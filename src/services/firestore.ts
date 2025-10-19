@@ -20,30 +20,45 @@ export class FirestoreService {
   // Get user's groups
   static async getUserGroups(uid: string): Promise<Group[]> {
     try {
-      const membersQuery = query(
-        collection(db, 'members'),
-        where('uid', '==', uid),
-        where('isActive', '==', true)
-      );
+      // Get the user's member document directly by ID (as per security rules)
+      const memberDoc = await getDoc(doc(db, 'members', uid));
+      
+      if (!memberDoc.exists()) {
+        return []; // User is not a member of any group
+      }
 
-      const membersSnapshot = await getDocs(membersQuery);
-      const groupIds = membersSnapshot.docs.map((doc) => doc.data().groupId);
+      const memberData = memberDoc.data();
+      
+      // Check if the member is active
+      if (!memberData.isActive) {
+        return [];
+      }
 
-      if (groupIds.length === 0) return [];
+      const groupId = memberData.groupId;
+      if (!groupId) {
+        return [];
+      }
 
-      const groupsQuery = query(
-        collection(db, 'groups'),
-        where('__name__', 'in', groupIds),
-        where('isActive', '==', true)
-      );
+      // Get the group document
+      const groupDoc = await getDoc(doc(db, 'groups', groupId));
+      
+      if (!groupDoc.exists()) {
+        return []; // Group doesn't exist
+      }
 
-      const groupsSnapshot = await getDocs(groupsQuery);
-      return groupsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date()
-      })) as Group[];
+      const groupData = groupDoc.data();
+      
+      // Check if the group is active
+      if (!groupData.isActive) {
+        return [];
+      }
+
+      return [{
+        id: groupDoc.id,
+        ...groupData,
+        createdAt: groupData.createdAt?.toDate() || new Date(),
+        updatedAt: groupData.updatedAt?.toDate() || new Date()
+      }] as Group[];
     } catch (error) {
       throw new Error(`Failed to get user groups: ${error}`);
     }
@@ -51,33 +66,49 @@ export class FirestoreService {
 
   // Listen to user's groups in real-time
   static listenToUserGroups(uid: string, callback: (groups: Group[]) => void): Unsubscribe {
-    const membersQuery = query(
-      collection(db, 'members'),
-      where('uid', '==', uid),
-      where('isActive', '==', true)
-    );
+    // Listen to the user's member document directly by ID
+    return onSnapshot(doc(db, 'members', uid), async (memberSnapshot) => {
+      if (!memberSnapshot.exists()) {
+        callback([]); // User is not a member of any group
+        return;
+      }
 
-    return onSnapshot(membersQuery, async (membersSnapshot) => {
-      const groupIds = membersSnapshot.docs.map((doc) => doc.data().groupId);
-
-      if (groupIds.length === 0) {
+      const memberData = memberSnapshot.data();
+      
+      // Check if the member is active
+      if (!memberData.isActive) {
         callback([]);
         return;
       }
 
-      const groupsQuery = query(
-        collection(db, 'groups'),
-        where('__name__', 'in', groupIds),
-        where('isActive', '==', true)
-      );
+      const groupId = memberData.groupId;
+      if (!groupId) {
+        callback([]);
+        return;
+      }
 
-      const groupsSnapshot = await getDocs(groupsQuery);
-      const groups = groupsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date()
-      })) as Group[];
+      // Get the group document
+      const groupDoc = await getDoc(doc(db, 'groups', groupId));
+      
+      if (!groupDoc.exists()) {
+        callback([]); // Group doesn't exist
+        return;
+      }
+
+      const groupData = groupDoc.data();
+      
+      // Check if the group is active
+      if (!groupData.isActive) {
+        callback([]);
+        return;
+      }
+
+      const groups = [{
+        id: groupDoc.id,
+        ...groupData,
+        createdAt: groupData.createdAt?.toDate() || new Date(),
+        updatedAt: groupData.updatedAt?.toDate() || new Date()
+      }] as Group[];
 
       callback(groups);
     });
