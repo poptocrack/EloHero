@@ -9,7 +9,11 @@
     "web": "expo start --web",
     "build": "expo build",
     "build:android": "expo build:android",
-    "build:ios": "expo build:ios"
+    "build:ios": "expo build:ios",
+    "emulators": "firebase emulators:start --only firestore,functions",
+    "emulators:all": "firebase emulators:start",
+    "emulators:export": "firebase emulators:export ./emulator-data",
+    "emulators:import": "firebase emulators:start --import ./emulator-data"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

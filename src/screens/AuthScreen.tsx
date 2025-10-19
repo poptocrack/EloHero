@@ -17,9 +17,9 @@ import { useAuthStore } from '../store/authStore';
 
 export default function AuthScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState(__DEV__ ? 'tristandebroise@gmail.com' : '');
+  const [password, setPassword] = useState(__DEV__ ? 'A2xjm3p5' : '');
+  const [displayName, setDisplayName] = useState(__DEV__ ? 'Tristan' : '');
   const [showPassword, setShowPassword] = useState(false);
 
   const {

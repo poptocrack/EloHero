@@ -19,6 +19,10 @@ export class AuthService {
   static async signInWithEmail(email: string, password: string): Promise<User> {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // Ensure user document exists
+      await this.ensureUserDocument(userCredential.user);
+
       return await this.getUserData(userCredential.user.uid);
     } catch (error) {
       throw new Error(`Sign in failed: ${error}`);
@@ -38,20 +42,29 @@ export class AuthService {
       await updateProfile(userCredential.user, { displayName });
 
       // Create user document in Firestore
-      const userData: Omit<User, 'uid'> = {
+      const userData: any = {
         displayName,
-        photoURL: userCredential.user.photoURL || undefined,
         plan: 'free' as UserPlan,
         groupsCount: 0,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
+      // Only add photoURL if it exists (Firestore doesn't allow undefined values)
+      if (userCredential.user.photoURL) {
+        userData.photoURL = userCredential.user.photoURL;
+      }
+
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
       return {
         uid: userCredential.user.uid,
-        ...userData
+        displayName,
+        photoURL: userCredential.user.photoURL || null,
+        plan: 'free' as UserPlan,
+        groupsCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
     } catch (error) {
       throw new Error(`Sign up failed: ${error}`);
@@ -64,21 +77,8 @@ export class AuthService {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
 
-      // Check if user document exists, create if not
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-
-      if (!userDoc.exists()) {
-        const userData: Omit<User, 'uid'> = {
-          displayName: result.user.displayName || 'Anonymous',
-          photoURL: result.user.photoURL || undefined,
-          plan: 'free' as UserPlan,
-          groupsCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        await setDoc(doc(db, 'users', result.user.uid), userData);
-      }
+      // Ensure user document exists
+      await this.ensureUserDocument(result.user);
 
       return await this.getUserData(result.user.uid);
     } catch (error) {
@@ -92,21 +92,8 @@ export class AuthService {
       const provider = new OAuthProvider('apple.com');
       const result = await signInWithPopup(auth, provider);
 
-      // Check if user document exists, create if not
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-
-      if (!userDoc.exists()) {
-        const userData: Omit<User, 'uid'> = {
-          displayName: result.user.displayName || 'Anonymous',
-          photoURL: result.user.photoURL || undefined,
-          plan: 'free' as UserPlan,
-          groupsCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        await setDoc(doc(db, 'users', result.user.uid), userData);
-      }
+      // Ensure user document exists
+      await this.ensureUserDocument(result.user);
 
       return await this.getUserData(result.user.uid);
     } catch (error) {
@@ -120,6 +107,28 @@ export class AuthService {
       await signOut(auth);
     } catch (error) {
       throw new Error(`Sign out failed: ${error}`);
+    }
+  }
+
+  // Ensure user document exists in Firestore
+  static async ensureUserDocument(firebaseUser: FirebaseUser): Promise<void> {
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+
+    if (!userDoc.exists()) {
+      const userData: any = {
+        displayName: firebaseUser.displayName || 'Anonymous',
+        plan: 'free' as UserPlan,
+        groupsCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Only add photoURL if it exists (Firestore doesn't allow undefined values)
+      if (firebaseUser.photoURL) {
+        userData.photoURL = firebaseUser.photoURL;
+      }
+
+      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
     }
   }
 
@@ -149,6 +158,8 @@ export class AuthService {
     return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         try {
+          // Ensure user document exists before trying to get user data
+          await this.ensureUserDocument(firebaseUser);
           const user = await this.getUserData(firebaseUser.uid);
           callback(user);
         } catch (error) {

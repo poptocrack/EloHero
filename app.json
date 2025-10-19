@@ -57,7 +57,13 @@
     "extra": {
       "eas": {
         "projectId": "your-eas-project-id"
-      }
+      },
+      "firebaseApiKey": "AIzaSyASlpzKNXuR9X8jnRjmZd4Sq4kQwBQs7JI",
+      "firebaseAuthDomain": "elohero.firebaseapp.com",
+      "firebaseProjectId": "elohero",
+      "firebaseStorageBucket": "elohero.firebasestorage.app",
+      "firebaseMessagingSenderId": "100850883969",
+      "firebaseAppId": "1:100850883969:web:f9e4f7af24d7cb8ce25c80"
     }
   }
 }

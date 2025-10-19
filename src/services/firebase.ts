@@ -43,7 +43,7 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
-// Initialize Auth with AsyncStorage persistence
+// Initialize Auth
 let auth;
 try {
   auth = initializeAuth(app, {
@@ -64,10 +64,16 @@ const functions = getFunctions(app);
 if (__DEV__) {
   try {
     connectFirestoreEmulator(db, 'localhost', 8080);
-    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.log('Connected to Firestore emulator');
   } catch (error) {
-    // Emulators already connected or not available
-    console.log('Firebase emulators not available or already connected');
+    console.log('Firestore emulator not available or already connected:', (error as Error).message);
+  }
+
+  try {
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.log('Connected to Functions emulator');
+  } catch (error) {
+    console.log('Functions emulator not available or already connected:', (error as Error).message);
   }
 }
 
