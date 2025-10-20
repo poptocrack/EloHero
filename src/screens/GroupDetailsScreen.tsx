@@ -9,10 +9,12 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
-  ScrollView
+  ScrollView,
+  Clipboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useGroupStore } from '../store/groupStore';
 import { useAuthStore } from '../store/authStore';
 import { Rating, Member } from '../types';
@@ -29,6 +31,7 @@ interface GroupDetailsScreenProps {
 export default function GroupDetailsScreen({ navigation, route }: GroupDetailsScreenProps) {
   const { groupId } = route.params;
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const {
     currentGroup,
@@ -69,28 +72,52 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   const handleNewMatch = () => {
     if (currentGroupMembers.length < 2) {
-      Alert.alert('Erreur', 'Il faut au moins 2 joueurs pour créer une partie');
+      Alert.alert(t('common.error'), t('groupDetails.needAtLeastTwoPlayers'));
       return;
     }
     navigation.navigate('MatchEntry', { groupId });
   };
+
+  const handleCopyInviteCode = () => {
+    if (currentGroup?.invitationCode) {
+      Clipboard.setString(currentGroup.invitationCode);
+      Alert.alert(t('groupDetails.codeCopied'));
+    }
+  };
+
+  const isAdmin = currentGroup && user && currentGroup.ownerId === user.uid;
+
+  // Debug logging
+  console.log('GroupDetailsScreen Debug:', {
+    currentGroup: currentGroup
+      ? {
+          id: currentGroup.id,
+          name: currentGroup.name,
+          ownerId: currentGroup.ownerId,
+          invitationCode: currentGroup.invitationCode
+        }
+      : null,
+    user: user ? { uid: user.uid } : null,
+    isAdmin,
+    hasInvitationCode: !!currentGroup?.invitationCode
+  });
 
   const handlePlayerPress = (member: Member) => {
     navigation.navigate('PlayerProfile', { uid: member.uid, groupId });
   };
 
   const handleLeaveGroup = () => {
-    Alert.alert('Quitter le groupe', 'Êtes-vous sûr de vouloir quitter ce groupe ?', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('groupDetails.leaveGroup'), t('groupDetails.confirmLeave'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Quitter',
+        text: t('groupDetails.leaveGroupConfirm'),
         style: 'destructive',
         onPress: async () => {
           try {
             await useGroupStore.getState().leaveGroup(groupId);
             navigation.goBack();
           } catch (error) {
-            Alert.alert('Erreur', 'Impossible de quitter le groupe');
+            Alert.alert(t('common.error'), t('groupDetails.cannotLeaveGroup'));
           }
         }
       }
@@ -102,6 +129,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     if (!member) return null;
 
     const isCurrentUser = user?.uid === item.uid;
+    const isMemberAdmin = currentGroup && member.uid === currentGroup.ownerId;
 
     return (
       <TouchableOpacity
@@ -115,9 +143,16 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         </View>
 
         <View style={styles.playerInfo}>
-          <Text style={[styles.playerName, isCurrentUser && styles.currentUserText]}>
-            {member.displayName}
-          </Text>
+          <View style={styles.playerNameContainer}>
+            <Text style={[styles.playerName, isCurrentUser && styles.currentUserText]}>
+              {member.displayName}
+            </Text>
+            {isMemberAdmin && (
+              <View style={styles.adminBadge}>
+                <Text style={styles.adminBadgeText}>{t('groupDetails.admin')}</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.playerStats}>
             {item.gamesPlayed} parties • {item.wins}V {item.losses}D {item.draws}N
           </Text>
@@ -150,16 +185,16 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   const renderEmptyRanking = () => (
     <View style={styles.emptyState}>
       <Ionicons name="trophy-outline" size={64} color="#ccc" />
-      <Text style={styles.emptyStateTitle}>Aucun classement</Text>
-      <Text style={styles.emptyStateText}>Jouez votre première partie pour voir le classement</Text>
+      <Text style={styles.emptyStateTitle}>{t('groupDetails.noMembers')}</Text>
+      <Text style={styles.emptyStateText}>{t('groupDetails.noGames')}</Text>
     </View>
   );
 
   const renderEmptyGames = () => (
     <View style={styles.emptyState}>
       <Ionicons name="game-controller-outline" size={64} color="#ccc" />
-      <Text style={styles.emptyStateTitle}>Aucune partie</Text>
-      <Text style={styles.emptyStateText}>Créez votre première partie pour commencer</Text>
+      <Text style={styles.emptyStateTitle}>{t('groupDetails.noGames')}</Text>
+      <Text style={styles.emptyStateText}>{t('groupDetails.noGames')}</Text>
     </View>
   );
 
@@ -167,7 +202,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Chargement du groupe...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -176,10 +211,10 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     return (
       <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
         <Ionicons name="alert-circle-outline" size={64} color="#ff3b30" />
-        <Text style={styles.errorTitle}>Groupe introuvable</Text>
-        <Text style={styles.errorText}>Ce groupe n'existe pas ou vous n'y avez pas accès</Text>
+        <Text style={styles.errorTitle}>{t('groups.groupNotFound')}</Text>
+        <Text style={styles.errorText}>{t('groupDetails.groupNotAccessible')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryButtonText}>Retour</Text>
+          <Text style={styles.retryButtonText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -209,25 +244,45 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
           <View style={styles.groupStats}>
             <View style={styles.statItem}>
               <Ionicons name="people" size={16} color="#007AFF" />
-              <Text style={styles.statText}>{currentGroup.memberCount} membres</Text>
+              <Text style={styles.statText}>
+                {currentGroup.memberCount} {t('groups.members')}
+              </Text>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="trophy" size={16} color="#FF9500" />
-              <Text style={styles.statText}>{currentGroup.gameCount} parties</Text>
+              <Text style={styles.statText}>
+                {currentGroup.gameCount} {t('groups.games')}
+              </Text>
             </View>
           </View>
         </View>
+
+        {/* Invitation Code Section for Admins */}
+        {isAdmin && currentGroup?.invitationCode && (
+          <View style={styles.inviteCodeContainer}>
+            <View style={styles.inviteCodeHeader}>
+              <Ionicons name="link" size={20} color="#667eea" />
+              <Text style={styles.inviteCodeTitle}>{t('groupDetails.invitationCode')}</Text>
+            </View>
+            <View style={styles.inviteCodeDisplay}>
+              <Text style={styles.inviteCodeText}>{currentGroup.invitationCode}</Text>
+              <TouchableOpacity style={styles.copyButton} onPress={handleCopyInviteCode}>
+                <Ionicons name="copy-outline" size={16} color="#667eea" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Action Buttons */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={styles.primaryButton} onPress={handleNewMatch}>
             <Ionicons name="add" size={20} color="#fff" />
-            <Text style={styles.primaryButtonText}>Nouvelle Partie</Text>
+            <Text style={styles.primaryButtonText}>{t('groupDetails.newMatch')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={handleLeaveGroup}>
             <Ionicons name="exit-outline" size={20} color="#ff3b30" />
-            <Text style={styles.secondaryButtonText}>Quitter</Text>
+            <Text style={styles.secondaryButtonText}>{t('groupDetails.leaveGroup')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -238,7 +293,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
             onPress={() => setActiveTab('ranking')}
           >
             <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>
-              Classement
+              {t('groupDetails.ranking')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -246,7 +301,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
             onPress={() => setActiveTab('games')}
           >
             <Text style={[styles.tabText, activeTab === 'games' && styles.activeTabText]}>
-              Parties
+              {t('groupDetails.games')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -374,6 +429,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666'
   },
+  inviteCodeContainer: {
+    backgroundColor: '#fff',
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0'
+  },
+  inviteCodeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  inviteCodeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8
+  },
+  inviteCodeDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9ff',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0'
+  },
+  inviteCodeText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#667eea',
+    fontFamily: 'monospace'
+  },
+  copyButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#f0f0f0'
+  },
   actionsContainer: {
     flexDirection: 'row',
     padding: 16,
@@ -473,11 +568,27 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 16
   },
+  playerNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2
+  },
   playerName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
-    marginBottom: 2
+    color: '#333'
+  },
+  adminBadge: {
+    backgroundColor: '#667eea',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8
+  },
+  adminBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600'
   },
   playerStats: {
     fontSize: 12,

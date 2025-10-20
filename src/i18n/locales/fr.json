@@ -74,7 +74,10 @@
     "cannotLeaveGroup": "Impossible de quitter le groupe",
     "groupNotAccessible": "Ce groupe n'existe pas ou vous n'y avez pas accès",
     "ranking": "Classement",
-    "games": "Parties"
+    "games": "Parties",
+    "invitationCode": "Code d'invitation",
+    "admin": "Admin",
+    "newMatch": "Nouvelle Partie"
   },
   "profile": {
     "title": "Profil",

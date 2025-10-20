@@ -23,6 +23,7 @@ export interface Group {
   gameCount: number;
   isActive: boolean;
   currentSeasonId?: string;
+  invitationCode: string;
   createdAt: Date;
   updatedAt: Date;
 }

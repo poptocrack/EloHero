@@ -40,7 +40,7 @@ const ELO_CONFIG = {
 // Plan Limits
 const PLAN_LIMITS = {
     free: {
-        maxGroups: 2,
+        maxGroups: 10,
         maxMembersPerGroup: 5,
         seasonsEnabled: false
     },
@@ -159,6 +159,18 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan');
         }
+        // Generate unique invitation code
+        console.log('createGroup: Generating unique invitation code...');
+        let invitationCode;
+        let attempts = 0;
+        do {
+            invitationCode = generateInviteCodeHelper();
+            attempts++;
+            if (attempts > 10) {
+                throw new functions.https.HttpsError('internal', 'Failed to generate unique invitation code');
+            }
+        } while ((await db.collection('groups').where('invitationCode', '==', invitationCode).get()).size > 0);
+        console.log('createGroup: Generated invitation code:', invitationCode);
         // Create group
         console.log('createGroup: Creating group document...');
         const groupRef = db.collection('groups').doc();
@@ -169,6 +181,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             memberCount: 1,
             gameCount: 0,
             isActive: true,
+            invitationCode: invitationCode,
             createdAt: firestore_1.FieldValue.serverTimestamp(),
             updatedAt: firestore_1.FieldValue.serverTimestamp()
         };
@@ -259,32 +272,23 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'Invite code is required');
     }
     try {
-        // Validate invite code
-        const inviteDoc = await db.collection('invites').doc(code.toUpperCase()).get();
-        if (!inviteDoc.exists) {
+        // Find group by invitation code
+        const groupsQuery = await db
+            .collection('groups')
+            .where('invitationCode', '==', code.toUpperCase())
+            .where('isActive', '==', true)
+            .get();
+        if (groupsQuery.empty) {
             throw new functions.https.HttpsError('not-found', 'Invalid invite code');
         }
-        const inviteData = inviteDoc.data();
-        // Check if invite is still active and not expired
-        if (!inviteData.isActive || inviteData.expiresAt.toDate() < new Date()) {
-            throw new functions.https.HttpsError('failed-precondition', 'Invite code has expired');
-        }
-        // Check if max uses reached
-        if (inviteData.maxUses && inviteData.currentUses >= inviteData.maxUses) {
-            throw new functions.https.HttpsError('resource-exhausted', 'Invite code has reached maximum uses');
-        }
-        const groupId = inviteData.groupId;
+        const groupDoc = groupsQuery.docs[0];
+        const groupData = groupDoc.data();
+        const groupId = groupDoc.id;
         // Check if user is already a member
         const existingMember = await db.collection('members').doc(uid).get();
         if (existingMember.exists && ((_a = existingMember.data()) === null || _a === void 0 ? void 0 : _a.groupId) === groupId) {
             throw new functions.https.HttpsError('already-exists', 'You are already a member of this group');
         }
-        // Get group data
-        const groupDoc = await db.collection('groups').doc(groupId).get();
-        if (!groupDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Group not found');
-        }
-        const groupData = groupDoc.data();
         // Check user plan and group member limit
         const plan = await getUserPlan(uid);
         if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
@@ -309,13 +313,6 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
             .update({
             memberCount: admin.firestore.FieldValue.increment(1),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-        // Update invite usage
-        await db
-            .collection('invites')
-            .doc(code.toUpperCase())
-            .update({
-            currentUses: admin.firestore.FieldValue.increment(1)
         });
         // Initialize user rating for current season
         if (groupData.currentSeasonId) {

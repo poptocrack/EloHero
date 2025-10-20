@@ -1,0 +1,319 @@
+[debug] [2025-10-20T02:43:12.179Z] ----------------------------------------------------------------------
+[debug] [2025-10-20T02:43:12.181Z] Command:       /Users/tristandebroise/.nvm/versions/node/v22.9.0/bin/node /Users/tristandebroise/.nvm/versions/node/v22.9.0/bin/firebase emulators:start --only firestore,functions
+[debug] [2025-10-20T02:43:12.181Z] CLI Version:   14.20.0
+[debug] [2025-10-20T02:43:12.181Z] Platform:      darwin
+[debug] [2025-10-20T02:43:12.181Z] Node Version:  v22.9.0
+[debug] [2025-10-20T02:43:12.181Z] Time:          Mon Oct 20 2025 04:43:12 GMT+0200 (heure d’été d’Europe centrale)
+[debug] [2025-10-20T02:43:12.182Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-20T02:43:12.318Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-20T02:43:12.318Z] > authorizing via signed-in user (tristandebroise@gmail.com)
+[debug] [2025-10-20T02:43:12.398Z] openjdk version "17.0.11" 2024-04-16 LTS
+
+[debug] [2025-10-20T02:43:12.398Z] OpenJDK Runtime Environment Zulu17.50+19-CA (build 17.0.11+9-LTS)
+OpenJDK 64-Bit Server VM Zulu17.50+19-CA (build 17.0.11+9-LTS, mixed mode, sharing)
+
+[debug] [2025-10-20T02:43:12.401Z] Parsed Java major version: 17
+[warn] ⬢  emulators: firebase-tools will drop support for Java version < 21 soon in firebase-tools@15. Please install a JDK at version 21 or above to get a compatible runtime. 
+[info] i  emulators: Starting emulators: functions, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: functions, firestore"}}
+[debug] [2025-10-20T02:43:13.160Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-20T02:43:13.160Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-20T02:43:13.160Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-20T02:43:13.160Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-10-20T02:43:13.162Z] Emulator locator file path: /var/folders/z0/pct1rbns1qnc2nmth94nhyy00000gn/T/hub-elohero.json
+[debug] [2025-10-20T02:43:13.162Z] [hub] writing locator at /var/folders/z0/pct1rbns1qnc2nmth94nhyy00000gn/T/hub-elohero.json
+[debug] [2025-10-20T02:43:13.591Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-20T02:43:13.591Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-20T02:43:13.591Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-20T02:43:13.591Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] ⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, database, hosting, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, database, hosting, pubsub, storage, dataconnect"}}
+[debug] [2025-10-20T02:43:13.619Z] defaultcredentials: writing to file /Users/tristandebroise/.config/firebase/tristandebroise_gmail_com_application_default_credentials.json
+[debug] [2025-10-20T02:43:13.620Z] Setting GAC to /Users/tristandebroise/.config/firebase/tristandebroise_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to /Users/tristandebroise/.config/firebase/tristandebroise_gmail_com_application_default_credentials.json"}}
+[debug] [2025-10-20T02:43:13.620Z] Checked if tokens are valid: true, expires at: 1760931751459
+[debug] [2025-10-20T02:43:13.620Z] Checked if tokens are valid: true, expires at: 1760931751459
+[debug] [2025-10-20T02:43:13.621Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/elohero/adminSdkConfig [none]
+[debug] [2025-10-20T02:43:13.893Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/elohero/adminSdkConfig 200
+[debug] [2025-10-20T02:43:13.893Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/elohero/adminSdkConfig {"projectId":"elohero","storageBucket":"elohero.firebasestorage.app"}
+[debug] [2025-10-20T02:43:13.906Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-10-20T02:43:13.906Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-10-20T02:43:13.906Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/tristandebroise/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","elohero","--rules","/Users/tristandebroise/Developer/EloHero/firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5001"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/tristandebroise/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"elohero\",\"--rules\",\"/Users/tristandebroise/Developer/EloHero/firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5001\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2025-10-20T02:43:14.595Z] Oct 20, 2025 4:43:14 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:14 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-10-20T02:43:14.617Z] API endpoint: http://127.0.0.1:8080
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST= {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://127.0.0.1:8080\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST="}}
+[debug] [2025-10-20T02:43:14.617Z] 127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[debug] [2025-10-20T02:43:14.673Z] Oct 20, 2025 4:43:14 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:14 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[info] i  functions: Watching "/Users/tristandebroise/Developer/EloHero/functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"/Users/tristandebroise/Developer/EloHero/functions\" for Cloud Functions..."}}
+[debug] [2025-10-20T02:43:14.719Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2025-10-20T02:43:15.141Z] > [functions] package.json contents: {
+  "name": "elohero-functions",
+  "description": "Cloud Functions for EloHero",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^4.8.0",
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.0",
+    "@types/node": "^18.0.0"
+  },
+  "private": true
+}
+[debug] [2025-10-20T02:43:15.141Z] Building nodejs source
+[debug] [2025-10-20T02:43:15.141Z] Failed to find version of module node: reached end of search path /Users/tristandebroise/Developer/EloHero/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "18" doesn't match your global version "22". Using node@22 from host. 
+[info] i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly 
+[debug] [2025-10-20T02:43:15.142Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-10-20T02:43:15.147Z] Found firebase-functions binary at '/Users/tristandebroise/Developer/EloHero/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8135
+
+[debug] [2025-10-20T02:43:15.367Z] Got response from /__/functions.yaml {"endpoints":{"createGroup":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"createGroup"},"joinGroupWithCode":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"joinGroupWithCode"},"createSeason":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"createSeason"},"reportMatch":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"reportMatch"},"generateInviteCode":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"generateInviteCode"},"leaveGroup":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"leaveGroup"},"deleteGroup":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"deleteGroup"},"updateGroup":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"updateGroup"},"endSeason":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"endSeason"},"resetSeasonRatings":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"resetSeasonRatings"},"scheduledCleanups":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"scheduleTrigger":{"schedule":"0 2 * * *","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null},"timeZone":null},"labels":{},"entryPoint":"scheduledCleanups"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}]}
+[info] ✔  functions: Loaded functions definitions from source: createGroup, joinGroupWithCode, createSeason, reportMatch, generateInviteCode, leaveGroup, deleteGroup, updateGroup, endSeason, resetSeasonRatings, scheduledCleanups. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: createGroup, joinGroupWithCode, createSeason, reportMatch, generateInviteCode, leaveGroup, deleteGroup, updateGroup, endSeason, resetSeasonRatings, scheduledCleanups."}}
+[info] ✔  functions[us-central1-createGroup]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/createGroup). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/createGroup)."}}
+[info] ✔  functions[us-central1-joinGroupWithCode]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/joinGroupWithCode). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/joinGroupWithCode)."}}
+[info] ✔  functions[us-central1-createSeason]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/createSeason). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/createSeason)."}}
+[info] ✔  functions[us-central1-reportMatch]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/reportMatch). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/reportMatch)."}}
+[info] ✔  functions[us-central1-generateInviteCode]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/generateInviteCode). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/generateInviteCode)."}}
+[info] ✔  functions[us-central1-leaveGroup]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/leaveGroup). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/leaveGroup)."}}
+[info] ✔  functions[us-central1-deleteGroup]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/deleteGroup). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/deleteGroup)."}}
+[info] ✔  functions[us-central1-updateGroup]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/updateGroup). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/updateGroup)."}}
+[info] ✔  functions[us-central1-endSeason]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/endSeason). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/endSeason)."}}
+[info] ✔  functions[us-central1-resetSeasonRatings]: http function initialized (http://127.0.0.1:5001/elohero/us-central1/resetSeasonRatings). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/elohero/us-central1/resetSeasonRatings)."}}
+[info] i  functions[us-central1-scheduledCleanups]: function ignored because the pubsub emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the pubsub emulator does not exist or is not running."}}
+[debug] [2025-10-20T02:43:19.387Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌───────────┬────────────────┬─────────────────────────────────┐
+│ Emulator  │ Host:Port      │ View in Emulator UI             │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Firestore │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+└───────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[warn] ⚠  emulators: firebase-tools will drop support for Java version < 21 soon in firebase-tools@15. Please install a JDK at version 21 or above to get a compatible runtime. 
+[debug] [2025-10-20T02:43:50.660Z] Oct 20, 2025 4:43:50 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:50 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:51.007Z] Oct 20, 2025 4:43:51 AM com.google.cloud.datastore.emulator.impl.context.EmulatorAuthorization warnAboutSecuredJwt
+WARNING: expected an unsecured JWT, the emulator does not validate JWTs and IS NOT SECURE
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM com.google.cloud.datastore.emulator.impl.context.EmulatorAuthorization warnAboutSecuredJwt\nWARNING: expected an unsecured JWT, the emulator does not validate JWTs and IS NOT SECURE\n"}}
+[debug] [2025-10-20T02:43:51.189Z] Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:51.207Z] Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:51.221Z] Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:51.225Z] Oct 20, 2025 4:43:51 AM com.google.cloud.datastore.emulator.impl.context.EmulatorAuthorization warnAboutSecuredJwt
+WARNING: expected an unsecured JWT, the emulator does not validate JWTs and IS NOT SECURE
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM com.google.cloud.datastore.emulator.impl.context.EmulatorAuthorization warnAboutSecuredJwt\nWARNING: expected an unsecured JWT, the emulator does not validate JWTs and IS NOT SECURE\n"}}
+[debug] [2025-10-20T02:43:51.241Z] Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:51.252Z] Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:51.320Z] [work-queue] {"queuedWork":["/elohero/us-central1/createGroup-2025-10-20T02:43:51.320Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-10-20T02:43:51.320Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/elohero/us-central1/createGroup-2025-10-20T02:43:51.320Z"],"workRunningCount":1}
+[debug] [2025-10-20T02:43:51.321Z] Accepted request POST /elohero/us-central1/createGroup --> us-central1-createGroup
+[debug] [2025-10-20T02:43:51.321Z] ID Token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMjEzMGZlZjAyNTg3ZmQ4ODYxODg2OTgyMjczNGVmNzZhMTExNjUiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVHJpc3RhbiIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9lbG9oZXJvIiwiYXVkIjoiZWxvaGVybyIsImF1dGhfdGltZSI6MTc2MDkxNTUzMCwidXNlcl9pZCI6IlJMNGZvTVNZV1BobjdybXdQcE5yRmNWYUJUdDEiLCJzdWIiOiJSTDRmb01TWVdQaG43cm13UHBOckZjVmFCVHQxIiwiaWF0IjoxNzYwOTI1NzgzLCJleHAiOjE3NjA5MjkzODMsImVtYWlsIjoidHJpc3RhbmRlYnJvaXNlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJ0cmlzdGFuZGVicm9pc2VAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.ZZy5u4yOYrEqBVVIrCqZIeANQASprUNowmGoCIs4ipvMCiVYSZmoWWVZLyWY0QhmsglZ6g3j2vM6As0A0nabyaYF_1CIq3I40pY4P8frGNx3M3nNqLJlsmLUTRSnCpi8UzTx0ppfPHGjmjANRJ5I2o1avi8QkcnC0KLASLXY4wLhTNvksvysektEmGM2LJSK6R1qaLGFko58e5JjDGacQ02Y4Y6dWzpV6zLeu-QR2Nk3zHRbCXi7dHRrFmLKRqBW8o6J3m8-V9AmkKrKKxxv5iKl_NxP0C1R--Tz2pGa0FdB3nypO-7MyY1wZ4d5FTGXuwoV8HMgo-mfYcbL1zUAvQ
+[debug] [2025-10-20T02:43:51.321Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-10-20T02:43:51.322Z] [functions] Got req.url=/elohero/us-central1/createGroup, mapping to path=/ {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/elohero/us-central1/createGroup, mapping to path=/"}}
+[debug] [2025-10-20T02:43:51.324Z] [worker-pool] addWorker(us-central1-createGroup) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] addWorker(us-central1-createGroup)"}}
+[debug] [2025-10-20T02:43:51.324Z] [worker-pool] Adding worker with key us-central1-createGroup, total=1 {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] Adding worker with key us-central1-createGroup, total=1"}}
+[info] >  (node:82812) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead. {"user":"(node:82812) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  (node:82812) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead."}}
+[info] >  (Use `node --trace-deprecation ...` to show where the warning was created) {"user":"(Use `node --trace-deprecation ...` to show where the warning was created)","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  (Use `node --trace-deprecation ...` to show where the warning was created)"}}
+[debug] [2025-10-20T02:43:51.994Z] [runtime-status] [82812] Resolved module firebase-admin {"declared":true,"installed":true,"version":"12.7.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-admin/lib/index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Resolved module firebase-admin {\"declared\":true,\"installed\":true,\"version\":\"12.7.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-admin/lib/index.js\"}"}}
+[debug] [2025-10-20T02:43:51.994Z] [runtime-status] [82812] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"4.9.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js\"}"}}
+[debug] [2025-10-20T02:43:51.995Z] [runtime-status] [82812] Outgoing network have been stubbed. [{"name":"http","status":"mocked"},{"name":"http","status":"mocked"},{"name":"https","status":"mocked"},{"name":"https","status":"mocked"},{"name":"net","status":"mocked"}] {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Outgoing network have been stubbed. [{\"name\":\"http\",\"status\":\"mocked\"},{\"name\":\"http\",\"status\":\"mocked\"},{\"name\":\"https\",\"status\":\"mocked\"},{\"name\":\"https\",\"status\":\"mocked\"},{\"name\":\"net\",\"status\":\"mocked\"}]"}}
+[debug] [2025-10-20T02:43:51.995Z] [runtime-status] [82812] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"4.9.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js\"}"}}
+[debug] [2025-10-20T02:43:52.171Z] [runtime-status] [82812] Checked functions.config() {"config":{}} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Checked functions.config() {\"config\":{}}"}}
+[debug] [2025-10-20T02:43:52.171Z] [runtime-status] [82812] firebase-functions has been stubbed. {"functionsResolution":{"declared":true,"installed":true,"version":"4.9.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js"}} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] firebase-functions has been stubbed. {\"functionsResolution\":{\"declared\":true,\"installed\":true,\"version\":\"4.9.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js\"}}"}}
+[debug] [2025-10-20T02:43:52.171Z] [runtime-status] [82812] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"4.9.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js\"}"}}
+[debug] [2025-10-20T02:43:52.172Z] [runtime-status] [82812] Resolved module firebase-admin {"declared":true,"installed":true,"version":"12.7.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-admin/lib/index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Resolved module firebase-admin {\"declared\":true,\"installed\":true,\"version\":\"12.7.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-admin/lib/index.js\"}"}}
+[debug] [2025-10-20T02:43:52.173Z] [runtime-status] [82812] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"4.9.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-functions/lib/v1/index.js\"}"}}
+[debug] [2025-10-20T02:43:52.173Z] [runtime-status] [82812] firebase-admin has been stubbed. {"adminResolution":{"declared":true,"installed":true,"version":"12.7.0","resolution":"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-admin/lib/index.js"}} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] firebase-admin has been stubbed. {\"adminResolution\":{\"declared\":true,\"installed\":true,\"version\":\"12.7.0\",\"resolution\":\"/Users/tristandebroise/Developer/EloHero/functions/node_modules/firebase-admin/lib/index.js\"}}"}}
+[debug] [2025-10-20T02:43:52.175Z] [runtime-status] [82812] initializeApp(DEFAULT) {"storageBucket":"elohero.firebasestorage.app","projectId":"elohero"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] initializeApp(DEFAULT) {\"storageBucket\":\"elohero.firebasestorage.app\",\"projectId\":\"elohero\"}"}}
+[debug] [2025-10-20T02:43:52.180Z] [runtime-status] [82812] Functions runtime initialized. {"cwd":"/Users/tristandebroise/Developer/EloHero/functions","node_version":"22.9.0"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Functions runtime initialized. {\"cwd\":\"/Users/tristandebroise/Developer/EloHero/functions\",\"node_version\":\"22.9.0\"}"}}
+[debug] [2025-10-20T02:43:52.180Z] [runtime-status] [82812] Listening to port: /var/folders/z0/pct1rbns1qnc2nmth94nhyy00000gn/T/fire_emu_87cd3f7ffb2bd4a6.sock {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] Listening to port: /var/folders/z0/pct1rbns1qnc2nmth94nhyy00000gn/T/fire_emu_87cd3f7ffb2bd4a6.sock"}}
+[debug] [2025-10-20T02:43:52.241Z] [worker-us-central1-createGroup-63bb68ee-e534-4267-9987-d946c2b5f1c8]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[worker-us-central1-createGroup-63bb68ee-e534-4267-9987-d946c2b5f1c8]: IDLE"}}
+[debug] [2025-10-20T02:43:52.241Z] [worker-pool] submitRequest(triggerId=us-central1-createGroup) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-createGroup)"}}
+[info] i  functions: Beginning execution of "us-central1-createGroup" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"Beginning execution of \"us-central1-createGroup\""}}
+[debug] [2025-10-20T02:43:52.241Z] [worker-us-central1-createGroup-63bb68ee-e534-4267-9987-d946c2b5f1c8]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[worker-us-central1-createGroup-63bb68ee-e534-4267-9987-d946c2b5f1c8]: BUSY"}}
+[info] >  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22token%22%3A%7B%22name%22%3A%22Tristan%22%2C%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Felohero%22%2C%22aud%22%3A%22elohero%22%2C%22auth_time%22%3A1760915530%2C%22user_id%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22sub%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22iat%22%3A1760925783%2C%22exp%22%3A1760929383%2C%22email%22%3A%22tristandebroise%40gmail.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3A%5B%22tristandebroise%40gmail.com%22%5D%7D%2C%22sign_in_provider%22%3A%22password%22%7D%2C%22uid%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%7D%7D","severity":"DEBUG","message":"Callable functions auth override"} {"user":{"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22token%22%3A%7B%22name%22%3A%22Tristan%22%2C%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Felohero%22%2C%22aud%22%3A%22elohero%22%2C%22auth_time%22%3A1760915530%2C%22user_id%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22sub%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22iat%22%3A1760925783%2C%22exp%22%3A1760929383%2C%22email%22%3A%22tristandebroise%40gmail.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3A%5B%22tristandebroise%40gmail.com%22%5D%7D%2C%22sign_in_provider%22%3A%22password%22%7D%2C%22uid%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%7D%7D","severity":"DEBUG","message":"Callable functions auth override"},"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  {\"key\":\"x-callable-context-auth\",\"value\":\"%7B%22uid%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22token%22%3A%7B%22name%22%3A%22Tristan%22%2C%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Felohero%22%2C%22aud%22%3A%22elohero%22%2C%22auth_time%22%3A1760915530%2C%22user_id%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22sub%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%2C%22iat%22%3A1760925783%2C%22exp%22%3A1760929383%2C%22email%22%3A%22tristandebroise%40gmail.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3A%5B%22tristandebroise%40gmail.com%22%5D%7D%2C%22sign_in_provider%22%3A%22password%22%7D%2C%22uid%22%3A%22RL4foMSYWPhn7rmwPpNrFcVaBTt1%22%7D%7D\",\"severity\":\"DEBUG\",\"message\":\"Callable functions auth override\"}"}}
+[info] >  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"} {"user":{"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"},"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  {\"verifications\":{\"app\":\"MISSING\",\"auth\":\"VALID\"},\"logging.googleapis.com/labels\":{\"firebase-log-type\":\"callable-request-verification\"},\"severity\":\"DEBUG\",\"message\":\"Callable request verification passed\"}"}}
+[debug] [2025-10-20T02:43:52.251Z] [runtime-status] [82812] No callable functions auth found {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[runtime-status] [82812] No callable functions auth found"}}
+[info] >  createGroup: Starting for user: RL4foMSYWPhn7rmwPpNrFcVaBTt1 name: zerzrgterdfgdf {"user":"createGroup: Starting for user: RL4foMSYWPhn7rmwPpNrFcVaBTt1 name: zerzrgterdfgdf","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Starting for user: RL4foMSYWPhn7rmwPpNrFcVaBTt1 name: zerzrgterdfgdf"}}
+[info] >  createGroup: Getting user plan... {"user":"createGroup: Getting user plan...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Getting user plan..."}}
+[info] >  getUserPlan: Getting user record for uid: RL4foMSYWPhn7rmwPpNrFcVaBTt1 {"user":"getUserPlan: Getting user record for uid: RL4foMSYWPhn7rmwPpNrFcVaBTt1","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  getUserPlan: Getting user record for uid: RL4foMSYWPhn7rmwPpNrFcVaBTt1"}}
+[warn] ⚠  functions: The Firebase Authentication emulator is not running, so calls to Firebase Authentication will affect production. {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"The Firebase Authentication emulator is not running, so calls to Firebase Authentication will affect production."}}
+[info] >  getUserPlan: User record retrieved, custom claims: undefined {"user":"getUserPlan: User record retrieved, custom claims: undefined","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  getUserPlan: User record retrieved, custom claims: undefined"}}
+[info] >  getUserPlan: Returning plan: free {"user":"getUserPlan: Returning plan: free","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  getUserPlan: Returning plan: free"}}
+[info] >  createGroup: User plan: free {"user":"createGroup: User plan: free","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: User plan: free"}}
+[info] >  createGroup: Getting user document... {"user":"createGroup: Getting user document...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Getting user document..."}}
+[debug] [2025-10-20T02:43:52.755Z] Oct 20, 2025 4:43:52 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:52 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[info] >  createGroup: User document exists: true {"user":"createGroup: User document exists: true","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: User document exists: true"}}
+[info] >  createGroup: Current groups count: 0 {"user":"createGroup: Current groups count: 0","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Current groups count: 0"}}
+[info] >  createGroup: Generating unique invitation code... {"user":"createGroup: Generating unique invitation code...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Generating unique invitation code..."}}
+[info] >  createGroup: Generated invitation code: H2BW5MZY {"user":"createGroup: Generated invitation code: H2BW5MZY","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Generated invitation code: H2BW5MZY"}}
+[info] >  createGroup: Creating group document... {"user":"createGroup: Creating group document...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Creating group document..."}}
+[info] >  createGroup: Group document created with ID: WhdoRzIR3mGywp2iDdMC {"user":"createGroup: Group document created with ID: WhdoRzIR3mGywp2iDdMC","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Group document created with ID: WhdoRzIR3mGywp2iDdMC"}}
+[info] >  createGroup: Adding owner as member... {"user":"createGroup: Adding owner as member...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Adding owner as member..."}}
+[info] >  createGroup: Owner added as member {"user":"createGroup: Owner added as member","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Owner added as member"}}
+[info] >  createGroup: Updating user group count... {"user":"createGroup: Updating user group count...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Updating user group count..."}}
+[info] >  createGroup: User group count updated {"user":"createGroup: User group count updated","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: User group count updated"}}
+[info] >  createGroup: Creating default season... {"user":"createGroup: Creating default season...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Creating default season..."}}
+[info] >  createGroup: Default season created with ID: 9aSfYYxaGpkEGT8ZPa26 {"user":"createGroup: Default season created with ID: 9aSfYYxaGpkEGT8ZPa26","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Default season created with ID: 9aSfYYxaGpkEGT8ZPa26"}}
+[info] >  createGroup: Updating group with current season... {"user":"createGroup: Updating group with current season...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Updating group with current season..."}}
+[info] >  createGroup: Group updated with current season {"user":"createGroup: Group updated with current season","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Group updated with current season"}}
+[info] >  createGroup: Creating initial rating for owner... {"user":"createGroup: Creating initial rating for owner...","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Creating initial rating for owner..."}}
+[info] >  createGroup: Initial rating created for owner {"user":"createGroup: Initial rating created for owner","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Initial rating created for owner"}}
+[info] >  createGroup: Function completed successfully {"user":"createGroup: Function completed successfully","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":">  createGroup: Function completed successfully"}}
+[debug] [2025-10-20T02:43:52.915Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-createGroup" in 674.292042ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"Finished \"us-central1-createGroup\" in 674.292042ms"}}
+[debug] [2025-10-20T02:43:52.916Z] [worker-us-central1-createGroup-63bb68ee-e534-4267-9987-d946c2b5f1c8]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"[worker-us-central1-createGroup-63bb68ee-e534-4267-9987-d946c2b5f1c8]: IDLE"}}
+[debug] [2025-10-20T02:43:52.916Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-10-20T02:43:52.916Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createGroup"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-10-20T02:43:52.916Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-10-20T02:43:53.025Z] Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:53.057Z] Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:53.066Z] Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:53.130Z] Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:54.267Z] Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:54.287Z] Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:54.295Z] Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:54.333Z] Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.575Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.578Z] Oct 20, 2025 4:43:56 AM com.google.cloud.datastore.emulator.impl.context.EmulatorAuthorization warnAboutSecuredJwt
+WARNING: expected an unsecured JWT, the emulator does not validate JWTs and IS NOT SECURE
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM com.google.cloud.datastore.emulator.impl.context.EmulatorAuthorization warnAboutSecuredJwt\nWARNING: expected an unsecured JWT, the emulator does not validate JWTs and IS NOT SECURE\n"}}
+[debug] [2025-10-20T02:43:56.593Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.628Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.637Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.765Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.782Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.820Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.831Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:43:56.869Z] Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:43:56 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:04.665Z] Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:04.724Z] Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:04.756Z] Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:04.807Z] Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:04.840Z] Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:04.907Z] Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:11.680Z] Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\nOct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\nOct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:11.701Z] Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+Oct 20, 2025 4:44:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\nOct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\nOct 20, 2025 4:44:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-10-20T02:44:11.702Z] Oct 20, 2025 4:44:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-10-20T02:44:11.740Z] Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:11.743Z] Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-10-20T02:44:11.758Z] Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 20, 2025 4:44:11 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}

@@ -74,7 +74,10 @@
     "cannotLeaveGroup": "Unable to leave group",
     "groupNotAccessible": "This group doesn't exist or you don't have access to it",
     "ranking": "Ranking",
-    "games": "Games"
+    "games": "Games",
+    "invitationCode": "Invitation Code",
+    "admin": "Admin",
+    "newMatch": "New Match"
   },
   "profile": {
     "title": "Profile",
