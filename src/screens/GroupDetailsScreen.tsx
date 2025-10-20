@@ -36,6 +36,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     groupGames,
     isLoading,
     error,
+    loadGroup,
     loadGroupMembers,
     loadGroupSeasons,
     loadSeasonRatings,
@@ -48,10 +49,8 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   useEffect(() => {
     // Load group data when component mounts
-    loadGroupMembers(groupId);
-    loadGroupSeasons(groupId);
-    loadGroupGames(groupId);
-  }, [groupId, loadGroupMembers, loadGroupSeasons, loadGroupGames]);
+    loadGroup(groupId);
+  }, [groupId, loadGroup]);
 
   useEffect(() => {
     // Load season ratings when current season changes
@@ -62,11 +61,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([
-      loadGroupMembers(groupId),
-      loadGroupSeasons(groupId),
-      loadGroupGames(groupId)
-    ]);
+    await loadGroup(groupId);
     setRefreshing(false);
   };
 

@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
+import GroupActionButtons from '../components/GroupActionButtons';
 
 interface ProfileScreenProps {
   navigation: any;
@@ -10,6 +11,16 @@ interface ProfileScreenProps {
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { user, signOut } = useAuthStore();
+
+  const handleCreateGroup = () => {
+    navigation.navigate('Groups');
+    // The create group functionality will be handled in GroupsScreen
+  };
+
+  const handleJoinGroup = () => {
+    navigation.navigate('Groups');
+    // The join group functionality will be handled in GroupsScreen
+  };
 
   const handleSignOut = () => {
     Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
@@ -152,6 +163,8 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <Text style={styles.statLabel}>Membres max</Text>
         </View>
       </View>
+
+      <GroupActionButtons onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
 
       <View style={styles.menuContainer}>{menuItems.map(renderMenuItem)}</View>
     </ScrollView>

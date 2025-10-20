@@ -8,11 +8,26 @@ export class CloudFunctionsService {
   // Create a new group
   static async createGroup(name: string, description?: string): Promise<ApiResponse<Group>> {
     try {
+      console.log(
+        'CloudFunctionsService: Creating group with name:',
+        name,
+        'description:',
+        description
+      );
       const createGroup = httpsCallable(functions, 'createGroup');
+      console.log('CloudFunctionsService: Calling createGroup function...');
       const result = await createGroup({ name, description });
+      console.log('CloudFunctionsService: Function call successful, result:', result.data);
       return result.data as ApiResponse<Group>;
-    } catch (error) {
-      throw new Error(`Failed to create group: ${error}`);
+    } catch (error: any) {
+      console.error('CloudFunctionsService: Create group error:', error);
+      console.error('CloudFunctionsService: Error code:', error?.code);
+      console.error('CloudFunctionsService: Error message:', error?.message);
+      console.error('CloudFunctionsService: Error details:', error?.details);
+      // Extract more detailed error information
+      const errorMessage = error?.message || error?.code || 'Unknown error';
+      const errorDetails = error?.details || '';
+      throw new Error(`Failed to create group: ${errorMessage} ${errorDetails}`);
     }
   }
 

@@ -67,22 +67,22 @@ function RootStackNavigator() {
       <Stack.Screen
         name="GroupDetails"
         component={GroupDetailsScreen}
-        options={{ title: 'Détails du Groupe' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="MatchEntry"
         component={MatchEntryScreen}
-        options={{ title: 'Nouvelle Partie' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="PlayerProfile"
         component={PlayerProfileScreen}
-        options={{ title: 'Profil Joueur' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Subscription"
         component={SubscriptionScreen}
-        options={{ title: 'Abonnement' }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

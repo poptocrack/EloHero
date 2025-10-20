@@ -27,6 +27,7 @@ exports.scheduledCleanups = exports.resetSeasonRatings = exports.endSeason = exp
 // Cloud Functions for EloHero
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
+const firestore_1 = require("firebase-admin/firestore");
 // Initialize Firebase Admin
 admin.initializeApp();
 const db = admin.firestore();
@@ -53,11 +54,15 @@ const PLAN_LIMITS = {
 async function getUserPlan(uid) {
     var _a;
     try {
+        console.log('getUserPlan: Getting user record for uid:', uid);
         const userRecord = await admin.auth().getUser(uid);
-        return ((_a = userRecord.customClaims) === null || _a === void 0 ? void 0 : _a.plan) || 'free';
+        console.log('getUserPlan: User record retrieved, custom claims:', userRecord.customClaims);
+        const plan = ((_a = userRecord.customClaims) === null || _a === void 0 ? void 0 : _a.plan) || 'free';
+        console.log('getUserPlan: Returning plan:', plan);
+        return plan;
     }
     catch (error) {
-        console.error('Error getting user plan:', error);
+        console.error('getUserPlan: Error getting user plan:', error);
         return 'free';
     }
 }
@@ -126,14 +131,36 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'Group name is required');
     }
     try {
+        console.log('createGroup: Starting for user:', uid, 'name:', name);
         // Check user plan and current group count
+        console.log('createGroup: Getting user plan...');
         const plan = await getUserPlan(uid);
+        console.log('createGroup: User plan:', plan);
+        console.log('createGroup: Getting user document...');
         const userDoc = await db.collection('users').doc(uid).get();
+        console.log('createGroup: User document exists:', userDoc.exists);
+        if (!userDoc.exists) {
+            console.log('createGroup: User document does not exist, creating it...');
+            // Create user document if it doesn't exist
+            await db
+                .collection('users')
+                .doc(uid)
+                .set({
+                displayName: context.auth.token.name || 'Anonymous',
+                plan: 'free',
+                groupsCount: 0,
+                createdAt: firestore_1.FieldValue.serverTimestamp(),
+                updatedAt: firestore_1.FieldValue.serverTimestamp()
+            });
+            console.log('createGroup: User document created');
+        }
         const currentGroupsCount = ((_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.groupsCount) || 0;
+        console.log('createGroup: Current groups count:', currentGroupsCount);
         if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan');
         }
         // Create group
+        console.log('createGroup: Creating group document...');
         const groupRef = db.collection('groups').doc();
         const groupData = {
             name: name.trim(),
@@ -142,11 +169,13 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             memberCount: 1,
             gameCount: 0,
             isActive: true,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            createdAt: firestore_1.FieldValue.serverTimestamp(),
+            updatedAt: firestore_1.FieldValue.serverTimestamp()
         };
         await groupRef.set(groupData);
+        console.log('createGroup: Group document created with ID:', groupRef.id);
         // Add owner as member
+        console.log('createGroup: Adding owner as member...');
         await db
             .collection('members')
             .doc(uid)
@@ -155,39 +184,66 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             groupId: groupRef.id,
             displayName: context.auth.token.name || 'Anonymous',
             photoURL: context.auth.token.picture || null,
-            joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+            joinedAt: firestore_1.FieldValue.serverTimestamp(),
             isActive: true
         });
+        console.log('createGroup: Owner added as member');
         // Update user's group count
+        console.log('createGroup: Updating user group count...');
         await db
             .collection('users')
             .doc(uid)
             .update({
-            groupsCount: admin.firestore.FieldValue.increment(1),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            groupsCount: firestore_1.FieldValue.increment(1),
+            updatedAt: firestore_1.FieldValue.serverTimestamp()
         });
+        console.log('createGroup: User group count updated');
         // Create default season
+        console.log('createGroup: Creating default season...');
         const seasonRef = db.collection('seasons').doc();
         await seasonRef.set({
             id: seasonRef.id,
             groupId: groupRef.id,
             name: 'Saison 1',
             isActive: true,
-            startDate: admin.firestore.FieldValue.serverTimestamp(),
+            startDate: firestore_1.FieldValue.serverTimestamp(),
             gameCount: 0,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
+            createdAt: firestore_1.FieldValue.serverTimestamp()
         });
+        console.log('createGroup: Default season created with ID:', seasonRef.id);
         // Update group with current season
+        console.log('createGroup: Updating group with current season...');
         await groupRef.update({
             currentSeasonId: seasonRef.id
         });
+        console.log('createGroup: Group updated with current season');
+        // Create initial rating for the group owner
+        console.log('createGroup: Creating initial rating for owner...');
+        await db
+            .collection('ratings')
+            .doc(`${seasonRef.id}_${uid}`)
+            .set({
+            id: `${seasonRef.id}_${uid}`,
+            seasonId: seasonRef.id,
+            uid,
+            groupId: groupRef.id,
+            currentRating: ELO_CONFIG.RATING_INIT,
+            gamesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            lastUpdated: firestore_1.FieldValue.serverTimestamp()
+        });
+        console.log('createGroup: Initial rating created for owner');
+        console.log('createGroup: Function completed successfully');
         return {
             success: true,
             data: Object.assign(Object.assign({ id: groupRef.id }, groupData), { currentSeasonId: seasonRef.id })
         };
     }
     catch (error) {
-        console.error('Error creating group:', error);
+        console.error('createGroup: Error creating group:', error);
+        console.error('createGroup: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         throw new functions.https.HttpsError('internal', 'Failed to create group');
     }
 });

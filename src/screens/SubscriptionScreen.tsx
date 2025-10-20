@@ -92,26 +92,6 @@ export default function SubscriptionScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Abonnement</Text>
-          <Text style={styles.headerSubtitle}>Débloquez toutes les fonctionnalités d'EloHero</Text>
-        </View>
-
-        <View style={styles.currentPlan}>
-          <View style={[styles.planBadge, user?.plan === 'premium' && styles.premiumBadge]}>
-            <Ionicons
-              name={user?.plan === 'premium' ? 'diamond' : 'person'}
-              size={20}
-              color={user?.plan === 'premium' ? '#ffd700' : '#666'}
-            />
-            <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
-              {user?.plan === 'premium' ? 'Premium' : 'Gratuit'}
-            </Text>
-          </View>
-        </View>
-      </View>
 
       {/* Current Usage */}
       <View style={styles.usageContainer}>
@@ -197,25 +177,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5'
-  },
-  header: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
-  },
-  headerContent: {
-    marginBottom: 16
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#666'
   },
   currentPlan: {
     alignItems: 'flex-start'

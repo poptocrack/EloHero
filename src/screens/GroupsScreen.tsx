@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { useGroupStore } from '../store/groupStore';
 import { Group } from '../types';
+import GroupActionButtons from '../components/GroupActionButtons';
 
 interface GroupsScreenProps {
   navigation: any;
@@ -51,12 +52,21 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Créer',
-          onPress: async (name) => {
+          onPress: async (name: string | undefined) => {
             if (name && name.trim()) {
               try {
+                console.log('Creating group with name:', name.trim());
                 await createGroup(name.trim());
+                console.log('Group created successfully');
               } catch (error) {
-                // Error handled by store
+                console.error('Error creating group:', error);
+                // Error handled by store, but also show alert
+                Alert.alert(
+                  'Erreur',
+                  `Impossible de créer le groupe: ${
+                    error instanceof Error ? error.message : 'Erreur inconnue'
+                  }`
+                );
               }
             }
           }
@@ -136,17 +146,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes Groupes</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton} onPress={handleJoinGroup}>
-            <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={handleCreateGroup}>
-            <Ionicons name="create-outline" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <GroupActionButtons onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
 
       {error && (
         <View style={styles.errorContainer}>
@@ -226,28 +226,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666'
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333'
-  },
-  headerActions: {
-    flexDirection: 'row'
-  },
-  headerButton: {
-    marginLeft: 16,
-    padding: 8
   },
   errorContainer: {
     flexDirection: 'row',
