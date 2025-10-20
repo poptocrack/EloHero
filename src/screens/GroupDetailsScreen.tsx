@@ -105,7 +105,11 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   });
 
   const handlePlayerPress = (member: Member) => {
-    navigation.navigate('PlayerProfile', { uid: member.uid, groupId });
+    navigation.navigate('PlayerProfile', {
+      uid: member.uid,
+      groupId,
+      displayName: member.displayName
+    });
   };
 
   const handleLeaveGroup = () => {

@@ -127,6 +127,22 @@
     "matches": "Parties",
     "subscription": "Abonnement"
   },
+  "playerProfile": {
+    "title": "Profil du joueur",
+    "loading": "Chargement du profil...",
+    "profileNotFound": "Profil introuvable",
+    "noDataInGroup": "Ce joueur n'a pas encore de données dans ce groupe",
+    "currentElo": "ELO Actuel",
+    "games": "Parties",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "draws": "Nuls",
+    "winRate": "Taux de victoire",
+    "ratingHistory": "Historique des changements",
+    "noHistory": "Aucun historique disponible",
+    "position": "Position",
+    "tied": "(ex æquo)"
+  },
   "errors": {
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
