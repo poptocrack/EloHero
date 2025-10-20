@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useGroupStore } from '../store/groupStore';
 import { Group } from '../types';
@@ -24,6 +25,7 @@ interface GroupsScreenProps {
 }
 
 export default function GroupsScreen({ navigation }: GroupsScreenProps) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { groups, isLoading, error, loadUserGroups, createGroup, joinGroupWithCode, clearError } =
@@ -49,12 +51,12 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
   const handleCreateGroup = () => {
     Alert.prompt(
-      'Créer un groupe',
-      'Entrez le nom de votre groupe',
+      t('groups.createGroup'),
+      t('groups.enterGroupName'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Créer',
+          text: t('groups.createGroup'),
           onPress: async (name: string | undefined) => {
             if (name && name.trim()) {
               try {
@@ -65,9 +67,9 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
                 console.error('Error creating group:', error);
                 // Error handled by store, but also show alert
                 Alert.alert(
-                  'Erreur',
-                  `Impossible de créer le groupe: ${
-                    error instanceof Error ? error.message : 'Erreur inconnue'
+                  t('common.error'),
+                  `${t('groups.errorCreatingGroup')}: ${
+                    error instanceof Error ? error.message : t('groups.unknownError')
                   }`
                 );
               }
@@ -85,7 +87,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
   const handleJoinWithCode = async () => {
     if (!joinCode.trim()) {
-      Alert.alert('Erreur', "Veuillez entrer un code d'invitation");
+      Alert.alert(t('common.error'), t('groups.pleaseEnterInvitationCode'));
       return;
     }
 
@@ -132,13 +134,17 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
             <View style={styles.statIconContainer}>
               <Ionicons name="people" size={14} color="#4ECDC4" />
             </View>
-            <Text style={styles.statText}>{item.memberCount} membres</Text>
+            <Text style={styles.statText}>
+              {item.memberCount} {t('groups.members')}
+            </Text>
           </View>
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
               <Ionicons name="trophy" size={14} color="#FF6B9D" />
             </View>
-            <Text style={styles.statText}>{item.gameCount} parties</Text>
+            <Text style={styles.statText}>
+              {item.gameCount} {t('groups.games')}
+            </Text>
           </View>
         </View>
 
@@ -154,10 +160,8 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="people-outline" size={64} color="#ccc" />
-      <Text style={styles.emptyStateTitle}>Aucun groupe</Text>
-      <Text style={styles.emptyStateText}>
-        Créez votre premier groupe ou rejoignez-en un avec un code d'invitation
-      </Text>
+      <Text style={styles.emptyStateTitle}>{t('groups.noGroups')}</Text>
+      <Text style={styles.emptyStateText}>{t('groups.noGroupsSubtitle')}</Text>
     </View>
   );
 
@@ -165,7 +169,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Chargement des groupes...</Text>
+        <Text style={styles.loadingText}>{t('groups.loadingGroups')}</Text>
       </View>
     );
   }
@@ -183,8 +187,8 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
             <View style={styles.actionCardIcon}>
               <Ionicons name="add-circle" size={32} color="#fff" />
             </View>
-            <Text style={styles.actionCardTitle}>Créer un groupe</Text>
-            <Text style={styles.actionCardSubtitle}>Commencez votre aventure</Text>
+            <Text style={styles.actionCardTitle}>{t('groups.createGroup')}</Text>
+            <Text style={styles.actionCardSubtitle}>{t('groups.createGroupSubtitle')}</Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -200,8 +204,8 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
             <View style={styles.actionCardIcon}>
               <Ionicons name="people" size={32} color="#fff" />
             </View>
-            <Text style={styles.actionCardTitle}>Rejoindre un groupe</Text>
-            <Text style={styles.actionCardSubtitle}>Avec un code d'invitation</Text>
+            <Text style={styles.actionCardTitle}>{t('groups.joinGroup')}</Text>
+            <Text style={styles.actionCardSubtitle}>{t('groups.joinGroupSubtitle')}</Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -242,13 +246,13 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
       {showJoinModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Rejoindre un groupe</Text>
-            <Text style={styles.modalSubtitle}>Entrez le code d'invitation du groupe</Text>
+            <Text style={styles.modalTitle}>{t('groups.joinGroup')}</Text>
+            <Text style={styles.modalSubtitle}>{t('groups.enterInvitationCode')}</Text>
 
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Code d'invitation"
+                placeholder={t('groups.invitationCode')}
                 value={joinCode}
                 onChangeText={setJoinCode}
                 autoCapitalize="characters"
@@ -264,14 +268,14 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
                   setJoinCode('');
                 }}
               >
-                <Text style={styles.cancelButtonText}>Annuler</Text>
+                <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleJoinWithCode}
               >
-                <Text style={styles.confirmButtonText}>Rejoindre</Text>
+                <Text style={styles.confirmButtonText}>{t('groups.joinGroup')}</Text>
               </TouchableOpacity>
             </View>
           </View>

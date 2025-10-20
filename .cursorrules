@@ -337,4 +337,214 @@ const { width } = Dimensions.get('window');
 // Use for responsive layouts when needed
 ```
 
+## 🌍 Internationalization (i18n) Guidelines
+
+### **MANDATORY Translation Rules:**
+
+#### **For ALL New Text:**
+
+1. **NEVER hardcode text strings** - Always use translation keys
+2. **Use the `useTranslation` hook** in every component with text
+3. **Add translations to both** `en.json` and `fr.json` files
+4. **Follow the translation key structure** from existing files
+
+#### **Required Imports for Components with Text:**
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+// In component:
+const { t } = useTranslation();
+```
+
+#### **Translation Key Structure:**
+
+```typescript
+// Use nested keys for organization
+t('groups.createGroup'); // ✅ Good
+t('common.loading'); // ✅ Good
+t('error'); // ❌ Too generic
+```
+
+#### **When Creating New Screens/Components:**
+
+1. **Add ALL text to translation files** before implementing
+2. **Use translation keys** for every string (buttons, labels, messages, etc.)
+3. **Test both languages** to ensure proper display
+4. **Add new translation keys** to both `en.json` and `fr.json`
+
+#### **When Modifying Existing Screens/Components:**
+
+1. **Audit ALL hardcoded text** and replace with translation keys
+2. **Add missing translations** to both language files
+3. **Update existing translation keys** if text changes
+4. **Ensure consistent terminology** across the app
+
+#### **Translation File Organization:**
+
+```json
+{
+  "common": {
+    /* Shared text like buttons, loading, errors */
+  },
+  "auth": {
+    /* Authentication related text */
+  },
+  "groups": {
+    /* Groups screen text */
+  },
+  "profile": {
+    /* Profile screen text */
+  },
+  "navigation": {
+    /* Navigation labels */
+  },
+  "errors": {
+    /* Error messages */
+  }
+}
+```
+
+#### **Text Implementation Examples:**
+
+```typescript
+// ✅ CORRECT - Using translations
+<Text style={styles.title}>{t('groups.title')}</Text>
+<TouchableOpacity onPress={handleCreate}>
+  <Text>{t('groups.createGroup')}</Text>
+</TouchableOpacity>
+
+// ❌ WRONG - Hardcoded text
+<Text style={styles.title}>Groups</Text>
+<TouchableOpacity onPress={handleCreate}>
+  <Text>Create Group</Text>
+</TouchableOpacity>
+```
+
+#### **Alert and Modal Text:**
+
+```typescript
+// ✅ CORRECT
+Alert.alert(t('groups.createGroup'), t('groups.enterGroupName'), [
+  { text: t('common.cancel'), style: 'cancel' },
+  { text: t('common.confirm'), onPress: handleCreate }
+]);
+
+// ❌ WRONG
+Alert.alert('Create Group', 'Enter group name', [
+  { text: 'Cancel', style: 'cancel' },
+  { text: 'Create', onPress: handleCreate }
+]);
+```
+
+#### **Dynamic Text with Variables:**
+
+```typescript
+// ✅ CORRECT - Use interpolation
+t('groups.memberCount', { count: item.memberCount })
+t('groups.memberCount', { count: 5 }) // "5 members" or "5 membres"
+
+// Translation file:
+"memberCount": "{{count}} members" // EN
+"memberCount": "{{count}} membres" // FR
+```
+
+#### **Language Switcher Integration:**
+
+- **Add LanguageSwitcher component** to settings/profile screens
+- **Use the useLanguage hook** for language-specific logic
+- **Test language switching** functionality
+
+#### **Quality Checklist for Translations:**
+
+- [ ] All text uses `t()` function
+- [ ] No hardcoded strings in components
+- [ ] Both EN and FR translations exist
+- [ ] Translation keys follow naming convention
+- [ ] Dynamic text uses interpolation
+- [ ] Error messages are translated
+- [ ] Alert/modal text is translated
+- [ ] Navigation labels are translated
+- [ ] Language switcher works properly
+
+#### **Common Translation Patterns:**
+
+```typescript
+// Loading states
+{
+  t('common.loading');
+}
+
+// Error handling
+{
+  t('errors.networkError');
+}
+
+// Form labels
+{
+  t('auth.email');
+}
+{
+  t('auth.password');
+}
+
+// Action buttons
+{
+  t('common.save');
+}
+{
+  t('common.cancel');
+}
+{
+  t('common.delete');
+}
+
+// Status messages
+{
+  t('groups.groupCreated');
+}
+{
+  t('groups.groupJoined');
+}
+```
+
+#### **When Working on Existing Components:**
+
+1. **Search for hardcoded strings** using quotes
+2. **Replace with translation keys** systematically
+3. **Add missing keys** to translation files
+4. **Test in both languages** after changes
+5. **Update any new text** that gets added
+
+#### **Translation File Maintenance:**
+
+- **Keep keys organized** by feature/screen
+- **Use consistent naming** (camelCase, descriptive)
+- **Add comments** for complex translations
+- **Validate JSON syntax** before committing
+- **Test all keys** are used in the app
+
+### **Example Translation Implementation:**
+
+```typescript
+// Component with proper translations
+import { useTranslation } from 'react-i18next';
+
+export default function MyComponent() {
+  const { t } = useTranslation();
+
+  return (
+    <View>
+      <Text style={styles.title}>{t('myComponent.title')}</Text>
+      <TouchableOpacity onPress={handleAction}>
+        <Text>{t('myComponent.actionButton')}</Text>
+      </TouchableOpacity>
+      {error && <Text style={styles.error}>{t('errors.generic')}</Text>}
+    </View>
+  );
+}
+```
+
 Remember: **Consistency is key!** Every screen should feel like part of the same beautiful, modern, and playful app experience. Use the GroupsScreen as your reference implementation and apply these patterns consistently across all screens.
+
+**🌍 TRANSLATION RULE: NO HARDCODED TEXT ALLOWED - EVERY STRING MUST USE TRANSLATIONS!**
