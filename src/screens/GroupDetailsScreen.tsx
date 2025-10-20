@@ -10,7 +10,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   ScrollView,
-  Clipboard
+  Clipboard,
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +34,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   const { user } = useAuthStore();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { height } = Dimensions.get('window');
   const {
     currentGroup,
     currentGroupMembers,
@@ -144,7 +146,11 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
         <View style={styles.playerInfo}>
           <View style={styles.playerNameContainer}>
-            <Text style={[styles.playerName, isCurrentUser && styles.currentUserText]}>
+            <Text
+              style={[styles.playerName, isCurrentUser && styles.currentUserText]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {member.displayName}
             </Text>
             {isMemberAdmin && (
@@ -153,7 +159,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
               </View>
             )}
           </View>
-          <Text style={styles.playerStats}>
+          <Text style={styles.playerStats} numberOfLines={1} ellipsizeMode="tail">
             {item.gamesPlayed} parties • {item.wins}V {item.losses}D {item.draws}N
           </Text>
         </View>
@@ -237,6 +243,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#667eea']} />
         }
+        contentContainerStyle={{ paddingBottom: height * 0.2 }}
       >
         {/* Header with Back Button and Group Info */}
         <View style={styles.header}>
@@ -253,52 +260,9 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
           </View>
         </View>
 
-        {/* Action Cards */}
-        <View style={styles.actionCardsContainer}>
-          <TouchableOpacity style={styles.actionCard} onPress={handleNewMatch}>
-            <View style={[styles.actionCardGradient, { backgroundColor: '#FF6B9D' }]}>
-              <View style={styles.actionCardContent}>
-                <View style={styles.actionCardIcon}>
-                  <Ionicons name="add" size={32} color="#fff" />
-                </View>
-                <Text style={styles.actionCardTitle}>{t('groupDetails.newMatch')}</Text>
-                <Text style={styles.actionCardSubtitle}>
-                  {t('groupDetails.needAtLeastTwoPlayers')}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
+        {/* Action Card removed in favor of FAB */}
 
-        {/* Group Stats Card */}
-        <View style={styles.card}>
-          <View style={[styles.cardGradient, { backgroundColor: '#667eea' }]}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="people" size={20} color="#fff" />
-              </View>
-              <Text style={styles.cardTitle}>{t('groupDetails.members')}</Text>
-            </View>
-            <View style={styles.cardContent}>
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <View style={styles.statIconContainer}>
-                    <Ionicons name="people" size={14} color="#667eea" />
-                  </View>
-                  <Text style={styles.statValue}>{currentGroup.memberCount}</Text>
-                  <Text style={styles.statLabel}>{t('groups.members')}</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <View style={styles.statIconContainer}>
-                    <Ionicons name="trophy" size={14} color="#667eea" />
-                  </View>
-                  <Text style={styles.statValue}>{currentGroup.gameCount}</Text>
-                  <Text style={styles.statLabel}>{t('groups.games')}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
+        {/* Group Stats Card removed; stats moved inline with tabs */}
 
         {/* Invitation Code Card for Admins */}
         {isAdmin && currentGroup?.invitationCode && (
@@ -325,23 +289,33 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         {/* Tab Navigation Card */}
         <View style={styles.card}>
           <View style={[styles.cardGradient, { backgroundColor: '#fff' }]}>
-            <View style={styles.tabContainer}>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === 'ranking' && styles.activeTab]}
-                onPress={() => setActiveTab('ranking')}
-              >
-                <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>
-                  {t('groupDetails.ranking')}
+            <View style={styles.tabRow}>
+              <View style={styles.tabContainer}>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === 'ranking' && styles.activeTab]}
+                  onPress={() => setActiveTab('ranking')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>
+                    {t('groupDetails.ranking')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === 'games' && styles.activeTab]}
+                  onPress={() => setActiveTab('games')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'games' && styles.activeTabText]}>
+                    {t('groupDetails.games')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.tabStatsRow}>
+                <Text style={styles.tabStatsText} numberOfLines={1}>
+                  {currentGroup.memberCount} {t('groups.members')}
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === 'games' && styles.activeTab]}
-                onPress={() => setActiveTab('games')}
-              >
-                <Text style={[styles.tabText, activeTab === 'games' && styles.activeTabText]}>
-                  {t('groupDetails.games')}
+                <Text style={styles.tabStatsText} numberOfLines={1}>
+                  {currentGroup.gameCount} {t('groups.games')}
                 </Text>
-              </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -372,6 +346,15 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
           />
         )}
       </ScrollView>
+      <TouchableOpacity
+        style={[styles.fab, { bottom: insets.bottom + 24 }]}
+        onPress={handleNewMatch}
+        accessibilityRole="button"
+        accessibilityLabel={t('groupDetails.newMatch')}
+      >
+        <Ionicons name="add" size={20} color="#fff" />
+        <Text style={styles.fabText}>{t('groupDetails.newMatch')}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -606,6 +589,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 4
   },
+  tabRow: {
+    flexDirection: 'column',
+    gap: 12
+  },
+  tabStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
   tab: {
     flex: 1,
     paddingVertical: 12,
@@ -628,6 +620,12 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#fff'
   },
+  tabStatsText: {
+    marginLeft: 12,
+    color: '#4A5568',
+    fontSize: 14,
+    fontWeight: '500'
+  },
   // List Styles
   listContainer: {
     paddingHorizontal: 20
@@ -642,8 +640,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 20,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 8,
     borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -657,11 +655,11 @@ const styles = StyleSheet.create({
     borderColor: '#667eea'
   },
   rankingPosition: {
-    width: 40,
+    width: 32,
     alignItems: 'center'
   },
   positionText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#2D3748'
   },
@@ -695,7 +693,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   playerStats: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     color: '#718096'
   },
@@ -703,7 +701,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end'
   },
   ratingText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#2D3748'
   },
@@ -782,6 +780,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#c62828',
+    marginLeft: 8
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    backgroundColor: '#FF6B9D',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 8
   }
 });
