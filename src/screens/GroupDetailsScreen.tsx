@@ -198,6 +198,17 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     </View>
   );
 
+  const renderLeaveGroupFooter = () => (
+    <View style={styles.leaveGroupContainer}>
+      <TouchableOpacity style={styles.leaveGroupButton} onPress={handleLeaveGroup}>
+        <View style={styles.leaveGroupButtonContent}>
+          <Ionicons name="exit-outline" size={20} color="#c62828" />
+          <Text style={styles.leaveGroupButtonText}>{t('groupDetails.leaveGroup')}</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (isLoading && !currentGroup) {
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
@@ -221,17 +232,17 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#007AFF']} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#667eea']} />
         }
       >
         {/* Header with Back Button and Group Info */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color="#333" />
+              <Ionicons name="arrow-back" size={24} color="#2D3748" />
             </TouchableOpacity>
             <View style={styles.groupInfo}>
               <Text style={styles.groupName}>{currentGroup.name}</Text>
@@ -240,73 +251,102 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
               )}
             </View>
           </View>
+        </View>
 
-          <View style={styles.groupStats}>
-            <View style={styles.statItem}>
-              <Ionicons name="people" size={16} color="#007AFF" />
-              <Text style={styles.statText}>
-                {currentGroup.memberCount} {t('groups.members')}
-              </Text>
+        {/* Action Cards */}
+        <View style={styles.actionCardsContainer}>
+          <TouchableOpacity style={styles.actionCard} onPress={handleNewMatch}>
+            <View style={[styles.actionCardGradient, { backgroundColor: '#FF6B9D' }]}>
+              <View style={styles.actionCardContent}>
+                <View style={styles.actionCardIcon}>
+                  <Ionicons name="add" size={32} color="#fff" />
+                </View>
+                <Text style={styles.actionCardTitle}>{t('groupDetails.newMatch')}</Text>
+                <Text style={styles.actionCardSubtitle}>
+                  {t('groupDetails.needAtLeastTwoPlayers')}
+                </Text>
+              </View>
             </View>
-            <View style={styles.statItem}>
-              <Ionicons name="trophy" size={16} color="#FF9500" />
-              <Text style={styles.statText}>
-                {currentGroup.gameCount} {t('groups.games')}
-              </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Group Stats Card */}
+        <View style={styles.card}>
+          <View style={[styles.cardGradient, { backgroundColor: '#667eea' }]}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="people" size={20} color="#fff" />
+              </View>
+              <Text style={styles.cardTitle}>{t('groupDetails.members')}</Text>
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <View style={styles.statIconContainer}>
+                    <Ionicons name="people" size={14} color="#667eea" />
+                  </View>
+                  <Text style={styles.statValue}>{currentGroup.memberCount}</Text>
+                  <Text style={styles.statLabel}>{t('groups.members')}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <View style={styles.statIconContainer}>
+                    <Ionicons name="trophy" size={14} color="#667eea" />
+                  </View>
+                  <Text style={styles.statValue}>{currentGroup.gameCount}</Text>
+                  <Text style={styles.statLabel}>{t('groups.games')}</Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Invitation Code Section for Admins */}
+        {/* Invitation Code Card for Admins */}
         {isAdmin && currentGroup?.invitationCode && (
-          <View style={styles.inviteCodeContainer}>
-            <View style={styles.inviteCodeHeader}>
-              <Ionicons name="link" size={20} color="#667eea" />
-              <Text style={styles.inviteCodeTitle}>{t('groupDetails.invitationCode')}</Text>
-            </View>
-            <View style={styles.inviteCodeDisplay}>
-              <Text style={styles.inviteCodeText}>{currentGroup.invitationCode}</Text>
-              <TouchableOpacity style={styles.copyButton} onPress={handleCopyInviteCode}>
-                <Ionicons name="copy-outline" size={16} color="#667eea" />
-              </TouchableOpacity>
+          <View style={styles.card}>
+            <View style={[styles.cardGradient, { backgroundColor: '#4ECDC4' }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="link" size={20} color="#fff" />
+                </View>
+                <Text style={styles.cardTitle}>{t('groupDetails.invitationCode')}</Text>
+              </View>
+              <View style={styles.cardContent}>
+                <View style={styles.inviteCodeDisplay}>
+                  <Text style={styles.inviteCodeText}>{currentGroup.invitationCode}</Text>
+                  <TouchableOpacity style={styles.copyButton} onPress={handleCopyInviteCode}>
+                    <Ionicons name="copy-outline" size={16} color="#4ECDC4" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
         )}
 
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleNewMatch}>
-            <Ionicons name="add" size={20} color="#fff" />
-            <Text style={styles.primaryButtonText}>{t('groupDetails.newMatch')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleLeaveGroup}>
-            <Ionicons name="exit-outline" size={20} color="#ff3b30" />
-            <Text style={styles.secondaryButtonText}>{t('groupDetails.leaveGroup')}</Text>
-          </TouchableOpacity>
+        {/* Tab Navigation Card */}
+        <View style={styles.card}>
+          <View style={[styles.cardGradient, { backgroundColor: '#fff' }]}>
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'ranking' && styles.activeTab]}
+                onPress={() => setActiveTab('ranking')}
+              >
+                <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>
+                  {t('groupDetails.ranking')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'games' && styles.activeTab]}
+                onPress={() => setActiveTab('games')}
+              >
+                <Text style={[styles.tabText, activeTab === 'games' && styles.activeTabText]}>
+                  {t('groupDetails.games')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
-        {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'ranking' && styles.activeTab]}
-            onPress={() => setActiveTab('ranking')}
-          >
-            <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>
-              {t('groupDetails.ranking')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'games' && styles.activeTab]}
-            onPress={() => setActiveTab('games')}
-          >
-            <Text style={[styles.tabText, activeTab === 'games' && styles.activeTabText]}>
-              {t('groupDetails.games')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Content */}
+        {/* Content Cards */}
         {activeTab === 'ranking' ? (
           <FlatList
             data={currentSeasonRatings}
@@ -316,6 +356,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
               currentSeasonRatings.length === 0 ? styles.emptyContainer : styles.listContainer
             }
             ListEmptyComponent={renderEmptyRanking}
+            ListFooterComponent={renderLeaveGroupFooter}
             scrollEnabled={false}
           />
         ) : (
@@ -338,12 +379,18 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F8F9FF'
+  },
+  header: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0'
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 16
   },
   backButton: {
@@ -351,187 +398,239 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12
+    marginRight: 12,
+    borderRadius: 20,
+    backgroundColor: '#F7FAFC'
   },
   groupInfo: {
     flex: 1,
     justifyContent: 'center'
   },
+  groupName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
+    textTransform: 'capitalize'
+  },
+  groupDescription: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#4A5568',
+    marginTop: 4
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F8F9FF'
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666'
+    fontWeight: '500',
+    color: '#4A5568'
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FF',
     padding: 32
   },
   errorTitle: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    color: '#2D3748',
     marginTop: 16,
     marginBottom: 8
   },
   errorText: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: '500',
+    color: '#4A5568',
     textAlign: 'center',
     marginBottom: 24
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
     paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
   retryButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '500'
+    fontWeight: '600'
   },
-  header: {
-    backgroundColor: '#fff',
+  // Action Cards
+  actionCardsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 12
+  },
+  actionCard: {
+    flex: 1,
+    height: 120,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  actionCardGradient: {
+    flex: 1,
+    borderRadius: 20,
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
+    justifyContent: 'center'
   },
-  groupName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textTransform: 'capitalize'
+  actionCardContent: {
+    alignItems: 'center'
   },
-  groupDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 16
-  },
-  groupStats: {
-    flexDirection: 'row'
-  },
-  statItem: {
-    flexDirection: 'row',
+  actionCardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16
+    marginBottom: 8
   },
-  statText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#666'
-  },
-  inviteCodeContainer: {
-    backgroundColor: '#fff',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0'
-  },
-  inviteCodeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  inviteCodeTitle: {
+  actionCardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginLeft: 8
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 4
   },
+  actionCardSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center'
+  },
+  // Card System
+  card: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  cardGradient: {
+    borderRadius: 20,
+    padding: 20
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff'
+  },
+  cardContent: {
+    // Content styles
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around'
+  },
+  statItem: {
+    alignItems: 'center'
+  },
+  statIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4
+  },
+  statLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)'
+  },
+  // Invitation Code
   inviteCodeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9ff',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0'
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 16,
+    borderRadius: 12
   },
   inviteCodeText: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#667eea',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
     fontFamily: 'monospace'
   },
   copyButton: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0'
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)'
   },
-  actionsContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12
-  },
-  primaryButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    borderRadius: 8
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8
-  },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ff3b30'
-  },
-  secondaryButtonText: {
-    color: '#ff3b30',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8
-  },
+  // Tab Navigation
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16
+    backgroundColor: '#F7FAFC',
+    borderRadius: 16,
+    padding: 4
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center'
+    alignItems: 'center',
+    borderRadius: 12
   },
   activeTab: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8
+    backgroundColor: '#667eea',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
   tabText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#666'
+    fontWeight: '600',
+    color: '#4A5568'
   },
   activeTabText: {
     color: '#fff'
   },
+  // List Styles
   listContainer: {
-    paddingHorizontal: 16
+    paddingHorizontal: 20
   },
   emptyContainer: {
     flex: 1,
@@ -543,14 +642,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8
+    padding: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
   },
   currentUserItem: {
-    backgroundColor: '#e3f2fd',
-    borderWidth: 1,
-    borderColor: '#007AFF'
+    backgroundColor: '#E3F2FD',
+    borderWidth: 2,
+    borderColor: '#667eea'
   },
   rankingPosition: {
     width: 40,
@@ -558,11 +662,11 @@ const styles = StyleSheet.create({
   },
   positionText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333'
+    fontWeight: '700',
+    color: '#2D3748'
   },
   currentUserText: {
-    color: '#007AFF'
+    color: '#667eea'
   },
   playerInfo: {
     flex: 1,
@@ -571,12 +675,12 @@ const styles = StyleSheet.create({
   playerNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2
+    marginBottom: 4
   },
   playerName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333'
+    fontWeight: '600',
+    color: '#2D3748'
   },
   adminBadge: {
     backgroundColor: '#667eea',
@@ -591,62 +695,49 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   playerStats: {
-    fontSize: 12,
-    color: '#666'
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#718096'
   },
   ratingContainer: {
     alignItems: 'flex-end'
   },
   ratingText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4
-  },
-  ratingChange: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4caf50',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4
-  },
-  positiveChange: {
-    backgroundColor: '#4caf50'
-  },
-  negativeChange: {
-    backgroundColor: '#f44336'
-  },
-  ratingChangeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '500',
-    marginLeft: 2
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2D3748'
   },
   gameItem: {
     backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8
+    padding: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
   },
   gameHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4
+    marginBottom: 8
   },
   gameDate: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333'
+    fontWeight: '600',
+    color: '#2D3748'
   },
   gameTime: {
     fontSize: 14,
-    color: '#666'
+    fontWeight: '500',
+    color: '#718096'
   },
   gameParticipants: {
     fontSize: 14,
-    color: '#666'
+    fontWeight: '500',
+    color: '#718096'
   },
   emptyState: {
     alignItems: 'center'
@@ -654,14 +745,43 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#2D3748',
     marginTop: 16,
     marginBottom: 8
   },
   emptyStateText: {
     fontSize: 14,
-    color: '#666',
+    fontWeight: '500',
+    color: '#718096',
     textAlign: 'center',
     lineHeight: 20
+  },
+  // Leave Group Footer
+  leaveGroupContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20
+  },
+  leaveGroupButton: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 2,
+    borderColor: '#c62828'
+  },
+  leaveGroupButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  leaveGroupButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#c62828',
+    marginLeft: 8
   }
 });
