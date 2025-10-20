@@ -101,15 +101,21 @@
     "experience": "Expérience"
   },
   "matchEntry": {
-    "title": "Saisir une partie",
-    "selectGame": "Sélectionner un jeu",
-    "selectOpponent": "Sélectionner un adversaire",
-    "enterScore": "Saisir le score",
-    "yourScore": "Votre score",
-    "opponentScore": "Score de l'adversaire",
-    "submitMatch": "Soumettre la partie",
-    "matchSubmitted": "Partie soumise avec succès !",
-    "errorSubmittingMatch": "Erreur lors de la soumission de la partie"
+    "title": "Nouvelle Partie",
+    "instructions": "Sélectionnez les joueurs et ordonnez-les selon leur classement final. Glissez-déposez pour réorganiser l'ordre.",
+    "selectedPlayers": "Joueurs sélectionnés",
+    "availablePlayers": "Joueurs disponibles",
+    "noPlayersSelected": "Aucun joueur sélectionné",
+    "selectPlayersBelow": "Sélectionnez des joueurs ci-dessous",
+    "allPlayersSelected": "Tous les joueurs sont sélectionnés",
+    "position": "Position",
+    "saveMatch": "Enregistrer la partie",
+    "confirmMatch": "Confirmer la partie",
+    "confirmMatchMessage": "Êtes-vous sûr de vouloir enregistrer cette partie avec {{count}} joueurs ?",
+    "matchRecorded": "La partie a été enregistrée avec succès !",
+    "errorRecordingMatch": "Impossible d'enregistrer la partie",
+    "needAtLeastTwoPlayers": "Il faut au moins 2 joueurs pour créer une partie",
+    "noActiveSeason": "Aucune saison active trouvée"
   },
   "subscription": {
     "title": "Abonnement",

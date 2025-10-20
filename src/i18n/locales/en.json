@@ -101,15 +101,21 @@
     "experience": "Experience"
   },
   "matchEntry": {
-    "title": "Enter Match",
-    "selectGame": "Select Game",
-    "selectOpponent": "Select Opponent",
-    "enterScore": "Enter Score",
-    "yourScore": "Your Score",
-    "opponentScore": "Opponent Score",
-    "submitMatch": "Submit Match",
-    "matchSubmitted": "Match submitted successfully!",
-    "errorSubmittingMatch": "Error submitting match"
+    "title": "New Match",
+    "instructions": "Select players and order them according to their final ranking. Drag and drop to reorganize the order.",
+    "selectedPlayers": "Selected Players",
+    "availablePlayers": "Available Players",
+    "noPlayersSelected": "No players selected",
+    "selectPlayersBelow": "Select players below",
+    "allPlayersSelected": "All players are selected",
+    "position": "Position",
+    "saveMatch": "Save Match",
+    "confirmMatch": "Confirm Match",
+    "confirmMatchMessage": "Are you sure you want to record this match with {{count}} players?",
+    "matchRecorded": "Match recorded successfully!",
+    "errorRecordingMatch": "Unable to record the match",
+    "needAtLeastTwoPlayers": "You need at least 2 players to create a match",
+    "noActiveSeason": "No active season found"
   },
   "subscription": {
     "title": "Subscription",

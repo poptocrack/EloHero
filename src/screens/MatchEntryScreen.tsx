@@ -7,10 +7,11 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  ScrollView
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator
@@ -32,6 +33,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   const { groupId } = route.params;
   const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const {
     currentGroupMembers,
     matchEntry,
@@ -73,17 +75,17 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
 
   const handleSubmitMatch = async () => {
     if (matchEntry.playerOrder.length < 2) {
-      Alert.alert('Erreur', 'Il faut au moins 2 joueurs pour créer une partie');
+      Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoPlayers'));
       return;
     }
 
     Alert.alert(
-      'Confirmer la partie',
-      `Êtes-vous sûr de vouloir enregistrer cette partie avec ${matchEntry.playerOrder.length} joueurs ?`,
+      t('matchEntry.confirmMatch'),
+      t('matchEntry.confirmMatchMessage', { count: matchEntry.playerOrder.length }),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Confirmer',
+          text: t('common.confirm'),
           onPress: async () => {
             try {
               // Convert player order to participants with placements
@@ -98,17 +100,17 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
               // Get current season (assuming first active season for now)
               const currentSeason = useGroupStore.getState().currentSeason;
               if (!currentSeason) {
-                Alert.alert('Erreur', 'Aucune saison active trouvée');
+                Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
                 return;
               }
 
               await reportMatch(groupId, currentSeason.id, participants);
 
-              Alert.alert('Partie enregistrée', 'La partie a été enregistrée avec succès !', [
-                { text: 'OK', onPress: () => navigation.goBack() }
+              Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
+                { text: t('common.done'), onPress: () => navigation.goBack() }
               ]);
             } catch (error) {
-              Alert.alert('Erreur', "Impossible d'enregistrer la partie");
+              Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
             }
           }
         }
@@ -148,7 +150,8 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
         <View style={styles.playerInfo}>
           <Text style={styles.playerName}>{item.displayName}</Text>
           <Text style={styles.placementText}>
-            Position: {matchEntry.playerOrder.findIndex((p) => p.uid === item.uid) + 1}
+            {t('matchEntry.position')}:{' '}
+            {matchEntry.playerOrder.findIndex((p) => p.uid === item.uid) + 1}
           </Text>
         </View>
 
@@ -160,28 +163,38 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView style={styles.scrollContainer}>
-        {/* Instructions */}
-        <View style={styles.instructionsContainer}>
-          <Text style={styles.instructionsTitle}>Nouvelle Partie</Text>
-          <Text style={styles.instructionsText}>
-            Sélectionnez les joueurs et ordonnez-les selon leur classement final. Glissez-déposez
-            pour réorganiser l'ordre.
-          </Text>
-        </View>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
+      {/* Header with Back Button */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#667eea" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t('matchEntry.title')}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
-        {/* Selected Players */}
-        <View style={styles.section}>
+      {/* Instructions Card */}
+      <View style={styles.instructionsCard}>
+        <View style={styles.cardGradient}>
+          <Text style={styles.instructionsTitle}>{t('matchEntry.title')}</Text>
+          <Text style={styles.instructionsText}>{t('matchEntry.instructions')}</Text>
+        </View>
+      </View>
+
+      {/* Selected Players Card */}
+      <View style={styles.sectionCard}>
+        <View style={styles.cardGradient}>
           <Text style={styles.sectionTitle}>
-            Joueurs sélectionnés ({matchEntry.playerOrder.length})
+            {t('matchEntry.selectedPlayers')} ({matchEntry.playerOrder.length})
           </Text>
 
           {matchEntry.playerOrder.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="people-outline" size={48} color="#ccc" />
-              <Text style={styles.emptyStateText}>Aucun joueur sélectionné</Text>
-              <Text style={styles.emptyStateSubtext}>Sélectionnez des joueurs ci-dessous</Text>
+              <View style={styles.emptyStateIcon}>
+                <Ionicons name="people-outline" size={32} color="#667eea" />
+              </View>
+              <Text style={styles.emptyStateText}>{t('matchEntry.noPlayersSelected')}</Text>
+              <Text style={styles.emptyStateSubtext}>{t('matchEntry.selectPlayersBelow')}</Text>
             </View>
           ) : (
             <DraggableFlatList
@@ -193,15 +206,21 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
             />
           )}
         </View>
+      </View>
 
-        {/* Available Players */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Joueurs disponibles ({availablePlayers.length})</Text>
+      {/* Available Players Card */}
+      <View style={styles.sectionCard}>
+        <View style={styles.cardGradient}>
+          <Text style={styles.sectionTitle}>
+            {t('matchEntry.availablePlayers')} ({availablePlayers.length})
+          </Text>
 
           {availablePlayers.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="checkmark-circle-outline" size={48} color="#4caf50" />
-              <Text style={styles.emptyStateText}>Tous les joueurs sont sélectionnés</Text>
+              <View style={styles.emptyStateIcon}>
+                <Ionicons name="checkmark-circle-outline" size={32} color="#4ECDC4" />
+              </View>
+              <Text style={styles.emptyStateText}>{t('matchEntry.allPlayersSelected')}</Text>
             </View>
           ) : (
             <View style={styles.availablePlayersList}>
@@ -209,7 +228,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
             </View>
           )}
         </View>
-      </ScrollView>
+      </View>
 
       {/* Submit Button */}
       <View style={styles.submitContainer}>
@@ -226,7 +245,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           ) : (
             <>
               <Ionicons name="checkmark" size={20} color="#fff" />
-              <Text style={styles.submitButtonText}>Enregistrer la partie</Text>
+              <Text style={styles.submitButtonText}>{t('matchEntry.saveMatch')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -235,41 +254,81 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   );
 }
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F8F9FF'
   },
-  scrollContainer: {
-    flex: 1
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#F8F9FF'
   },
-  instructionsContainer: {
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
+    textAlign: 'center',
+    marginHorizontal: 16
+  },
+  headerSpacer: {
+    width: 40
+  },
+  instructionsCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  cardGradient: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
+    borderRadius: 20,
+    padding: 20
   },
   instructionsTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
     marginBottom: 8
   },
   instructionsText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#4A5568',
+    lineHeight: 24
   },
-  section: {
-    marginTop: 16,
-    backgroundColor: '#fff',
-    padding: 16
+  sectionCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 12
+    color: '#2D3748',
+    marginBottom: 16
   },
   draggableList: {
     paddingBottom: 8
@@ -277,24 +336,24 @@ const styles = StyleSheet.create({
   selectedPlayerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    marginBottom: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0'
+    backgroundColor: '#F7FAFC',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#E2E8F0'
   },
   draggingItem: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#007AFF',
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    borderColor: '#667eea',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 4
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8
   },
   dragHandle: {
     marginRight: 12,
@@ -304,7 +363,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12
@@ -319,60 +378,75 @@ const styles = StyleSheet.create({
   },
   playerName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 2
+    fontWeight: '600',
+    color: '#2D3748',
+    marginBottom: 4
   },
   placementText: {
-    fontSize: 12,
-    color: '#666'
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#718096'
   },
   removeButton: {
     padding: 4
   },
   availablePlayersList: {
-    gap: 8
+    gap: 12
   },
   availablePlayerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0'
+    backgroundColor: '#F7FAFC',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#E2E8F0'
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 32
   },
+  emptyStateIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16
+  },
   emptyStateText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#666',
-    marginTop: 12,
-    marginBottom: 4
+    fontWeight: '600',
+    color: '#4A5568',
+    marginBottom: 8
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#999'
+    fontWeight: '500',
+    color: '#718096'
   },
   submitContainer: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0'
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: '#F8F9FF'
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
     paddingVertical: 16,
-    borderRadius: 8
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
   disabledButton: {
-    backgroundColor: '#ccc'
+    backgroundColor: '#E2E8F0'
   },
   submitButtonText: {
     color: '#fff',
