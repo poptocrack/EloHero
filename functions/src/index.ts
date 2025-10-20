@@ -206,11 +206,11 @@ export const createGroup = functions.https.onCall(async (data, context) => {
     await groupRef.set(groupData);
     console.log('createGroup: Group document created with ID:', groupRef.id);
 
-    // Add owner as member
+    // Add owner as member (composite membership id to support multi-group)
     console.log('createGroup: Adding owner as member...');
     await db
       .collection('members')
-      .doc(uid)
+      .doc(`${uid}_${groupRef.id}`)
       .set({
         uid,
         groupId: groupRef.id,
@@ -320,9 +320,9 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
     const groupData = groupDoc.data()!;
     const groupId = groupDoc.id;
 
-    // Check if user is already a member
-    const existingMember = await db.collection('members').doc(uid).get();
-    if (existingMember.exists && existingMember.data()?.groupId === groupId) {
+    // Check if user is already a member (composite membership id)
+    const existingMember = await db.collection('members').doc(`${uid}_${groupId}`).get();
+    if (existingMember.exists) {
       throw new functions.https.HttpsError(
         'already-exists',
         'You are already a member of this group'
@@ -344,10 +344,10 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       ? joinUserDoc.data()!.displayName || 'Anonymous'
       : context.auth.token.name || 'Anonymous';
 
-    // Add user as member
+    // Add user as member (composite membership id to support multi-group)
     await db
       .collection('members')
-      .doc(uid)
+      .doc(`${uid}_${groupId}`)
       .set({
         uid,
         groupId,
@@ -533,9 +533,9 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    // Verify user is a member of the group
-    const memberDoc = await db.collection('members').doc(uid).get();
-    if (!memberDoc.exists || memberDoc.data()?.groupId !== groupId) {
+    // Verify user is a member of the group (composite membership id)
+    const memberDoc = await db.collection('members').doc(`${uid}_${groupId}`).get();
+    if (!memberDoc.exists) {
       throw new functions.https.HttpsError(
         'permission-denied',
         'You are not a member of this group'
@@ -772,8 +772,8 @@ export const leaveGroup = functions.https.onCall(async (data, context) => {
       );
     }
 
-    // Remove user from group
-    await db.collection('members').doc(uid).delete();
+    // Remove user from group (composite membership id)
+    await db.collection('members').doc(`${uid}_${groupId}`).delete();
 
     // Update group member count
     await db

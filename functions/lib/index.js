@@ -154,9 +154,8 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             });
             console.log('createGroup: User document created');
         }
-        // Resolve displayName dynamically from user profile
-        const profileDisplayName = ((_a = (await db.collection('users').doc(uid).get()).data()) === null || _a === void 0 ? void 0 : _a.displayName) ||
-            context.auth.token.name || 'Anonymous';
+        // Always resolve displayName from Firestore to reflect user-updated pseudo
+        const userDisplayName = ((_a = (await db.collection('users').doc(uid).get()).data()) === null || _a === void 0 ? void 0 : _a.displayName) || 'Anonymous';
         const currentGroupsCount = ((_b = userDoc.data()) === null || _b === void 0 ? void 0 : _b.groupsCount) || 0;
         console.log('createGroup: Current groups count:', currentGroupsCount);
         if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
@@ -190,15 +189,15 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         };
         await groupRef.set(groupData);
         console.log('createGroup: Group document created with ID:', groupRef.id);
-        // Add owner as member with latest displayName from profile
+        // Add owner as member (composite membership id to support multi-group)
         console.log('createGroup: Adding owner as member...');
         await db
             .collection('members')
-            .doc(uid)
+            .doc(`${uid}_${groupRef.id}`)
             .set({
             uid,
             groupId: groupRef.id,
-            displayName: profileDisplayName,
+            displayName: userDisplayName,
             photoURL: context.auth.token.picture || null,
             joinedAt: firestore_1.FieldValue.serverTimestamp(),
             isActive: true
@@ -265,7 +264,6 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
 });
 // 2. Join Group with Code Function
 exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
-    var _a, _b;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -287,9 +285,9 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         const groupDoc = groupsQuery.docs[0];
         const groupData = groupDoc.data();
         const groupId = groupDoc.id;
-        // Check if user is already a member
-        const existingMember = await db.collection('members').doc(uid).get();
-        if (existingMember.exists && ((_a = existingMember.data()) === null || _a === void 0 ? void 0 : _a.groupId) === groupId) {
+        // Check if user is already a member (composite membership id)
+        const existingMember = await db.collection('members').doc(`${uid}_${groupId}`).get();
+        if (existingMember.exists) {
             throw new functions.https.HttpsError('already-exists', 'You are already a member of this group');
         }
         // Check user plan and group member limit
@@ -297,16 +295,19 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group member limit reached for your plan');
         }
-        // Add user as member with latest displayName from profile
+        // Resolve user's current display name from Firestore (dynamic pseudo)
+        const joinUserDoc = await db.collection('users').doc(uid).get();
+        const joinUserDisplayName = joinUserDoc.exists
+            ? joinUserDoc.data().displayName || 'Anonymous'
+            : context.auth.token.name || 'Anonymous';
+        // Add user as member (composite membership id to support multi-group)
         await db
             .collection('members')
-            .doc(uid)
+            .doc(`${uid}_${groupId}`)
             .set({
             uid,
             groupId,
-            displayName: ((_b = (await db.collection('users').doc(uid).get()).data()) === null || _b === void 0 ? void 0 : _b.displayName) ||
-                context.auth.token.name ||
-                'Anonymous',
+            displayName: joinUserDisplayName,
             photoURL: context.auth.token.picture || null,
             joinedAt: admin.firestore.FieldValue.serverTimestamp(),
             isActive: true
@@ -438,7 +439,6 @@ exports.createSeason = functions.https.onCall(async (data, context) => {
 });
 // 4. Report Match Function
 exports.reportMatch = functions.https.onCall(async (data, context) => {
-    var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -451,9 +451,9 @@ exports.reportMatch = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'At least 2 participants are required');
     }
     try {
-        // Verify user is a member of the group
-        const memberDoc = await db.collection('members').doc(uid).get();
-        if (!memberDoc.exists || ((_a = memberDoc.data()) === null || _a === void 0 ? void 0 : _a.groupId) !== groupId) {
+        // Verify user is a member of the group (composite membership id)
+        const memberDoc = await db.collection('members').doc(`${uid}_${groupId}`).get();
+        if (!memberDoc.exists) {
             throw new functions.https.HttpsError('permission-denied', 'You are not a member of this group');
         }
         // Get current ratings for all participants
@@ -644,8 +644,8 @@ exports.leaveGroup = functions.https.onCall(async (data, context) => {
         if (groupData.ownerId === uid) {
             throw new functions.https.HttpsError('permission-denied', 'Group owner cannot leave the group. Transfer ownership or delete the group instead.');
         }
-        // Remove user from group
-        await db.collection('members').doc(uid).delete();
+        // Remove user from group (composite membership id)
+        await db.collection('members').doc(`${uid}_${groupId}`).delete();
         // Update group member count
         await db
             .collection('groups')
