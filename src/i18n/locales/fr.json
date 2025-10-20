@@ -115,7 +115,16 @@
     "matchRecorded": "La partie a été enregistrée avec succès !",
     "errorRecordingMatch": "Impossible d'enregistrer la partie",
     "needAtLeastTwoPlayers": "Il faut au moins 2 joueurs pour créer une partie",
-    "noActiveSeason": "Aucune saison active trouvée"
+    "noActiveSeason": "Aucune saison active trouvée",
+    "addMember": "Ajouter un membre",
+    "addMemberModal": {
+      "title": "Ajouter un nouveau membre",
+      "memberName": "Nom du membre",
+      "enterMemberName": "Entrez le nom du membre",
+      "addMemberSuccess": "Membre ajouté avec succès !",
+      "addMemberError": "Impossible d'ajouter le membre",
+      "memberNameRequired": "Le nom du membre est requis"
+    }
   },
   "subscription": {
     "title": "Abonnement",

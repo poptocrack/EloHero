@@ -2,7 +2,7 @@
 // All write operations go through Cloud Functions as per cursor rules
 import { httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
-import { Group, Season, Game, Participant, Invite, ApiResponse } from '../types';
+import { Group, Season, Game, Participant, Invite, ApiResponse, Member } from '../types';
 
 export class CloudFunctionsService {
   // Create a new group
@@ -171,6 +171,17 @@ export class CloudFunctionsService {
       return result.data as ApiResponse<void>;
     } catch (error) {
       throw new Error(`Failed to reset season ratings: ${error}`);
+    }
+  }
+
+  // Add a new member to a group (Admin only)
+  static async addMember(groupId: string, memberName: string): Promise<ApiResponse<Member>> {
+    try {
+      const addMember = httpsCallable(functions, 'addMember');
+      const result = await addMember({ groupId, memberName });
+      return result.data as ApiResponse<Member>;
+    } catch (error) {
+      throw new Error(`Failed to add member: ${error}`);
     }
   }
 }

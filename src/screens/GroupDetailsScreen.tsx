@@ -11,7 +11,9 @@ import {
   ActivityIndicator,
   ScrollView,
   Clipboard,
-  Dimensions
+  Dimensions,
+  TextInput,
+  Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,11 +50,15 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     loadGroupSeasons,
     loadSeasonRatings,
     loadGroupGames,
-    clearError
+    clearError,
+    addMember
   } = useGroupStore();
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'ranking' | 'games'>('ranking');
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
 
   useEffect(() => {
     // Load group data when component mounts
@@ -87,22 +93,31 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     }
   };
 
-  const isAdmin = currentGroup && user && currentGroup.ownerId === user.uid;
+  const handleAddMember = async () => {
+    if (!newMemberName.trim()) {
+      Alert.alert(t('common.error'), t('matchEntry.addMemberModal.memberNameRequired'));
+      return;
+    }
 
-  // Debug logging
-  console.log('GroupDetailsScreen Debug:', {
-    currentGroup: currentGroup
-      ? {
-          id: currentGroup.id,
-          name: currentGroup.name,
-          ownerId: currentGroup.ownerId,
-          invitationCode: currentGroup.invitationCode
-        }
-      : null,
-    user: user ? { uid: user.uid } : null,
-    isAdmin,
-    hasInvitationCode: !!currentGroup?.invitationCode
-  });
+    setIsAddingMember(true);
+    try {
+      await addMember(groupId, newMemberName.trim());
+      setShowAddMemberModal(false);
+      setNewMemberName('');
+      Alert.alert(t('common.success'), t('matchEntry.addMemberModal.addMemberSuccess'));
+    } catch (error) {
+      Alert.alert(t('common.error'), t('matchEntry.addMemberModal.addMemberError'));
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleCancelAddMember = () => {
+    setShowAddMemberModal(false);
+    setNewMemberName('');
+  };
+
+  const isAdmin = currentGroup && user && currentGroup.ownerId === user.uid;
 
   const handlePlayerPress = (member: Member) => {
     navigation.navigate('PlayerProfile', {
@@ -210,6 +225,21 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   const renderLeaveGroupFooter = () => (
     <View style={styles.leaveGroupContainer}>
+      {/* Add Member Button - Only show for admins */}
+      {isAdmin && (
+        <TouchableOpacity
+          style={styles.addMemberButton}
+          onPress={() => setShowAddMemberModal(true)}
+        >
+          <View style={styles.addMemberButtonContent}>
+            <View style={styles.addMemberIcon}>
+              <Ionicons name="person-add" size={20} color="#667eea" />
+            </View>
+            <Text style={styles.addMemberButtonText}>{t('matchEntry.addMember')}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity style={styles.leaveGroupButton} onPress={handleLeaveGroup}>
         <View style={styles.leaveGroupButtonContent}>
           <Ionicons name="exit-outline" size={20} color="#c62828" />
@@ -359,6 +389,55 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         <Ionicons name="add" size={20} color="#fff" />
         <Text style={styles.fabText}>{t('groupDetails.newMatch')}</Text>
       </TouchableOpacity>
+
+      {/* Add Member Modal */}
+      <Modal
+        visible={showAddMemberModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelAddMember}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('matchEntry.addMemberModal.title')}</Text>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('matchEntry.addMemberModal.memberName')}</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newMemberName}
+                onChangeText={setNewMemberName}
+                placeholder={t('matchEntry.addMemberModal.enterMemberName')}
+                placeholderTextColor="#718096"
+                autoFocus={true}
+                maxLength={50}
+              />
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={handleCancelAddMember}
+                disabled={isAddingMember}
+              >
+                <Text style={styles.modalCancelButtonText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalSaveButton, isAddingMember && styles.disabledButton]}
+                onPress={handleAddMember}
+                disabled={isAddingMember}
+              >
+                {isAddingMember ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.modalSaveButtonText}>{t('common.save')}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -806,5 +885,123 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8
+  },
+  // Add Member Button Styles
+  addMemberButton: {
+    backgroundColor: '#F7FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12
+  },
+  addMemberButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  addMemberIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8
+  },
+  addMemberButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#667eea'
+  },
+  // Modal Styles
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  inputContainer: {
+    marginBottom: 24
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2D3748',
+    marginBottom: 8
+  },
+  textInput: {
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#2D3748',
+    backgroundColor: '#F7FAFC'
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#F7FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center'
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4A5568'
+  },
+  modalSaveButton: {
+    flex: 1,
+    backgroundColor: '#667eea',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
+  },
+  modalSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff'
+  },
+  disabledButton: {
+    backgroundColor: '#E2E8F0'
   }
 });

@@ -1106,7 +1106,105 @@ export const resetSeasonRatings = functions.https.onCall(async (data, context) =
   }
 });
 
-// 11. Scheduled Cleanup Function
+// 11. Add Member Function (Admin only)
+export const addMember = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { groupId, memberName } = data;
+  const uid = context.auth.uid;
+
+  if (!groupId || !memberName) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Group ID and member name are required'
+    );
+  }
+
+  try {
+    // Check if user is group owner (admin)
+    const groupDoc = await db.collection('groups').doc(groupId).get();
+    if (!groupDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Group not found');
+    }
+
+    const groupData = groupDoc.data()!;
+    if (groupData.ownerId !== uid) {
+      throw new functions.https.HttpsError('permission-denied', 'Only group owner can add members');
+    }
+
+    // Check user plan and group member limit
+    const plan = await getUserPlan(uid);
+    if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        'Group member limit reached for your plan'
+      );
+    }
+
+    // Generate a unique UID for the virtual member
+    const virtualMemberUid = `virtual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Add virtual member to the group
+    await db.collection('members').doc(`${virtualMemberUid}_${groupId}`).set({
+      uid: virtualMemberUid,
+      groupId,
+      displayName: memberName.trim(),
+      photoURL: null,
+      joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+      isActive: true
+    });
+
+    // Update group member count
+    await db
+      .collection('groups')
+      .doc(groupId)
+      .update({
+        memberCount: admin.firestore.FieldValue.increment(1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+    // Initialize rating for the virtual member in current season
+    if (groupData.currentSeasonId) {
+      await db
+        .collection('ratings')
+        .doc(`${groupData.currentSeasonId}_${virtualMemberUid}`)
+        .set({
+          id: `${groupData.currentSeasonId}_${virtualMemberUid}`,
+          seasonId: groupData.currentSeasonId,
+          uid: virtualMemberUid,
+          groupId,
+          currentRating: ELO_CONFIG.RATING_INIT,
+          gamesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    return {
+      success: true,
+      data: {
+        uid: virtualMemberUid,
+        groupId,
+        displayName: memberName.trim(),
+        photoURL: null,
+        joinedAt: new Date(),
+        isActive: true
+      }
+    };
+  } catch (error) {
+    console.error('Error adding member:', error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError('internal', 'Failed to add member');
+  }
+});
+
+// 12. Scheduled Cleanup Function
 export const scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(async (context) => {
   console.log('Running scheduled cleanups...');
 

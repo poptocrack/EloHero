@@ -115,7 +115,16 @@
     "matchRecorded": "Match recorded successfully!",
     "errorRecordingMatch": "Unable to record the match",
     "needAtLeastTwoPlayers": "You need at least 2 players to create a match",
-    "noActiveSeason": "No active season found"
+    "noActiveSeason": "No active season found",
+    "addMember": "Add Member",
+    "addMemberModal": {
+      "title": "Add New Member",
+      "memberName": "Member Name",
+      "enterMemberName": "Enter the member's name",
+      "addMemberSuccess": "Member added successfully!",
+      "addMemberError": "Unable to add member",
+      "memberNameRequired": "Member name is required"
+    }
   },
   "subscription": {
     "title": "Subscription",

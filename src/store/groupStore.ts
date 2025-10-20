@@ -42,6 +42,7 @@ interface GroupState {
       'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
     >[]
   ) => Promise<void>;
+  addMember: (groupId: string, memberName: string) => Promise<Member>;
 
   // Match entry actions
   setSelectedPlayers: (players: Member[]) => void;
@@ -360,6 +361,30 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to report match',
         matchEntry: { ...state.matchEntry, isSubmitting: false }
       }));
+      throw error;
+    }
+  },
+
+  addMember: async (groupId: string, memberName: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await CloudFunctionsService.addMember(groupId, memberName);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to add member');
+      }
+
+      const newMember = response.data;
+
+      // Reload group members to get the updated list
+      get().loadGroupMembers(groupId);
+
+      set({ isLoading: false });
+      return newMember;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to add member',
+        isLoading: false
+      });
       throw error;
     }
   },
