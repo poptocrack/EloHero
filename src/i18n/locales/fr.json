@@ -29,6 +29,11 @@
     "welcome": "Bienvenue sur EloHero !",
     "welcomeSubtitle": "Suivez vos progrès de jeu et rivalisez avec vos amis"
   },
+  "onboarding": {
+    "setPseudoTitle": "Choisissez votre pseudo",
+    "setPseudoSubtitle": "Il sera visible par les autres joueurs",
+    "pseudoPlaceholder": "Votre pseudo"
+  },
   "groups": {
     "title": "Groupes",
     "createGroup": "Créer un groupe",

@@ -143,6 +143,7 @@ export interface MatchEntryState {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  SetPseudo: undefined;
   GroupDetails: { groupId: string };
   MatchEntry: { groupId: string };
   PlayerProfile: { uid: string; groupId: string };

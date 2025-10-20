@@ -121,7 +121,7 @@ function calculateEloChanges(participants) {
 }
 // 1. Create Group Function
 exports.createGroup = functions.https.onCall(async (data, context) => {
-    var _a;
+    var _a, _b;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -154,7 +154,10 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             });
             console.log('createGroup: User document created');
         }
-        const currentGroupsCount = ((_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.groupsCount) || 0;
+        // Resolve displayName dynamically from user profile
+        const profileDisplayName = ((_a = (await db.collection('users').doc(uid).get()).data()) === null || _a === void 0 ? void 0 : _a.displayName) ||
+            context.auth.token.name || 'Anonymous';
+        const currentGroupsCount = ((_b = userDoc.data()) === null || _b === void 0 ? void 0 : _b.groupsCount) || 0;
         console.log('createGroup: Current groups count:', currentGroupsCount);
         if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan');
@@ -187,7 +190,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         };
         await groupRef.set(groupData);
         console.log('createGroup: Group document created with ID:', groupRef.id);
-        // Add owner as member
+        // Add owner as member with latest displayName from profile
         console.log('createGroup: Adding owner as member...');
         await db
             .collection('members')
@@ -195,7 +198,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             .set({
             uid,
             groupId: groupRef.id,
-            displayName: context.auth.token.name || 'Anonymous',
+            displayName: profileDisplayName,
             photoURL: context.auth.token.picture || null,
             joinedAt: firestore_1.FieldValue.serverTimestamp(),
             isActive: true
@@ -262,7 +265,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
 });
 // 2. Join Group with Code Function
 exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
-    var _a;
+    var _a, _b;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -294,14 +297,16 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group member limit reached for your plan');
         }
-        // Add user as member
+        // Add user as member with latest displayName from profile
         await db
             .collection('members')
             .doc(uid)
             .set({
             uid,
             groupId,
-            displayName: context.auth.token.name || 'Anonymous',
+            displayName: ((_b = (await db.collection('users').doc(uid).get()).data()) === null || _b === void 0 ? void 0 : _b.displayName) ||
+                context.auth.token.name ||
+                'Anonymous',
             photoURL: context.auth.token.picture || null,
             joinedAt: admin.firestore.FieldValue.serverTimestamp(),
             isActive: true

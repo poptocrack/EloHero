@@ -7,9 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/auth';
 import { RootStackParamList, MainTabParamList } from '../types';
+import SetPseudoScreen from '../screens/SetPseudoScreen';
 
 // Import screens
-import AuthScreen from '../screens/AuthScreen';
 import GroupsScreen from '../screens/GroupsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import GroupDetailsScreen from '../screens/GroupDetailsScreen';
@@ -19,6 +19,7 @@ import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const OnboardingStack = createStackNavigator<{ SetPseudo: undefined }>();
 
 // Main Tab Navigator
 function MainTabNavigator() {
@@ -52,45 +53,19 @@ function MainTabNavigator() {
 // Root Stack Navigator
 function RootStackNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#007AFF'
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold'
-        }
-      }}
-    >
-      <Stack.Screen name="Main" component={MainTabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="GroupDetails"
-        component={GroupDetailsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="MatchEntry"
-        component={MatchEntryScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="PlayerProfile"
-        component={PlayerProfileScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Subscription"
-        component={SubscriptionScreen}
-        options={{ headerShown: false }}
-      />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Main" component={MainTabNavigator} />
+      <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
+      <Stack.Screen name="MatchEntry" component={MatchEntryScreen} />
+      <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+      <Stack.Screen name="Subscription" component={SubscriptionScreen} />
     </Stack.Navigator>
   );
 }
 
 // Main App Navigator
 export default function AppNavigator() {
-  const { user, isLoading, setUser, setLoading } = useAuthStore();
+  const { user, isLoading, setUser, setLoading, signInAnonymously } = useAuthStore();
 
   useEffect(() => {
     // Listen to auth state changes
@@ -102,20 +77,31 @@ export default function AppNavigator() {
     return unsubscribe;
   }, [setUser, setLoading]);
 
+  // If user is not authenticated, sign in anonymously automatically
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signInAnonymously().catch(() => {});
+    }
+  }, [isLoading, user, signInAnonymously]);
+
   if (isLoading) {
     // You can add a loading screen here
     return null;
   }
 
+  const needsPseudo = !!user && (!user.displayName || user.displayName === 'Anonymous');
+
   return (
     <NavigationContainer>
       {user ? (
-        <RootStackNavigator />
-      ) : (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Auth" component={AuthScreen} />
-        </Stack.Navigator>
-      )}
+        needsPseudo ? (
+          <OnboardingStack.Navigator screenOptions={{ headerShown: false }}>
+            <OnboardingStack.Screen name="SetPseudo" component={SetPseudoScreen} />
+          </OnboardingStack.Navigator>
+        ) : (
+          <RootStackNavigator />
+        )
+      ) : null}
     </NavigationContainer>
   );
 }

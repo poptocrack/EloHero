@@ -156,6 +156,10 @@ export const createGroup = functions.https.onCall(async (data, context) => {
       console.log('createGroup: User document created');
     }
 
+    // Always resolve displayName from Firestore to reflect user-updated pseudo
+    const userDisplayName =
+      (await db.collection('users').doc(uid).get()).data()?.displayName || 'Anonymous';
+
     const currentGroupsCount = userDoc.data()?.groupsCount || 0;
     console.log('createGroup: Current groups count:', currentGroupsCount);
 
@@ -210,7 +214,7 @@ export const createGroup = functions.https.onCall(async (data, context) => {
       .set({
         uid,
         groupId: groupRef.id,
-        displayName: context.auth.token.name || 'Anonymous',
+        displayName: userDisplayName,
         photoURL: context.auth.token.picture || null,
         joinedAt: FieldValue.serverTimestamp(),
         isActive: true
@@ -334,6 +338,12 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       );
     }
 
+    // Resolve user's current display name from Firestore (dynamic pseudo)
+    const joinUserDoc = await db.collection('users').doc(uid).get();
+    const joinUserDisplayName = joinUserDoc.exists
+      ? joinUserDoc.data()!.displayName || 'Anonymous'
+      : context.auth.token.name || 'Anonymous';
+
     // Add user as member
     await db
       .collection('members')
@@ -341,7 +351,7 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       .set({
         uid,
         groupId,
-        displayName: context.auth.token.name || 'Anonymous',
+        displayName: joinUserDisplayName,
         photoURL: context.auth.token.picture || null,
         joinedAt: admin.firestore.FieldValue.serverTimestamp(),
         isActive: true

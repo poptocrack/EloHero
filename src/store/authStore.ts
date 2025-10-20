@@ -14,6 +14,8 @@ interface AuthState {
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
+  signInAnonymously: () => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
@@ -73,6 +75,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Apple sign in failed',
         isLoading: false
       });
+      throw error;
+    }
+  },
+
+  signInAnonymously: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const user = await AuthService.signInAnonymously();
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Anonymous sign in failed',
+        isLoading: false
+      });
+      throw error;
+    }
+  },
+
+  updateDisplayName: async (displayName: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await AuthService.updateDisplayName(displayName);
+      const current = get().user;
+      if (current) {
+        set({ user: { ...current, displayName }, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Update failed', isLoading: false });
       throw error;
     }
   },

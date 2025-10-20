@@ -5,16 +5,28 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   OAuthProvider,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { User, UserPlan } from '../types';
 
 export class AuthService {
+  // Sign in anonymously
+  static async signInAnonymously(): Promise<User> {
+    try {
+      const credential = await signInAnonymously(auth);
+      await this.ensureUserDocument(credential.user);
+      return await this.getUserData(credential.user.uid);
+    } catch (error) {
+      throw new Error(`Anonymous sign in failed: ${error}`);
+    }
+  }
+
   // Sign in with email and password
   static async signInWithEmail(email: string, password: string): Promise<User> {
     try {
@@ -175,5 +187,20 @@ export class AuthService {
   // Get current user
   static getCurrentUser(): FirebaseUser | null {
     return auth.currentUser;
+  }
+
+  // Update display name in Auth and Firestore
+  static async updateDisplayName(newDisplayName: string): Promise<void> {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('No authenticated user');
+
+    // Update Firebase Auth profile
+    await updateProfile(currentUser, { displayName: newDisplayName });
+
+    // Update Firestore user document
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      displayName: newDisplayName,
+      updatedAt: new Date()
+    });
   }
 }

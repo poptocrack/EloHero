@@ -22,13 +22,13 @@ export class FirestoreService {
     try {
       // Get the user's member document directly by ID (as per security rules)
       const memberDoc = await getDoc(doc(db, 'members', uid));
-      
+
       if (!memberDoc.exists()) {
         return []; // User is not a member of any group
       }
 
       const memberData = memberDoc.data();
-      
+
       // Check if the member is active
       if (!memberData.isActive) {
         return [];
@@ -41,24 +41,26 @@ export class FirestoreService {
 
       // Get the group document
       const groupDoc = await getDoc(doc(db, 'groups', groupId));
-      
+
       if (!groupDoc.exists()) {
         return []; // Group doesn't exist
       }
 
       const groupData = groupDoc.data();
-      
+
       // Check if the group is active
       if (!groupData.isActive) {
         return [];
       }
 
-      return [{
-        id: groupDoc.id,
-        ...groupData,
-        createdAt: groupData.createdAt?.toDate() || new Date(),
-        updatedAt: groupData.updatedAt?.toDate() || new Date()
-      }] as Group[];
+      return [
+        {
+          id: groupDoc.id,
+          ...groupData,
+          createdAt: groupData.createdAt?.toDate() || new Date(),
+          updatedAt: groupData.updatedAt?.toDate() || new Date()
+        }
+      ] as Group[];
     } catch (error) {
       throw new Error(`Failed to get user groups: ${error}`);
     }
@@ -74,7 +76,7 @@ export class FirestoreService {
       }
 
       const memberData = memberSnapshot.data();
-      
+
       // Check if the member is active
       if (!memberData.isActive) {
         callback([]);
@@ -89,26 +91,28 @@ export class FirestoreService {
 
       // Get the group document
       const groupDoc = await getDoc(doc(db, 'groups', groupId));
-      
+
       if (!groupDoc.exists()) {
         callback([]); // Group doesn't exist
         return;
       }
 
       const groupData = groupDoc.data();
-      
+
       // Check if the group is active
       if (!groupData.isActive) {
         callback([]);
         return;
       }
 
-      const groups = [{
-        id: groupDoc.id,
-        ...groupData,
-        createdAt: groupData.createdAt?.toDate() || new Date(),
-        updatedAt: groupData.updatedAt?.toDate() || new Date()
-      }] as Group[];
+      const groups = [
+        {
+          id: groupDoc.id,
+          ...groupData,
+          createdAt: groupData.createdAt?.toDate() || new Date(),
+          updatedAt: groupData.updatedAt?.toDate() || new Date()
+        }
+      ] as Group[];
 
       callback(groups);
     });
