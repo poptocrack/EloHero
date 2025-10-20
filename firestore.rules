@@ -8,26 +8,27 @@ service cloud.firestore {
     
     // Groups are readable by members, writable by owners
     match /groups/{groupId} {
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/members/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.groupId == groupId;
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + groupId));
       allow write: if request.auth != null && 
         resource.data.ownerId == request.auth.uid;
     }
     
     // Members can read their own membership and group members can read each other
-    match /members/{userId} {
-      allow read: if request.auth != null && 
-        (request.auth.uid == userId || 
-         (exists(/databases/$(database)/documents/members/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/members/$(request.auth.uid)).data.groupId == resource.data.groupId));
+    match /members/{memberId} {
+      // Allow reading:
+      // - Own membership docs members/{uid}_{groupId}
+      // - Any membership in a group the requester belongs to
+      allow read: if request.auth != null && (
+        resource.data.uid == request.auth.uid ||
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId))
+      );
     }
     
     // Seasons are readable by group members
     match /seasons/{seasonId} {
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/members/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.groupId == resource.data.groupId;
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId));
     }
     
     // Ratings are readable by group members
@@ -37,18 +38,15 @@ service cloud.firestore {
     
     // Games are readable by group members
     match /games/{gameId} {
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/members/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.groupId == resource.data.groupId;
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId));
     }
     
     // Participants are readable by group members
     match /participants/{participantId} {
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/members/$(request.auth.uid)) &&
+      allow read: if request.auth != null &&
         exists(/databases/$(database)/documents/games/$(resource.data.gameId)) &&
-        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.groupId == 
-        get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.groupId;
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.groupId));
     }
     
     // Rating changes are readable by the user

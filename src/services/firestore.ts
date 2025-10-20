@@ -20,47 +20,38 @@ export class FirestoreService {
   // Get user's groups
   static async getUserGroups(uid: string): Promise<Group[]> {
     try {
-      // Get the user's member document directly by ID (as per security rules)
-      const memberDoc = await getDoc(doc(db, 'members', uid));
+      // Query all memberships for this user
+      const membershipsQuery = query(
+        collection(db, 'members'),
+        where('uid', '==', uid),
+        where('isActive', '==', true)
+      );
+      const membershipsSnapshot = await getDocs(membershipsQuery);
 
-      if (!memberDoc.exists()) {
-        return []; // User is not a member of any group
-      }
-
-      const memberData = memberDoc.data();
-
-      // Check if the member is active
-      if (!memberData.isActive) {
+      if (membershipsSnapshot.empty) {
         return [];
       }
 
-      const groupId = memberData.groupId;
-      if (!groupId) {
-        return [];
-      }
+      const groups: Group[] = [];
+      for (const membershipDoc of membershipsSnapshot.docs) {
+        const memberData = membershipDoc.data();
+        const groupId = memberData.groupId;
+        if (!groupId) continue;
 
-      // Get the group document
-      const groupDoc = await getDoc(doc(db, 'groups', groupId));
+        const groupDoc = await getDoc(doc(db, 'groups', groupId));
+        if (!groupDoc.exists()) continue;
+        const groupData = groupDoc.data();
+        if (!groupData.isActive) continue;
 
-      if (!groupDoc.exists()) {
-        return []; // Group doesn't exist
-      }
-
-      const groupData = groupDoc.data();
-
-      // Check if the group is active
-      if (!groupData.isActive) {
-        return [];
-      }
-
-      return [
-        {
+        groups.push({
           id: groupDoc.id,
           ...groupData,
           createdAt: groupData.createdAt?.toDate() || new Date(),
           updatedAt: groupData.updatedAt?.toDate() || new Date()
-        }
-      ] as Group[];
+        } as Group);
+      }
+
+      return groups;
     } catch (error) {
       throw new Error(`Failed to get user groups: ${error}`);
     }
@@ -68,52 +59,30 @@ export class FirestoreService {
 
   // Listen to user's groups in real-time
   static listenToUserGroups(uid: string, callback: (groups: Group[]) => void): Unsubscribe {
-    // Listen to the user's member document directly by ID
-    return onSnapshot(doc(db, 'members', uid), async (memberSnapshot) => {
-      if (!memberSnapshot.exists()) {
-        callback([]); // User is not a member of any group
-        return;
-      }
-
-      const memberData = memberSnapshot.data();
-
-      // Check if the member is active
-      if (!memberData.isActive) {
-        callback([]);
-        return;
-      }
-
-      const groupId = memberData.groupId;
-      if (!groupId) {
-        callback([]);
-        return;
-      }
-
-      // Get the group document
-      const groupDoc = await getDoc(doc(db, 'groups', groupId));
-
-      if (!groupDoc.exists()) {
-        callback([]); // Group doesn't exist
-        return;
-      }
-
-      const groupData = groupDoc.data();
-
-      // Check if the group is active
-      if (!groupData.isActive) {
-        callback([]);
-        return;
-      }
-
-      const groups = [
-        {
+    // Listen to all memberships for this user
+    const membershipsQuery = query(
+      collection(db, 'members'),
+      where('uid', '==', uid),
+      where('isActive', '==', true)
+    );
+    return onSnapshot(membershipsQuery, async (snapshot) => {
+      const groupPromises = snapshot.docs.map(async (membershipDoc) => {
+        const memberData = membershipDoc.data();
+        const groupId = memberData.groupId;
+        if (!groupId) return null;
+        const groupDoc = await getDoc(doc(db, 'groups', groupId));
+        if (!groupDoc.exists()) return null;
+        const groupData = groupDoc.data();
+        if (!groupData.isActive) return null;
+        return {
           id: groupDoc.id,
           ...groupData,
           createdAt: groupData.createdAt?.toDate() || new Date(),
           updatedAt: groupData.updatedAt?.toDate() || new Date()
-        }
-      ] as Group[];
+        } as Group;
+      });
 
+      const groups = (await Promise.all(groupPromises)).filter(Boolean) as Group[];
       callback(groups);
     });
   }
