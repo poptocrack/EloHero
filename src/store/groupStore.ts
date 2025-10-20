@@ -135,9 +135,14 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
       if (currentSeason) {
         get().loadSeasonRatings(currentSeason.id);
+      } else {
+        // No seasons exist, which is fine - clear any existing season data
+        set({ currentSeason: null, currentSeasonRatings: [] });
       }
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to load group seasons' });
+      console.log('Error loading group seasons (non-critical):', error);
+      // Don't set this as an error since seasons are optional
+      set({ currentSeason: null, currentSeasonRatings: [] });
     }
   },
 

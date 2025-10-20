@@ -34,11 +34,31 @@ export class CloudFunctionsService {
   // Join a group with invitation code
   static async joinGroupWithCode(code: string): Promise<ApiResponse<Group>> {
     try {
+      console.log('CloudFunctionsService: Joining group with code:', code);
       const joinGroup = httpsCallable(functions, 'joinGroupWithCode');
       const result = await joinGroup({ code });
+      console.log('CloudFunctionsService: Join group result:', result.data);
       return result.data as ApiResponse<Group>;
-    } catch (error) {
-      throw new Error(`Failed to join group: ${error}`);
+    } catch (error: any) {
+      console.error('CloudFunctionsService: Join group error:', error);
+      console.error('CloudFunctionsService: Error code:', error?.code);
+      console.error('CloudFunctionsService: Error message:', error?.message);
+      console.error('CloudFunctionsService: Error details:', error?.details);
+
+      // Extract more detailed error information
+      const errorMessage = error?.message || error?.code || 'Unknown error';
+      const errorDetails = error?.details || '';
+
+      // Handle specific error cases
+      if (error?.code === 'functions/not-found') {
+        throw new Error(`Invalid invite code: ${errorDetails || errorMessage}`);
+      } else if (error?.code === 'functions/already-exists') {
+        throw new Error(`You are already a member of this group`);
+      } else if (error?.code === 'functions/resource-exhausted') {
+        throw new Error(`Group member limit reached for your plan`);
+      } else {
+        throw new Error(`Failed to join group: ${errorMessage} ${errorDetails}`);
+      }
     }
   }
 

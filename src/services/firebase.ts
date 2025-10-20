@@ -8,7 +8,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // Firebase configuration
-
 const firebaseConfig = {
   apiKey:
     Constants.expoConfig?.extra?.firebaseApiKey ||
@@ -36,6 +35,14 @@ const firebaseConfig = {
     'demo-app-id'
 };
 
+// Log Firebase configuration status (without sensitive data)
+console.log('Firebase Config Status:', {
+  hasApiKey: !!firebaseConfig.apiKey && firebaseConfig.apiKey !== 'demo-key',
+  hasProjectId: !!firebaseConfig.projectId && firebaseConfig.projectId !== 'demo-project',
+  hasAppId: !!firebaseConfig.appId && firebaseConfig.appId !== 'demo-app-id',
+  projectId: firebaseConfig.projectId
+});
+
 // Initialize Firebase (only if not already initialized)
 let app;
 if (getApps().length === 0) {
@@ -61,20 +68,37 @@ const db = getFirestore(app);
 // Initialize Functions
 const functions = getFunctions(app);
 
-// Connect to emulators in development
+// Connect to emulators in development (only when running on simulator/emulator)
 if (__DEV__) {
-  try {
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    console.log('Connected to Firestore emulator');
-  } catch (error) {
-    console.log('Firestore emulator not available or already connected:', (error as Error).message);
-  }
+  // Check if we're running on a simulator/emulator or physical device
+  const isSimulator = Constants.platform?.ios?.simulator || Constants.platform?.android?.emulator;
 
-  try {
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.log('Connected to Functions emulator');
-  } catch (error) {
-    console.log('Functions emulator not available or already connected:', (error as Error).message);
+  // Only connect to emulators if we're on a simulator/emulator
+  if (isSimulator) {
+    // Use environment variable for emulator host, fallback to localhost
+    const EMULATOR_HOST = process.env.EXPO_PUBLIC_EMULATOR_HOST || 'localhost';
+
+    try {
+      connectFirestoreEmulator(db, EMULATOR_HOST, 8080);
+      console.log('Connected to Firestore emulator at', EMULATOR_HOST);
+    } catch (error) {
+      console.log(
+        'Firestore emulator not available or already connected:',
+        (error as Error).message
+      );
+    }
+
+    try {
+      connectFunctionsEmulator(functions, EMULATOR_HOST, 5001);
+      console.log('Connected to Functions emulator at', EMULATOR_HOST);
+    } catch (error) {
+      console.log(
+        'Functions emulator not available or already connected:',
+        (error as Error).message
+      );
+    }
+  } else {
+    console.log('Running on physical device - using production Firebase');
   }
 }
 

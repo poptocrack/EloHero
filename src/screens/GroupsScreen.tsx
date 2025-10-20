@@ -92,11 +92,15 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
     }
 
     try {
+      console.log('GroupsScreen: Attempting to join group with code:', joinCode.trim());
       await joinGroupWithCode(joinCode.trim());
       setShowJoinModal(false);
       setJoinCode('');
+      Alert.alert(t('common.success'), t('groups.groupJoinedSuccessfully'));
     } catch (error) {
-      // Error handled by store
+      console.error('GroupsScreen: Error joining group:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to join group';
+      Alert.alert(t('common.error'), errorMessage);
     }
   };
 

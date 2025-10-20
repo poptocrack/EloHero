@@ -305,15 +305,32 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
   }
 
   try {
+    const upperCode = code.toUpperCase();
+    console.log('joinGroupWithCode: Searching for code:', upperCode);
+
     // Find group by invitation code
     const groupsQuery = await db
       .collection('groups')
-      .where('invitationCode', '==', code.toUpperCase())
+      .where('invitationCode', '==', upperCode)
       .where('isActive', '==', true)
       .get();
 
+    console.log('joinGroupWithCode: Query returned', groupsQuery.size, 'results');
+
     if (groupsQuery.empty) {
-      throw new functions.https.HttpsError('not-found', 'Invalid invite code');
+      // Let's also check if the code exists but group is inactive
+      const inactiveQuery = await db
+        .collection('groups')
+        .where('invitationCode', '==', upperCode)
+        .get();
+
+      if (inactiveQuery.empty) {
+        console.log('joinGroupWithCode: Code does not exist in database');
+        throw new functions.https.HttpsError('not-found', 'Invalid invite code');
+      } else {
+        console.log('joinGroupWithCode: Code exists but group is inactive');
+        throw new functions.https.HttpsError('not-found', 'Group is no longer active');
+      }
     }
 
     const groupDoc = groupsQuery.docs[0];

@@ -2,6 +2,7 @@
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
+    "success": "Succès",
     "cancel": "Annuler",
     "confirm": "Confirmer",
     "save": "Enregistrer",
@@ -57,6 +58,7 @@
     "errorCreatingGroup": "Impossible de créer le groupe",
     "errorJoiningGroup": "Impossible de rejoindre le groupe",
     "pleaseEnterInvitationCode": "Veuillez entrer un code d'invitation",
+    "groupJoinedSuccessfully": "Groupe rejoint avec succès !",
     "unknownError": "Erreur inconnue"
   },
   "groupDetails": {

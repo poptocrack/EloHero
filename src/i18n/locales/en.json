@@ -2,6 +2,7 @@
   "common": {
     "loading": "Loading...",
     "error": "Error",
+    "success": "Success",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "save": "Save",
@@ -57,6 +58,7 @@
     "errorCreatingGroup": "Unable to create group",
     "errorJoiningGroup": "Unable to join group",
     "pleaseEnterInvitationCode": "Please enter an invitation code",
+    "groupJoinedSuccessfully": "Successfully joined the group!",
     "unknownError": "Unknown error"
   },
   "groupDetails": {

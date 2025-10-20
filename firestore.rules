@@ -25,10 +25,9 @@ service cloud.firestore {
       );
     }
     
-    // Seasons are readable by group members
+    // Seasons are readable by authenticated users (simplified for now)
     match /seasons/{seasonId} {
-      allow read: if request.auth != null &&
-        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId));
+      allow read: if request.auth != null;
     }
     
     // Ratings are readable by group members

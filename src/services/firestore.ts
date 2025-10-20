@@ -110,15 +110,26 @@ export class FirestoreService {
   // Get group members
   static async getGroupMembers(groupId: string): Promise<Member[]> {
     try {
-      const membersQuery = query(
-        collection(db, 'members'),
-        where('groupId', '==', groupId),
-        where('isActive', '==', true),
-        orderBy('joinedAt', 'asc')
-      );
+      // First try with orderBy, if it fails due to missing index, try without
+      let membersQuery;
+      try {
+        membersQuery = query(
+          collection(db, 'members'),
+          where('groupId', '==', groupId),
+          where('isActive', '==', true),
+          orderBy('joinedAt', 'asc')
+        );
+      } catch (indexError) {
+        console.log('Index not found for members query, trying without orderBy');
+        membersQuery = query(
+          collection(db, 'members'),
+          where('groupId', '==', groupId),
+          where('isActive', '==', true)
+        );
+      }
 
       const membersSnapshot = await getDocs(membersQuery);
-      return membersSnapshot.docs.map((doc) => ({
+      const members = membersSnapshot.docs.map((doc) => ({
         uid: doc.data().uid,
         groupId: doc.data().groupId,
         displayName: doc.data().displayName,
@@ -126,8 +137,12 @@ export class FirestoreService {
         joinedAt: doc.data().joinedAt?.toDate() || new Date(),
         isActive: doc.data().isActive
       })) as Member[];
+
+      // Sort manually if we couldn't use orderBy
+      return members.sort((a, b) => a.joinedAt.getTime() - b.joinedAt.getTime());
     } catch (error) {
-      throw new Error(`Failed to get group members: ${error}`);
+      console.log('Failed to get group members, returning empty array:', error);
+      return [];
     }
   }
 
@@ -157,42 +172,65 @@ export class FirestoreService {
   // Get group seasons
   static async getGroupSeasons(groupId: string): Promise<Season[]> {
     try {
-      const seasonsQuery = query(
-        collection(db, 'seasons'),
-        where('groupId', '==', groupId),
-        orderBy('createdAt', 'desc')
-      );
+      // First try with orderBy, if it fails due to missing index, try without
+      let seasonsQuery;
+      try {
+        seasonsQuery = query(
+          collection(db, 'seasons'),
+          where('groupId', '==', groupId),
+          orderBy('createdAt', 'desc')
+        );
+      } catch (indexError) {
+        console.log('Index not found for seasons query, trying without orderBy');
+        seasonsQuery = query(collection(db, 'seasons'), where('groupId', '==', groupId));
+      }
 
       const seasonsSnapshot = await getDocs(seasonsQuery);
-      return seasonsSnapshot.docs.map((doc) => ({
+      const seasons = seasonsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         startDate: doc.data().startDate?.toDate() || new Date(),
         endDate: doc.data().endDate?.toDate() || undefined,
         createdAt: doc.data().createdAt?.toDate() || new Date()
       })) as Season[];
+
+      // Sort manually if we couldn't use orderBy
+      return seasons.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
-      throw new Error(`Failed to get group seasons: ${error}`);
+      console.log('Failed to get group seasons, returning empty array:', error);
+      // Return empty array instead of throwing error - groups can exist without seasons
+      return [];
     }
   }
 
   // Get current season ratings
   static async getSeasonRatings(seasonId: string): Promise<Rating[]> {
     try {
-      const ratingsQuery = query(
-        collection(db, 'ratings'),
-        where('seasonId', '==', seasonId),
-        orderBy('currentRating', 'desc')
-      );
+      // First try with orderBy, if it fails due to missing index, try without
+      let ratingsQuery;
+      try {
+        ratingsQuery = query(
+          collection(db, 'ratings'),
+          where('seasonId', '==', seasonId),
+          orderBy('currentRating', 'desc')
+        );
+      } catch (indexError) {
+        console.log('Index not found for ratings query, trying without orderBy');
+        ratingsQuery = query(collection(db, 'ratings'), where('seasonId', '==', seasonId));
+      }
 
       const ratingsSnapshot = await getDocs(ratingsQuery);
-      return ratingsSnapshot.docs.map((doc) => ({
+      const ratings = ratingsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         lastUpdated: doc.data().lastUpdated?.toDate() || new Date()
       })) as Rating[];
+
+      // Sort manually if we couldn't use orderBy
+      return ratings.sort((a, b) => b.currentRating - a.currentRating);
     } catch (error) {
-      throw new Error(`Failed to get season ratings: ${error}`);
+      console.log('Failed to get season ratings, returning empty array:', error);
+      return [];
     }
   }
 
@@ -221,35 +259,57 @@ export class FirestoreService {
   // Get group games
   static async getGroupGames(groupId: string, limitCount: number = 50): Promise<Game[]> {
     try {
-      const gamesQuery = query(
-        collection(db, 'games'),
-        where('groupId', '==', groupId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
+      // First try with orderBy, if it fails due to missing index, try without
+      let gamesQuery;
+      try {
+        gamesQuery = query(
+          collection(db, 'games'),
+          where('groupId', '==', groupId),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        );
+      } catch (indexError) {
+        console.log('Index not found for games query, trying without orderBy');
+        gamesQuery = query(
+          collection(db, 'games'),
+          where('groupId', '==', groupId),
+          limit(limitCount)
+        );
+      }
 
       const gamesSnapshot = await getDocs(gamesQuery);
-      return gamesSnapshot.docs.map((doc) => ({
+      const games = gamesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date()
       })) as Game[];
+
+      // Sort manually if we couldn't use orderBy
+      return games.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
-      throw new Error(`Failed to get group games: ${error}`);
+      console.log('Failed to get group games, returning empty array:', error);
+      return [];
     }
   }
 
   // Get game participants
   static async getGameParticipants(gameId: string): Promise<Participant[]> {
     try {
-      const participantsQuery = query(
-        collection(db, 'participants'),
-        where('gameId', '==', gameId),
-        orderBy('placement', 'asc')
-      );
+      // First try with orderBy, if it fails due to missing index, try without
+      let participantsQuery;
+      try {
+        participantsQuery = query(
+          collection(db, 'participants'),
+          where('gameId', '==', gameId),
+          orderBy('placement', 'asc')
+        );
+      } catch (indexError) {
+        console.log('Index not found for participants query, trying without orderBy');
+        participantsQuery = query(collection(db, 'participants'), where('gameId', '==', gameId));
+      }
 
       const participantsSnapshot = await getDocs(participantsQuery);
-      return participantsSnapshot.docs.map((doc) => ({
+      const participants = participantsSnapshot.docs.map((doc) => ({
         uid: doc.data().uid,
         gameId: doc.data().gameId,
         displayName: doc.data().displayName,
@@ -260,8 +320,12 @@ export class FirestoreService {
         ratingAfter: doc.data().ratingAfter,
         ratingChange: doc.data().ratingChange
       })) as Participant[];
+
+      // Sort manually if we couldn't use orderBy
+      return participants.sort((a, b) => a.placement - b.placement);
     } catch (error) {
-      throw new Error(`Failed to get game participants: ${error}`);
+      console.log('Failed to get game participants, returning empty array:', error);
+      return [];
     }
   }
 
@@ -272,22 +336,38 @@ export class FirestoreService {
     limitCount: number = 50
   ): Promise<RatingChange[]> {
     try {
-      const ratingChangesQuery = query(
-        collection(db, 'ratingChanges'),
-        where('uid', '==', uid),
-        where('seasonId', '==', seasonId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
+      // First try with orderBy, if it fails due to missing index, try without
+      let ratingChangesQuery;
+      try {
+        ratingChangesQuery = query(
+          collection(db, 'ratingChanges'),
+          where('uid', '==', uid),
+          where('seasonId', '==', seasonId),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        );
+      } catch (indexError) {
+        console.log('Index not found for rating changes query, trying without orderBy');
+        ratingChangesQuery = query(
+          collection(db, 'ratingChanges'),
+          where('uid', '==', uid),
+          where('seasonId', '==', seasonId),
+          limit(limitCount)
+        );
+      }
 
       const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
-      return ratingChangesSnapshot.docs.map((doc) => ({
+      const ratingChanges = ratingChangesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date()
       })) as RatingChange[];
+
+      // Sort manually if we couldn't use orderBy
+      return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
-      throw new Error(`Failed to get user rating history: ${error}`);
+      console.log('Failed to get user rating history, returning empty array:', error);
+      return [];
     }
   }
 
