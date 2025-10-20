@@ -1,0 +1,340 @@
+# EloHero Design System & Development Guidelines
+
+## 🎨 Design Philosophy
+
+- **Modern & Playful**: Use vibrant colors, rounded corners, and engaging visuals
+- **Card-Based Layout**: All content should be organized in beautiful gradient cards
+- **Consistent Spacing**: Use 20px padding/margins for main containers, 12-16px for cards
+- **Rounded Corners**: 20px border radius for cards, 16px for buttons, 12px for small elements
+
+## 🌈 Color Palette
+
+### Primary Colors
+
+- **Pink Gradient**: `#FF6B9D` to `#C44569` (Create/Action buttons)
+- **Teal Gradient**: `#4ECDC4` to `#44A08D` (Join/Secondary actions)
+- **Purple Gradient**: `#667eea` to `#764ba2` (Primary elements, icons)
+- **Background**: `#F8F9FF` (Light purple tint)
+
+### Text Colors
+
+- **Primary Text**: `#2D3748` (Dark gray)
+- **Secondary Text**: `#4A5568` (Medium gray)
+- **Muted Text**: `#718096` (Light gray)
+- **White Text**: `#FFFFFF` (On colored backgrounds)
+
+### Accent Colors
+
+- **Success**: `#4ECDC4` (Teal)
+- **Warning**: `#FF6B9D` (Pink)
+- **Error**: `#c62828` (Red)
+- **Info**: `#667eea` (Purple)
+
+## 📱 Layout Patterns
+
+### Screen Structure
+
+```typescript
+// Always use this structure for screens
+<View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
+  {/* Header/Title Section */}
+  {/* Action Cards (2-column layout) */}
+  {/* Content Cards */}
+  {/* Modals/Overlays */}
+</View>
+```
+
+### Card Design Pattern
+
+```typescript
+// Standard card structure
+<TouchableOpacity style={styles.card}>
+  <View style={[styles.cardGradient, { backgroundColor: 'COLOR' }]}>
+    <View style={styles.cardHeader}>{/* Icon + Title */}</View>
+    <View style={styles.cardContent}>{/* Main content */}</View>
+    <View style={styles.cardFooter}>{/* Stats/Actions */}</View>
+  </View>
+</TouchableOpacity>
+```
+
+### Action Cards (2-column layout)
+
+```typescript
+// For primary actions at top of screens
+<View style={styles.actionCardsContainer}>
+  <TouchableOpacity style={styles.actionCard}>
+    <View style={[styles.actionCardGradient, { backgroundColor: '#FF6B9D' }]}>
+      <View style={styles.actionCardContent}>
+        <View style={styles.actionCardIcon}>
+          <Ionicons name="icon-name" size={32} color="#fff" />
+        </View>
+        <Text style={styles.actionCardTitle}>Title</Text>
+        <Text style={styles.actionCardSubtitle}>Subtitle</Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+</View>
+```
+
+## 🎯 Component Styles
+
+### Standard Card Styles
+
+```typescript
+card: {
+  marginBottom: 16,
+  borderRadius: 20,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 6
+},
+cardGradient: {
+  borderRadius: 20,
+  padding: 20
+}
+```
+
+### Action Card Styles
+
+```typescript
+actionCardsContainer: {
+  flexDirection: 'row',
+  paddingHorizontal: 20,
+  paddingVertical: 20,
+  gap: 12
+},
+actionCard: {
+  flex: 1,
+  height: 120,
+  borderRadius: 20,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.15,
+  shadowRadius: 8,
+  elevation: 8
+}
+```
+
+### Button Styles
+
+```typescript
+primaryButton: {
+  backgroundColor: '#667eea',
+  borderRadius: 16,
+  paddingVertical: 16,
+  paddingHorizontal: 24,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3
+},
+secondaryButton: {
+  backgroundColor: '#F7FAFC',
+  borderWidth: 2,
+  borderColor: '#E2E8F0',
+  borderRadius: 16,
+  paddingVertical: 16,
+  paddingHorizontal: 24
+}
+```
+
+## 📝 Typography Scale
+
+### Text Styles
+
+```typescript
+// Headers
+title: {
+  fontSize: 22,
+  fontWeight: '700',
+  color: '#2D3748'
+},
+subtitle: {
+  fontSize: 18,
+  fontWeight: '600',
+  color: '#2D3748'
+},
+
+// Body Text
+body: {
+  fontSize: 16,
+  fontWeight: '500',
+  color: '#4A5568'
+},
+bodySmall: {
+  fontSize: 14,
+  fontWeight: '500',
+  color: '#718096'
+},
+
+// Button Text
+buttonText: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#fff'
+},
+buttonTextSecondary: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#4A5568'
+}
+```
+
+## 🎨 Icon Guidelines
+
+### Icon Containers
+
+```typescript
+iconContainer: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  backgroundColor: 'COLOR',
+  justifyContent: 'center',
+  alignItems: 'center'
+},
+statIconContainer: {
+  width: 24,
+  height: 24,
+  borderRadius: 12,
+  backgroundColor: 'rgba(102, 126, 234, 0.1)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginRight: 8
+}
+```
+
+### Icon Usage
+
+- **Primary Icons**: 32px size, white color on colored backgrounds
+- **Secondary Icons**: 20px size, colored (#667eea, #4ECDC4, #FF6B9D)
+- **Stat Icons**: 14px size, with colored backgrounds
+- **Navigation Icons**: 20px size, #667eea color
+
+## 📐 Spacing System
+
+### Standard Spacing
+
+- **Screen Padding**: 20px horizontal
+- **Card Padding**: 20px internal
+- **Card Margins**: 16px bottom
+- **Element Gaps**: 12px between related elements
+- **Action Card Height**: 120px
+- **Icon Container**: 40px (primary), 24px (secondary)
+
+## 🎭 Modal & Overlay Patterns
+
+### Modal Structure
+
+```typescript
+modalOverlay: {
+  position: 'absolute',
+  top: 0, left: 0, right: 0, bottom: 0,
+  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20
+},
+modalContent: {
+  backgroundColor: '#fff',
+  borderRadius: 24,
+  padding: 24,
+  width: '100%',
+  maxWidth: 400,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.25,
+  shadowRadius: 16,
+  elevation: 12
+}
+```
+
+## 🚀 Development Rules
+
+### When Creating New Screens:
+
+1. **Always use the card-based layout** with rounded corners (20px)
+2. **Use the defined color palette** - no custom colors without approval
+3. **Implement 2-column action cards** at the top when applicable
+4. **Use consistent spacing** (20px padding, 16px margins)
+5. **Apply proper shadows** for depth and elevation
+6. **Use the typography scale** for all text elements
+7. **Include proper icon containers** with background colors
+
+### When Modifying Existing Screens:
+
+1. **Maintain the established patterns** from GroupsScreen
+2. **Update colors to match the palette** if they don't
+3. **Ensure consistent spacing and typography**
+4. **Add proper shadows and rounded corners**
+5. **Use the same modal and overlay patterns**
+
+### Component Creation:
+
+1. **Create reusable components** for common patterns
+2. **Use the design system colors and spacing**
+3. **Include proper TypeScript interfaces**
+4. **Add consistent styling and shadows**
+5. **Follow the established naming conventions**
+
+## 📱 Screen-Specific Guidelines
+
+### GroupsScreen Pattern (Reference Implementation):
+
+- 2-column action cards at top
+- Card-based group list
+- Gradient backgrounds for action cards
+- Consistent spacing and typography
+- Proper modal implementation
+
+### Apply This Pattern To:
+
+- ProfileScreen
+- GroupDetailsScreen
+- MatchEntryScreen
+- PlayerProfileScreen
+- SubscriptionScreen
+- Any new screens
+
+## 🎨 Visual Consistency Checklist
+
+Before finalizing any screen:
+
+- [ ] Uses card-based layout with 20px border radius
+- [ ] Implements proper color palette
+- [ ] Has consistent 20px padding/margins
+- [ ] Uses defined typography scale
+- [ ] Includes proper shadows and elevation
+- [ ] Has rounded corners throughout
+- [ ] Uses consistent icon sizing and colors
+- [ ] Follows the established spacing system
+- [ ] Matches the GroupsScreen visual style
+
+## 🔧 Technical Implementation
+
+### Required Imports:
+
+```typescript
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+```
+
+### Safe Area Handling:
+
+```typescript
+const insets = useSafeAreaInsets();
+// Always use: { paddingTop: insets.top }
+```
+
+### Responsive Design:
+
+```typescript
+const { width } = Dimensions.get('window');
+// Use for responsive layouts when needed
+```
+
+Remember: **Consistency is key!** Every screen should feel like part of the same beautiful, modern, and playful app experience. Use the GroupsScreen as your reference implementation and apply these patterns consistently across all screens.

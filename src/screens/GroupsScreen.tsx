@@ -9,14 +9,15 @@ import {
   StyleSheet,
   Alert,
   RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { useGroupStore } from '../store/groupStore';
 import { Group } from '../types';
-import GroupActionButtons from '../components/GroupActionButtons';
 
 interface GroupsScreenProps {
   navigation: any;
@@ -103,27 +104,50 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
   const renderGroupItem = ({ item }: { item: Group }) => (
     <TouchableOpacity style={styles.groupItem} onPress={() => handleGroupPress(item)}>
-      <View style={styles.groupHeader}>
-        <Text style={styles.groupName}>{item.name}</Text>
-        <Ionicons name="chevron-forward" size={20} color="#666" />
-      </View>
-
-      <View style={styles.groupStats}>
-        <View style={styles.statItem}>
-          <Ionicons name="people" size={16} color="#007AFF" />
-          <Text style={styles.statText}>{item.memberCount} membres</Text>
+      <LinearGradient
+        colors={['#FFFFFF', '#F8F9FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.groupCardGradient}
+      >
+        <View style={styles.groupHeader}>
+          <View style={styles.groupTitleContainer}>
+            <View style={styles.groupIconContainer}>
+              <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.groupIconGradient}
+              >
+                <Ionicons name="people" size={20} color="#fff" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.groupName}>{item.name}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#667eea" />
         </View>
-        <View style={styles.statItem}>
-          <Ionicons name="trophy" size={16} color="#FF9500" />
-          <Text style={styles.statText}>{item.gameCount} parties</Text>
-        </View>
-      </View>
 
-      {item.description && (
-        <Text style={styles.groupDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-      )}
+        <View style={styles.groupStats}>
+          <View style={styles.statItem}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="people" size={14} color="#4ECDC4" />
+            </View>
+            <Text style={styles.statText}>{item.memberCount} membres</Text>
+          </View>
+          <View style={styles.statItem}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="trophy" size={14} color="#FF6B9D" />
+            </View>
+            <Text style={styles.statText}>{item.gameCount} parties</Text>
+          </View>
+        </View>
+
+        {item.description && (
+          <Text style={styles.groupDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+      </LinearGradient>
     </TouchableOpacity>
   );
 
@@ -146,9 +170,52 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
     );
   }
 
+  const renderActionCards = () => (
+    <View style={styles.actionCardsContainer}>
+      <TouchableOpacity style={styles.actionCard} onPress={handleCreateGroup}>
+        <LinearGradient
+          colors={['#FF6B9D', '#C44569']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.actionCardGradient}
+        >
+          <View style={styles.actionCardContent}>
+            <View style={styles.actionCardIcon}>
+              <Ionicons name="add-circle" size={32} color="#fff" />
+            </View>
+            <Text style={styles.actionCardTitle}>Créer un groupe</Text>
+            <Text style={styles.actionCardSubtitle}>Commencez votre aventure</Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.actionCard} onPress={handleJoinGroup}>
+        <LinearGradient
+          colors={['#4ECDC4', '#44A08D']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.actionCardGradient}
+        >
+          <View style={styles.actionCardContent}>
+            <View style={styles.actionCardIcon}>
+              <Ionicons name="people" size={32} color="#fff" />
+            </View>
+            <Text style={styles.actionCardTitle}>Rejoindre un groupe</Text>
+            <Text style={styles.actionCardSubtitle}>Avec un code d'invitation</Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <GroupActionButtons onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
+    <LinearGradient
+      colors={['#F8F9FF', '#FFFFFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.container, { paddingTop: insets.top }]}
+    >
+      {renderActionCards()}
 
       {error && (
         <View style={styles.errorContainer}>
@@ -166,8 +233,9 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         contentContainerStyle={groups.length === 0 ? styles.emptyContainer : styles.listContainer}
         ListEmptyComponent={renderEmptyState}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#007AFF']} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#FF6B9D']} />
         }
+        showsVerticalScrollIndicator={false}
       />
 
       {/* Join Group Modal */}
@@ -209,25 +277,27 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
           </View>
         </View>
       )}
-    </View>
+    </LinearGradient>
   );
 }
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5'
+    flex: 1
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F8F9FF'
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666'
+    color: '#667eea',
+    fontWeight: '500'
   },
   errorContainer: {
     flexDirection: 'row',
@@ -236,15 +306,69 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffebee',
     margin: 16,
     padding: 12,
-    borderRadius: 8
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
   errorText: {
     flex: 1,
     color: '#c62828',
-    fontSize: 14
+    fontSize: 14,
+    fontWeight: '500'
   },
+  // Action Cards Styles
+  actionCardsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 12
+  },
+  actionCard: {
+    flex: 1,
+    height: 120,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  actionCardGradient: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  actionCardContent: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  actionCardIcon: {
+    marginBottom: 8,
+    opacity: 0.9
+  },
+  actionCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 4
+  },
+  actionCardSubtitle: {
+    fontSize: 12,
+    color: '#fff',
+    textAlign: 'center',
+    opacity: 0.8,
+    fontWeight: '500'
+  },
+  // List Styles
   listContainer: {
-    padding: 16
+    paddingHorizontal: 20,
+    paddingBottom: 20
   },
   emptyContainer: {
     flex: 1,
@@ -252,131 +376,174 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 32
   },
+  // Group Item Styles
   groupItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5
+    shadowRadius: 8,
+    elevation: 6
+  },
+  groupCardGradient: {
+    borderRadius: 20,
+    padding: 20
   },
   groupHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8
+    marginBottom: 12
+  },
+  groupTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
+  groupIconContainer: {
+    marginRight: 12
+  },
+  groupIconGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   groupName: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    color: '#2D3748',
     flex: 1
   },
   groupStats: {
     flexDirection: 'row',
-    marginBottom: 8
+    marginBottom: 12,
+    gap: 16
   },
   statItem: {
     flexDirection: 'row',
+    alignItems: 'center'
+  },
+  statIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16
+    marginRight: 8
   },
   statText: {
-    marginLeft: 4,
     fontSize: 14,
-    color: '#666'
+    color: '#4A5568',
+    fontWeight: '600'
   },
   groupDescription: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20
+    color: '#718096',
+    lineHeight: 20,
+    fontWeight: '500'
   },
+  // Empty State Styles
   emptyState: {
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingVertical: 40
   },
   emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
     marginTop: 16,
     marginBottom: 8
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
+    color: '#718096',
     textAlign: 'center',
-    lineHeight: 24
+    lineHeight: 24,
+    fontWeight: '500',
+    paddingHorizontal: 20
   },
+  // Modal Styles
   modalOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 24,
     width: '100%',
-    maxWidth: 400
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
+    marginBottom: 8,
+    textAlign: 'center'
   },
   modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20
+    fontSize: 16,
+    color: '#718096',
+    marginBottom: 24,
+    textAlign: 'center',
+    fontWeight: '500'
   },
   inputContainer: {
     marginBottom: 24
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#f9f9f9'
+    backgroundColor: '#F7FAFC',
+    fontWeight: '500',
+    color: '#2D3748'
   },
   modalActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end'
+    justifyContent: 'space-between',
+    gap: 12
   },
   modalButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginLeft: 12
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center'
   },
   cancelButton: {
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F7FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0'
   },
   confirmButton: {
-    backgroundColor: '#007AFF'
+    backgroundColor: '#667eea'
   },
   cancelButtonText: {
-    color: '#666',
+    color: '#4A5568',
     fontSize: 16,
-    fontWeight: '500'
+    fontWeight: '600'
   },
   confirmButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '500'
+    fontWeight: '600'
   }
 });
