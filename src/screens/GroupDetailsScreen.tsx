@@ -12,6 +12,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGroupStore } from '../store/groupStore';
 import { useAuthStore } from '../store/authStore';
 import { Rating, Member } from '../types';
@@ -28,6 +29,7 @@ interface GroupDetailsScreenProps {
 export default function GroupDetailsScreen({ navigation, route }: GroupDetailsScreenProps) {
   const { groupId } = route.params;
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
   const {
     currentGroup,
     currentGroupMembers,
@@ -100,9 +102,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     if (!member) return null;
 
     const isCurrentUser = user?.uid === item.uid;
-    const ratingChange = item.ratingChange || 0;
-    const isPositive = ratingChange > 0;
-    const isNegative = ratingChange < 0;
 
     return (
       <TouchableOpacity
@@ -128,22 +127,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
           <Text style={[styles.ratingText, isCurrentUser && styles.currentUserText]}>
             {item.currentRating}
           </Text>
-          {ratingChange !== 0 && (
-            <View
-              style={[
-                styles.ratingChange,
-                isPositive && styles.positiveChange,
-                isNegative && styles.negativeChange
-              ]}
-            >
-              <Ionicons
-                name={isPositive ? 'trending-up' : 'trending-down'}
-                size={12}
-                color="#fff"
-              />
-              <Text style={styles.ratingChangeText}>{Math.abs(ratingChange)}</Text>
-            </View>
-          )}
         </View>
       </TouchableOpacity>
     );
@@ -182,7 +165,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   if (isLoading && !currentGroup) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Chargement du groupe...</Text>
       </View>
@@ -191,7 +174,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   if (!currentGroup) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
         <Ionicons name="alert-circle-outline" size={64} color="#ff3b30" />
         <Text style={styles.errorTitle}>Groupe introuvable</Text>
         <Text style={styles.errorText}>Ce groupe n'existe pas ou vous n'y avez pas accès</Text>
@@ -203,18 +186,25 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#007AFF']} />
         }
       >
-        {/* Group Header */}
+        {/* Header with Back Button and Group Info */}
         <View style={styles.header}>
-          <Text style={styles.groupName}>{currentGroup.name}</Text>
-          {currentGroup.description && (
-            <Text style={styles.groupDescription}>{currentGroup.description}</Text>
-          )}
+          <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <View style={styles.groupInfo}>
+              <Text style={styles.groupName}>{currentGroup.name}</Text>
+              {currentGroup.description && (
+                <Text style={styles.groupDescription}>{currentGroup.description}</Text>
+              )}
+            </View>
+          </View>
 
           <View style={styles.groupStats}>
             <View style={styles.statItem}>
@@ -295,6 +285,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5'
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  groupInfo: {
+    flex: 1,
+    justifyContent: 'center'
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -347,7 +354,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8
+    textTransform: 'capitalize'
   },
   groupDescription: {
     fontSize: 16,

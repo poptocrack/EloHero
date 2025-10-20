@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import GroupActionButtons from '../components/GroupActionButtons';
 
@@ -11,6 +12,7 @@ interface ProfileScreenProps {
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { user, signOut } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   const handleCreateGroup = () => {
     navigation.navigate('Groups');
@@ -117,7 +119,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           {user?.photoURL ? (

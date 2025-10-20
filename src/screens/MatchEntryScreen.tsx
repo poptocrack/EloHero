@@ -10,6 +10,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator
@@ -30,6 +31,7 @@ interface MatchEntryScreenProps {
 export default function MatchEntryScreen({ navigation, route }: MatchEntryScreenProps) {
   const { groupId } = route.params;
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
   const {
     currentGroupMembers,
     matchEntry,
@@ -158,7 +160,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView style={styles.scrollContainer}>
         {/* Instructions */}
         <View style={styles.instructionsContainer}>

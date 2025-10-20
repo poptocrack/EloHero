@@ -12,6 +12,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { useGroupStore } from '../store/groupStore';
 import { Group } from '../types';
@@ -23,6 +24,7 @@ interface GroupsScreenProps {
 
 export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
   const { groups, isLoading, error, loadUserGroups, createGroup, joinGroupWithCode, clearError } =
     useGroupStore();
 
@@ -137,7 +139,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
   if (isLoading && groups.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Chargement des groupes...</Text>
       </View>
@@ -145,7 +147,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <GroupActionButtons onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
 
       {error && (

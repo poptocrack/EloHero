@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FirestoreService } from '../services/firestore';
 import { RatingChange, Rating } from '../types';
 
@@ -17,6 +18,7 @@ interface PlayerProfileScreenProps {
 
 export default function PlayerProfileScreen({ navigation, route }: PlayerProfileScreenProps) {
   const { uid, groupId } = route.params;
+  const insets = useSafeAreaInsets();
   const [playerRating, setPlayerRating] = useState<Rating | null>(null);
   const [ratingHistory, setRatingHistory] = useState<RatingChange[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +99,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Chargement du profil...</Text>
       </View>
@@ -106,7 +108,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
 
   if (!playerRating) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
         <Ionicons name="person-outline" size={64} color="#ccc" />
         <Text style={styles.errorTitle}>Profil introuvable</Text>
         <Text style={styles.errorText}>Ce joueur n'a pas encore de données dans ce groupe</Text>
@@ -115,7 +117,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Player Header */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>

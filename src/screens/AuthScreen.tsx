@@ -13,9 +13,11 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 
 export default function AuthScreen() {
+  const insets = useSafeAreaInsets();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState(__DEV__ ? 'tristandebroise@gmail.com' : '');
   const [password, setPassword] = useState(__DEV__ ? 'A2xjm3p5' : '');
@@ -75,7 +77,7 @@ export default function AuthScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { paddingTop: insets.top }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>

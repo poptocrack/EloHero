@@ -2,10 +2,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 
 export default function SubscriptionScreen() {
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   const handleUpgrade = () => {
     Alert.alert(
@@ -91,8 +93,7 @@ export default function SubscriptionScreen() {
   );
 
   return (
-    <ScrollView style={styles.container}>
-
+    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
       {/* Current Usage */}
       <View style={styles.usageContainer}>
         <Text style={styles.usageTitle}>Utilisation actuelle</Text>
