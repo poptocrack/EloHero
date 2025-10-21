@@ -346,6 +346,15 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       );
     }
 
+    // Check if group admin is premium
+    const adminPlan = await getUserPlan(groupData.ownerId);
+    if (adminPlan !== 'premium' && groupData.memberCount >= 5) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        'Group admin is not premium and group is at member limit'
+      );
+    }
+
     // Check user plan and group member limit
     const plan = await getUserPlan(uid);
     if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
@@ -773,15 +782,23 @@ export const leaveGroup = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    // Check if user is a member
-    const memberDoc = await db.collection('members').doc(uid).get();
-    if (!memberDoc.exists || memberDoc.data()?.groupId !== groupId) {
+    // Check if user is a member (composite membership id)
+    const memberDocId = `${uid}_${groupId}`;
+    const memberDoc = await db.collection('members').doc(memberDocId).get();
+
+    if (!memberDoc.exists) {
       throw new functions.https.HttpsError('not-found', 'You are not a member of this group');
     }
 
     // Check if user is the owner
     const groupDoc = await db.collection('groups').doc(groupId).get();
+
+    if (!groupDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Group not found');
+    }
+
     const groupData = groupDoc.data()!;
+
     if (groupData.ownerId === uid) {
       throw new functions.https.HttpsError(
         'permission-denied',
@@ -790,7 +807,7 @@ export const leaveGroup = functions.https.onCall(async (data, context) => {
     }
 
     // Remove user from group (composite membership id)
-    await db.collection('members').doc(`${uid}_${groupId}`).delete();
+    await db.collection('members').doc(memberDocId).delete();
 
     // Update group member count
     await db
@@ -813,8 +830,9 @@ export const leaveGroup = functions.https.onCall(async (data, context) => {
     return {
       success: true
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error leaving group:', error);
+
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }

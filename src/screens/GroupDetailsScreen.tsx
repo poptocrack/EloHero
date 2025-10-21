@@ -51,6 +51,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     loadSeasonRatings,
     loadGroupGames,
     clearError,
+    clearGroupData,
     addMember
   } = useGroupStore();
 
@@ -61,9 +62,11 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   const [isAddingMember, setIsAddingMember] = useState(false);
 
   useEffect(() => {
-    // Load group data when component mounts
+    // Clear old group data immediately when navigating to a new group
+    clearGroupData();
+    // Load new group data
     loadGroup(groupId);
-  }, [groupId, loadGroup]);
+  }, [groupId, loadGroup, clearGroupData]);
 
   useEffect(() => {
     // Load season ratings when current season changes
@@ -99,12 +102,28 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
       return;
     }
 
+    // Check member limit before adding
+    if (memberLimitReached) {
+      Alert.alert(
+        t('matchEntry.addMemberModal.memberLimitReached'),
+        t('matchEntry.addMemberModal.memberLimitReachedMessage'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('matchEntry.addMemberModal.upgradeToPremium'),
+            onPress: () => navigation.navigate('Subscription')
+          }
+        ]
+      );
+      return;
+    }
+
     setIsAddingMember(true);
     try {
       await addMember(groupId, newMemberName.trim());
       setShowAddMemberModal(false);
       setNewMemberName('');
-      Alert.alert(t('common.success'), t('matchEntry.addMemberModal.addMemberSuccess'));
+      // No need for success alert - member is already visible optimistically
     } catch (error) {
       Alert.alert(t('common.error'), t('matchEntry.addMemberModal.addMemberError'));
     } finally {
@@ -118,6 +137,11 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   };
 
   const isAdmin = currentGroup && user && currentGroup.ownerId === user.uid;
+
+  // Check if admin is premium and member limit
+  const isAdminPremium = user?.plan === 'premium';
+  const memberLimitReached = !isAdminPremium && currentGroupMembers.length >= 5;
+  const canAddMember = isAdmin && !memberLimitReached;
 
   const handlePlayerPress = (member: Member) => {
     navigation.navigate('PlayerProfile', {
@@ -135,10 +159,14 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         style: 'destructive',
         onPress: async () => {
           try {
+            // Leave group optimistically (removes from UI immediately)
             await useGroupStore.getState().leaveGroup(groupId);
+            // Navigate back immediately - group is already removed from UI
             navigation.goBack();
           } catch (error) {
-            Alert.alert(t('common.error'), t('groupDetails.cannotLeaveGroup'));
+            const errorMessage =
+              error instanceof Error ? error.message : t('groupDetails.cannotLeaveGroup');
+            Alert.alert(t('common.error'), errorMessage);
           }
         }
       }
@@ -192,6 +220,71 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     );
   };
 
+  // Render member item for members without ratings (optimistic updates)
+  const renderMemberItem = ({ member, index }: { member: Member; index: number }) => {
+    const isCurrentUser = user?.uid === member.uid;
+    const isMemberAdmin = currentGroup && member.uid === currentGroup.ownerId;
+    const isOptimistic = member.uid.startsWith('temp_');
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.rankingItem,
+          isCurrentUser && styles.currentUserItem,
+          isOptimistic && styles.optimisticItem
+        ]}
+        onPress={() => handlePlayerPress(member)}
+      >
+        <View style={styles.rankingPosition}>
+          <Text style={[styles.positionText, isCurrentUser && styles.currentUserText]}>
+            {index + 1}
+          </Text>
+        </View>
+
+        <View style={styles.playerInfo}>
+          <View style={styles.playerNameContainer}>
+            <Text
+              style={[
+                styles.playerName,
+                isCurrentUser && styles.currentUserText,
+                isOptimistic && styles.optimisticText
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {member.displayName}
+            </Text>
+            {isMemberAdmin && (
+              <View style={styles.adminBadge}>
+                <Text style={styles.adminBadgeText}>{t('groupDetails.admin')}</Text>
+              </View>
+            )}
+            {isOptimistic && (
+              <View style={styles.optimisticBadge}>
+                <Text style={styles.optimisticBadgeText}>{t('common.loading')}</Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.playerStats, isOptimistic && styles.optimisticText]}>
+            0 parties • 0V 0D 0N
+          </Text>
+        </View>
+
+        <View style={styles.ratingContainer}>
+          <Text
+            style={[
+              styles.ratingText,
+              isCurrentUser && styles.currentUserText,
+              isOptimistic && styles.optimisticText
+            ]}
+          >
+            1200
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderGameItem = ({ item }: { item: any }) => (
     <View style={styles.gameItem}>
       <View style={styles.gameHeader}>
@@ -228,14 +321,49 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
       {/* Add Member Button - Only show for admins */}
       {isAdmin && (
         <TouchableOpacity
-          style={styles.addMemberButton}
-          onPress={() => setShowAddMemberModal(true)}
+          style={[styles.addMemberButton, memberLimitReached && styles.addMemberButtonDisabled]}
+          onPress={() => {
+            if (memberLimitReached) {
+              Alert.alert(
+                t('matchEntry.addMemberModal.memberLimitReached'),
+                t('matchEntry.addMemberModal.memberLimitReachedMessage'),
+                [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('matchEntry.addMemberModal.upgradeToPremium'),
+                    onPress: () => navigation.navigate('Subscription')
+                  }
+                ]
+              );
+            } else {
+              setShowAddMemberModal(true);
+            }
+          }}
+          disabled={memberLimitReached}
         >
           <View style={styles.addMemberButtonContent}>
-            <View style={styles.addMemberIcon}>
-              <Ionicons name="person-add" size={20} color="#667eea" />
+            <View
+              style={[styles.addMemberIcon, memberLimitReached && styles.addMemberIconDisabled]}
+            >
+              <Ionicons
+                name="person-add"
+                size={20}
+                color={memberLimitReached ? '#718096' : '#667eea'}
+              />
             </View>
-            <Text style={styles.addMemberButtonText}>{t('matchEntry.addMember')}</Text>
+            <Text
+              style={[
+                styles.addMemberButtonText,
+                memberLimitReached && styles.addMemberButtonTextDisabled
+              ]}
+            >
+              {t('matchEntry.addMember')}
+            </Text>
+            {memberLimitReached && (
+              <View style={styles.limitBadge}>
+                <Text style={styles.limitBadgeText}>5/5</Text>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       )}
@@ -357,11 +485,19 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         {/* Content Cards */}
         {activeTab === 'ranking' ? (
           <FlatList
-            data={currentSeasonRatings}
-            renderItem={renderRankingItem}
-            keyExtractor={(item) => item.id}
+            data={currentGroupMembers}
+            renderItem={({ item: member, index }) => {
+              // Find rating for this member
+              const rating = currentSeasonRatings.find((r) => r.uid === member.uid);
+              if (rating) {
+                return renderRankingItem({ item: rating, index });
+              } else {
+                return renderMemberItem({ member, index });
+              }
+            }}
+            keyExtractor={(item) => item.uid}
             contentContainerStyle={
-              currentSeasonRatings.length === 0 ? styles.emptyContainer : styles.listContainer
+              currentGroupMembers.length === 0 ? styles.emptyContainer : styles.listContainer
             }
             ListEmptyComponent={renderEmptyRanking}
             ListFooterComponent={renderLeaveGroupFooter}
@@ -788,6 +924,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2D3748'
   },
+  // Optimistic update styles
+  optimisticItem: {
+    opacity: 0.7,
+    backgroundColor: '#f8f9ff'
+  },
+  optimisticText: {
+    color: '#718096',
+    fontStyle: 'italic'
+  },
+  optimisticBadge: {
+    backgroundColor: '#667eea',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 8
+  },
+  optimisticBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600'
+  },
   gameItem: {
     backgroundColor: '#fff',
     padding: 20,
@@ -914,6 +1071,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#667eea'
+  },
+  addMemberButtonDisabled: {
+    backgroundColor: '#F7FAFC',
+    borderColor: '#E2E8F0',
+    opacity: 0.6
+  },
+  addMemberIconDisabled: {
+    backgroundColor: 'rgba(113, 128, 150, 0.1)'
+  },
+  addMemberButtonTextDisabled: {
+    color: '#718096'
+  },
+  limitBadge: {
+    backgroundColor: '#FF6B9D',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8
+  },
+  limitBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600'
   },
   // Modal Styles
   modalOverlay: {

@@ -59,7 +59,10 @@
     "errorJoiningGroup": "Impossible de rejoindre le groupe",
     "pleaseEnterInvitationCode": "Veuillez entrer un code d'invitation",
     "groupJoinedSuccessfully": "Groupe rejoint avec succès !",
-    "unknownError": "Erreur inconnue"
+    "unknownError": "Erreur inconnue",
+    "adminNotPremium": "L'admin du groupe n'est pas premium",
+    "adminNotPremiumMessage": "L'admin de ce groupe a un plan gratuit et ne peut pas accepter de nouveaux membres. Le groupe a atteint sa limite de membres.",
+    "upgradeToJoin": "Passer à Premium"
   },
   "groupDetails": {
     "title": "Détails du groupe",
@@ -84,7 +87,8 @@
     "games": "Parties",
     "invitationCode": "Code d'invitation",
     "admin": "Admin",
-    "newMatch": "Nouvelle Partie"
+    "newMatch": "Nouvelle Partie",
+    "noGamesYet": "Aucune partie encore"
   },
   "profile": {
     "title": "Profil",
@@ -141,7 +145,10 @@
       "enterMemberName": "Entrez le nom du membre",
       "addMemberSuccess": "Membre ajouté avec succès !",
       "addMemberError": "Impossible d'ajouter le membre",
-      "memberNameRequired": "Le nom du membre est requis"
+      "memberNameRequired": "Le nom du membre est requis",
+      "memberLimitReached": "Limite de membres atteinte",
+      "memberLimitReachedMessage": "Les utilisateurs gratuits peuvent ajouter jusqu'à 5 membres. Passez à Premium pour des membres illimités.",
+      "upgradeToPremium": "Passer à Premium"
     }
   },
   "subscription": {

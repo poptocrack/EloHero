@@ -55,7 +55,12 @@ export class CloudFunctionsService {
       } else if (error?.code === 'functions/already-exists') {
         throw new Error(`You are already a member of this group`);
       } else if (error?.code === 'functions/resource-exhausted') {
-        throw new Error(`Group member limit reached for your plan`);
+        // Check if it's the admin premium limit or user plan limit
+        if (errorMessage.includes('Group admin is not premium')) {
+          throw new Error(`Group admin is not premium and group is at member limit`);
+        } else {
+          throw new Error(`Group member limit reached for your plan`);
+        }
       } else {
         throw new Error(`Failed to join group: ${errorMessage} ${errorDetails}`);
       }
@@ -119,11 +124,22 @@ export class CloudFunctionsService {
   // Leave a group
   static async leaveGroup(groupId: string): Promise<ApiResponse<void>> {
     try {
+      console.log('CloudFunctionsService: Attempting to leave group:', groupId);
       const leaveGroup = httpsCallable(functions, 'leaveGroup');
       const result = await leaveGroup({ groupId });
+      console.log('CloudFunctionsService: Leave group result:', result.data);
       return result.data as ApiResponse<void>;
-    } catch (error) {
-      throw new Error(`Failed to leave group: ${error}`);
+    } catch (error: any) {
+      console.error('CloudFunctionsService: Leave group error:', error);
+      console.error('CloudFunctionsService: Error code:', error?.code);
+      console.error('CloudFunctionsService: Error message:', error?.message);
+      console.error('CloudFunctionsService: Error details:', error?.details);
+
+      // Extract more detailed error information
+      const errorMessage = error?.message || error?.code || 'Unknown error';
+      const errorDetails = error?.details || '';
+
+      throw new Error(`Failed to leave group: ${errorMessage} ${errorDetails}`);
     }
   }
 

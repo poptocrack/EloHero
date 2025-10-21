@@ -59,7 +59,10 @@
     "errorJoiningGroup": "Unable to join group",
     "pleaseEnterInvitationCode": "Please enter an invitation code",
     "groupJoinedSuccessfully": "Successfully joined the group!",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "adminNotPremium": "Group admin is not premium",
+    "adminNotPremiumMessage": "This group's admin has a free plan and cannot accept new members. The group is at its member limit.",
+    "upgradeToJoin": "Upgrade to Premium"
   },
   "groupDetails": {
     "title": "Group Details",
@@ -84,7 +87,8 @@
     "games": "Games",
     "invitationCode": "Invitation Code",
     "admin": "Admin",
-    "newMatch": "New Match"
+    "newMatch": "New Match",
+    "noGamesYet": "No games yet"
   },
   "profile": {
     "title": "Profile",
@@ -141,7 +145,10 @@
       "enterMemberName": "Enter the member's name",
       "addMemberSuccess": "Member added successfully!",
       "addMemberError": "Unable to add member",
-      "memberNameRequired": "Member name is required"
+      "memberNameRequired": "Member name is required",
+      "memberLimitReached": "Member limit reached",
+      "memberLimitReachedMessage": "Free users can add up to 5 members. Upgrade to Premium for unlimited members.",
+      "upgradeToPremium": "Upgrade to Premium"
     }
   },
   "subscription": {

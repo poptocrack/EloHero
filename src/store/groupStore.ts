@@ -20,6 +20,7 @@ interface GroupState {
   // Actions
   loadUserGroups: (uid: string) => Promise<void>;
   setCurrentGroup: (group: Group | null) => void;
+  clearGroupData: () => void;
   loadGroup: (groupId: string) => Promise<void>;
   loadGroupMembers: (groupId: string) => Promise<void>;
   loadGroupSeasons: (groupId: string) => Promise<void>;
@@ -101,6 +102,18 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         groupGames: []
       });
     }
+  },
+
+  // Clear all group data immediately (for navigation)
+  clearGroupData: () => {
+    set({
+      currentGroup: null,
+      currentGroupMembers: [],
+      currentSeason: null,
+      currentSeasonRatings: [],
+      groupGames: [],
+      error: null
+    });
   },
 
   loadGroup: async (groupId: string) => {
@@ -240,22 +253,41 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
   leaveGroup: async (groupId: string) => {
     set({ isLoading: true, error: null });
+
+    // Store the group being left for potential rollback
+    const groupToLeave = get().groups.find((g) => g.id === groupId);
+    const currentGroup = get().currentGroup;
+
+    // Optimistically remove group from UI immediately
+    set((state) => ({
+      groups: state.groups.filter((g) => g.id !== groupId),
+      currentGroup: state.currentGroup?.id === groupId ? null : state.currentGroup,
+      isLoading: false
+    }));
+
     try {
       const response = await CloudFunctionsService.leaveGroup(groupId);
       if (!response.success) {
         throw new Error(response.error || 'Failed to leave group');
       }
 
-      set((state) => ({
-        groups: state.groups.filter((g) => g.id !== groupId),
-        currentGroup: state.currentGroup?.id === groupId ? null : state.currentGroup,
-        isLoading: false
-      }));
+      // Success - group is already removed from UI
+      return;
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to leave group',
-        isLoading: false
-      });
+      // Rollback optimistic update on error
+      if (groupToLeave) {
+        set((state) => ({
+          groups: [...state.groups, groupToLeave],
+          currentGroup: currentGroup,
+          error: error instanceof Error ? error.message : 'Failed to leave group',
+          isLoading: false
+        }));
+      } else {
+        set({
+          error: error instanceof Error ? error.message : 'Failed to leave group',
+          isLoading: false
+        });
+      }
       throw error;
     }
   },
@@ -367,6 +399,22 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
   addMember: async (groupId: string, memberName: string) => {
     set({ isLoading: true, error: null });
+
+    // Create optimistic member object
+    const optimisticMember: Member = {
+      uid: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      groupId,
+      displayName: memberName.trim(),
+      photoURL: undefined,
+      joinedAt: new Date(),
+      isActive: true
+    };
+
+    // Add member optimistically to the UI
+    set((state) => ({
+      currentGroupMembers: [...state.currentGroupMembers, optimisticMember]
+    }));
+
     try {
       const response = await CloudFunctionsService.addMember(groupId, memberName);
       if (!response.success || !response.data) {
@@ -375,16 +423,28 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
       const newMember = response.data;
 
-      // Reload group members to get the updated list
-      get().loadGroupMembers(groupId);
+      // Remove optimistic member and refresh all data from server
+      set((state) => ({
+        currentGroupMembers: state.currentGroupMembers.filter(
+          (member) => member.uid !== optimisticMember.uid
+        ),
+        isLoading: false
+      }));
 
-      set({ isLoading: false });
+      // Refresh all group data in the background to get the latest values
+      get().loadGroupMembers(groupId);
+      get().loadSeasonRatings(get().currentSeason?.id || '');
+
       return newMember;
     } catch (error) {
-      set({
+      // Rollback optimistic update on error
+      set((state) => ({
+        currentGroupMembers: state.currentGroupMembers.filter(
+          (member) => member.uid !== optimisticMember.uid
+        ),
         error: error instanceof Error ? error.message : 'Failed to add member',
         isLoading: false
-      });
+      }));
       throw error;
     }
   },

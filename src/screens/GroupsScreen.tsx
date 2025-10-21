@@ -100,7 +100,16 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
     } catch (error) {
       console.error('GroupsScreen: Error joining group:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to join group';
-      Alert.alert(t('common.error'), errorMessage);
+
+      // Handle admin premium limit error with upgrade option
+      if (errorMessage.includes('Group admin is not premium')) {
+        Alert.alert(t('groups.adminNotPremium'), t('groups.adminNotPremiumMessage'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('groups.upgradeToJoin'), onPress: () => navigation.navigate('Subscription') }
+        ]);
+      } else {
+        Alert.alert(t('common.error'), errorMessage);
+      }
     }
   };
 

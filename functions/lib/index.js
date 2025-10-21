@@ -305,6 +305,11 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         if (existingMember.exists) {
             throw new functions.https.HttpsError('already-exists', 'You are already a member of this group');
         }
+        // Check if group admin is premium
+        const adminPlan = await getUserPlan(groupData.ownerId);
+        if (adminPlan !== 'premium' && groupData.memberCount >= 5) {
+            throw new functions.https.HttpsError('resource-exhausted', 'Group admin is not premium and group is at member limit');
+        }
         // Check user plan and group member limit
         const plan = await getUserPlan(uid);
         if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
@@ -638,7 +643,6 @@ exports.generateInviteCode = functions.https.onCall(async (data, context) => {
 });
 // 6. Leave Group Function
 exports.leaveGroup = functions.https.onCall(async (data, context) => {
-    var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -648,19 +652,23 @@ exports.leaveGroup = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'Group ID is required');
     }
     try {
-        // Check if user is a member
-        const memberDoc = await db.collection('members').doc(uid).get();
-        if (!memberDoc.exists || ((_a = memberDoc.data()) === null || _a === void 0 ? void 0 : _a.groupId) !== groupId) {
+        // Check if user is a member (composite membership id)
+        const memberDocId = `${uid}_${groupId}`;
+        const memberDoc = await db.collection('members').doc(memberDocId).get();
+        if (!memberDoc.exists) {
             throw new functions.https.HttpsError('not-found', 'You are not a member of this group');
         }
         // Check if user is the owner
         const groupDoc = await db.collection('groups').doc(groupId).get();
+        if (!groupDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Group not found');
+        }
         const groupData = groupDoc.data();
         if (groupData.ownerId === uid) {
             throw new functions.https.HttpsError('permission-denied', 'Group owner cannot leave the group. Transfer ownership or delete the group instead.');
         }
         // Remove user from group (composite membership id)
-        await db.collection('members').doc(`${uid}_${groupId}`).delete();
+        await db.collection('members').doc(memberDocId).delete();
         // Update group member count
         await db
             .collection('groups')
@@ -945,10 +953,7 @@ exports.addMember = functions.https.onCall(async (data, context) => {
         // Generate a unique UID for the virtual member
         const virtualMemberUid = `virtual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         // Add virtual member to the group
-        await db
-            .collection('members')
-            .doc(`${virtualMemberUid}_${groupId}`)
-            .set({
+        await db.collection('members').doc(`${virtualMemberUid}_${groupId}`).set({
             uid: virtualMemberUid,
             groupId,
             displayName: memberName.trim(),
