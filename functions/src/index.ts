@@ -18,7 +18,7 @@ const ELO_CONFIG = {
 // Plan Limits
 const PLAN_LIMITS = {
   free: {
-    maxGroups: 10, // Temporarily increased for testing
+    maxGroups: 2, // Free users can only create/join 2 groups
     maxMembersPerGroup: 5,
     seasonsEnabled: false
   },
@@ -166,7 +166,7 @@ export const createGroup = functions.https.onCall(async (data, context) => {
     if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
       throw new functions.https.HttpsError(
         'resource-exhausted',
-        'Group limit reached for your plan'
+        'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.'
       );
     }
 
@@ -346,6 +346,18 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       );
     }
 
+    // Check user's total group count limit
+    const plan = await getUserPlan(uid);
+    const userDoc = await db.collection('users').doc(uid).get();
+    const currentGroupsCount = userDoc.data()?.groupsCount || 0;
+
+    if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        'Group limit reached for your plan. Upgrade to premium for unlimited groups.'
+      );
+    }
+
     // Check if group admin is premium
     const adminPlan = await getUserPlan(groupData.ownerId);
     if (adminPlan !== 'premium' && groupData.memberCount >= 5) {
@@ -356,7 +368,6 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
     }
 
     // Check user plan and group member limit
-    const plan = await getUserPlan(uid);
     if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
       throw new functions.https.HttpsError(
         'resource-exhausted',
@@ -389,6 +400,15 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       .doc(groupId)
       .update({
         memberCount: admin.firestore.FieldValue.increment(1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+    // Update user's group count
+    await db
+      .collection('users')
+      .doc(uid)
+      .update({
+        groupsCount: admin.firestore.FieldValue.increment(1),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 

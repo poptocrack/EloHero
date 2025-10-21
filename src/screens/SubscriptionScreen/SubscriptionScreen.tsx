@@ -64,14 +64,14 @@ export default function SubscriptionScreen({ navigation }: any) {
       description: t('subscription.advancedStatsDesc'),
       free: t('subscription.basic'),
       premium: t('subscription.advanced')
-    },
-    {
-      icon: 'cloud-upload',
-      title: t('subscription.dataExport'),
-      description: t('subscription.dataExportDesc'),
-      free: t('subscription.notAvailable'),
-      premium: t('subscription.available')
     }
+    // {
+    //   icon: 'cloud-upload',
+    //   title: t('subscription.dataExport'),
+    //   description: t('subscription.dataExportDesc'),
+    //   free: t('subscription.notAvailable'),
+    //   premium: t('subscription.available')
+    // }
   ];
 
   return (

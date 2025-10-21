@@ -62,7 +62,10 @@
     "unknownError": "Erreur inconnue",
     "adminNotPremium": "L'admin du groupe n'est pas premium",
     "adminNotPremiumMessage": "L'admin de ce groupe a un plan gratuit et ne peut pas accepter de nouveaux membres. Le groupe a atteint sa limite de membres.",
-    "upgradeToJoin": "Passer à Premium"
+    "upgradeToJoin": "Passer à Premium",
+    "groupLimitReached": "Limite de groupes atteinte",
+    "groupLimitMessage": "Les utilisateurs gratuits peuvent créer ou rejoindre jusqu'à 2 groupes. Passez à Premium pour des groupes illimités.",
+    "upgradeToPremium": "Passer à Premium"
   },
   "groupDetails": {
     "title": "Détails du groupe",
@@ -84,7 +87,6 @@
     "cannotLeaveGroup": "Impossible de quitter le groupe",
     "groupNotAccessible": "Ce groupe n'existe pas ou vous n'y avez pas accès",
     "ranking": "Classement",
-    "games": "Parties",
     "invitationCode": "Code d'invitation",
     "admin": "Admin",
     "newMatch": "Nouvelle Partie",
@@ -183,7 +185,7 @@
     "premiumPlan": "Premium",
     "monthly": "/ mois",
     "premiumDescription": "Accès à toutes les fonctionnalités premium",
-    "unlimitedGroupsDesc": "Créez autant de groupes que vous voulez",
+    "unlimitedGroupsDesc": "Créez et rejoignez autant de groupes que vous voulez",
     "unlimitedMembersDesc": "Ajoutez autant de joueurs que nécessaire",
     "seasonsDesc": "Créez des saisons et réinitialisez les ELO",
     "resetEloDesc": "Réinitialisez les scores pour une nouvelle saison",

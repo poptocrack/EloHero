@@ -65,13 +65,24 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
                 console.log('Group created successfully');
               } catch (error) {
                 console.error('Error creating group:', error);
-                // Error handled by store, but also show alert
-                Alert.alert(
-                  t('common.error'),
-                  `${t('groups.errorCreatingGroup')}: ${
-                    error instanceof Error ? error.message : t('groups.unknownError')
-                  }`
-                );
+                const errorMessage =
+                  error instanceof Error ? error.message : t('groups.unknownError');
+
+                // Handle group limit error with upgrade option
+                if (errorMessage.includes('Group limit reached for your plan')) {
+                  Alert.alert(t('groups.groupLimitReached'), t('groups.groupLimitMessage'), [
+                    { text: t('common.cancel'), style: 'cancel' },
+                    {
+                      text: t('groups.upgradeToPremium'),
+                      onPress: () => navigation.navigate('Subscription')
+                    }
+                  ]);
+                } else {
+                  Alert.alert(
+                    t('common.error'),
+                    `${t('groups.errorCreatingGroup')}: ${errorMessage}`
+                  );
+                }
               }
             }
           }
@@ -106,6 +117,11 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         Alert.alert(t('groups.adminNotPremium'), t('groups.adminNotPremiumMessage'), [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('groups.upgradeToJoin'), onPress: () => navigation.navigate('Subscription') }
+        ]);
+      } else if (errorMessage.includes('Group limit reached for your plan')) {
+        Alert.alert(t('groups.groupLimitReached'), t('groups.groupLimitMessage'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('groups.upgradeToPremium'), onPress: () => navigation.navigate('Subscription') }
         ]);
       } else {
         Alert.alert(t('common.error'), errorMessage);
