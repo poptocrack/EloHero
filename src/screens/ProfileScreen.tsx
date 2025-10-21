@@ -1,190 +1,183 @@
 // Profile Screen
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
-import GroupActionButtons from '../components/GroupActionButtons';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileScreenProps {
   navigation: any;
 }
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const { user, signOut } = useAuthStore();
+  const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
-
-  const handleCreateGroup = () => {
-    navigation.navigate('Groups');
-    // The create group functionality will be handled in GroupsScreen
-  };
-
-  const handleJoinGroup = () => {
-    navigation.navigate('Groups');
-    // The join group functionality will be handled in GroupsScreen
-  };
-
-  const handleSignOut = () => {
-    Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Déconnexion',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch (error) {
-            Alert.alert('Erreur', 'Impossible de se déconnecter');
-          }
-        }
-      }
-    ]);
-  };
+  const { t } = useTranslation();
 
   const handleSubscription = () => {
     navigation.navigate('Subscription');
   };
 
   const handleAbout = () => {
-    Alert.alert(
-      "À propos d'EloHero",
-      'Version 1.0.0\n\nEloHero est une application de classement ELO communautaire qui permet aux groupes de joueurs de suivre leurs performances et de créer des classements dynamiques basés sur leurs parties.',
-      [{ text: 'OK' }]
-    );
+    Alert.alert(t('profile.about'), t('profile.aboutMessage'), [{ text: t('common.done') }]);
   };
 
   const handleSupport = () => {
-    Alert.alert(
-      'Support',
-      'Pour toute question ou problème, contactez-nous à support@elohero.app',
-      [{ text: 'OK' }]
-    );
+    Alert.alert(t('profile.support'), t('profile.supportMessage'), [
+      { text: t('common.done'), style: 'cancel' },
+      { text: t('profile.goToDiscord'), onPress: handleDiscord }
+    ]);
+  };
+
+  const handleDiscord = async () => {
+    const discordUrl = 'https://discord.gg/2MZeDx5CNZ';
+    try {
+      const supported = await Linking.canOpenURL(discordUrl);
+      if (supported) {
+        await Linking.openURL(discordUrl);
+      } else {
+        Alert.alert(t('common.error'), t('profile.cannotOpenDiscord'));
+      }
+    } catch (error) {
+      Alert.alert(t('common.error'), t('profile.cannotOpenDiscord'));
+    }
   };
 
   const menuItems = [
     {
-      title: 'Abonnement',
-      subtitle: user?.plan === 'premium' ? 'Premium actif' : 'Plan gratuit',
+      title: t('profile.subscription'),
+      subtitle: user?.plan === 'premium' ? t('profile.premiumActive') : t('profile.freePlan'),
       icon: 'diamond-outline',
       onPress: handleSubscription,
       showChevron: true
     },
     {
-      title: 'À propos',
-      subtitle: 'Version et informations',
+      title: t('profile.discord'),
+      subtitle: t('profile.discordSubtitle'),
+      icon: 'logo-discord',
+      onPress: handleDiscord,
+      showChevron: false
+    },
+    {
+      title: t('profile.about'),
+      subtitle: t('profile.aboutSubtitle'),
       icon: 'information-circle-outline',
       onPress: handleAbout,
       showChevron: false
     },
     {
-      title: 'Support',
-      subtitle: 'Aide et contact',
+      title: t('profile.support'),
+      subtitle: t('profile.supportSubtitle'),
       icon: 'help-circle-outline',
       onPress: handleSupport,
       showChevron: false
-    },
-    {
-      title: 'Déconnexion',
-      subtitle: "Se déconnecter de l'application",
-      icon: 'log-out-outline',
-      onPress: handleSignOut,
-      showChevron: false,
-      destructive: true
     }
   ];
 
-  const renderMenuItem = (item: any, index: number) => (
-    <TouchableOpacity
-      key={index}
-      style={[styles.menuItem, item.destructive && styles.destructiveItem]}
-      onPress={item.onPress}
-    >
-      <View style={styles.menuItemLeft}>
-        <View style={[styles.iconContainer, item.destructive && styles.destructiveIcon]}>
-          <Ionicons
-            name={item.icon as any}
-            size={24}
-            color={item.destructive ? '#ff3b30' : '#007AFF'}
-          />
-        </View>
-        <View style={styles.menuItemText}>
-          <Text style={[styles.menuItemTitle, item.destructive && styles.destructiveText]}>
-            {item.title}
-          </Text>
-          <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
-        </View>
-      </View>
-      {item.showChevron && <Ionicons name="chevron-forward" size={20} color="#c7c7cc" />}
-    </TouchableOpacity>
-  );
-
   return (
-    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          {user?.photoURL ? (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{user.displayName?.charAt(0).toUpperCase()}</Text>
-            </View>
-          ) : (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                {user?.displayName?.charAt(0).toUpperCase() || t('profile.user').charAt(0)}
               </Text>
             </View>
-          )}
-        </View>
-        <Text style={styles.userName}>{user?.displayName || 'Utilisateur'}</Text>
-        <Text style={styles.userEmail}>{user?.uid}</Text>
+          </View>
+          <Text style={styles.userName}>{user?.displayName || t('profile.user')}</Text>
+          <Text style={styles.userEmail}>{user?.uid}</Text>
 
-        <View style={styles.planBadge}>
-          <Ionicons
-            name={user?.plan === 'premium' ? 'diamond' : 'person'}
-            size={16}
-            color={user?.plan === 'premium' ? '#ffd700' : '#666'}
-          />
-          <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
-            {user?.plan === 'premium' ? 'Premium' : 'Gratuit'}
-          </Text>
+          <View style={styles.planBadge}>
+            <View style={styles.planIconContainer}>
+              <Ionicons
+                name={user?.plan === 'premium' ? 'diamond' : 'person'}
+                size={16}
+                color={user?.plan === 'premium' ? '#ffd700' : '#667eea'}
+              />
+            </View>
+            <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
+              {user?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{user?.groupsCount || 0}</Text>
-          <Text style={styles.statLabel}>Groupes</Text>
+        {/* Stats Cards */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="people" size={20} color="#667eea" />
+            </View>
+            <Text style={styles.statNumber}>{user?.groupsCount || 0}</Text>
+            <Text style={styles.statLabel}>{t('profile.groups')}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="trending-up" size={20} color="#4ECDC4" />
+            </View>
+            <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '2'}</Text>
+            <Text style={styles.statLabel}>{t('profile.groupLimit')}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="person-add" size={20} color="#FF6B9D" />
+            </View>
+            <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '5'}</Text>
+            <Text style={styles.statLabel}>{t('profile.memberLimit')}</Text>
+          </View>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '2'}</Text>
-          <Text style={styles.statLabel}>Limite groupes</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '5'}</Text>
-          <Text style={styles.statLabel}>Membres max</Text>
-        </View>
-      </View>
 
-      <GroupActionButtons onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
-
-      <View style={styles.menuContainer}>{menuItems.map(renderMenuItem)}</View>
-    </ScrollView>
+        {/* Menu Cards */}
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity key={index} style={styles.menuCard} onPress={item.onPress}>
+              <View style={styles.menuCardContent}>
+                <View
+                  style={[
+                    styles.menuIconContainer,
+                    item.icon === 'logo-discord' && styles.discordIconContainer
+                  ]}
+                >
+                  <Ionicons
+                    name={item.icon as any}
+                    size={24}
+                    color={item.icon === 'logo-discord' ? '#5865F2' : '#667eea'}
+                  />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={styles.menuTitle}>{item.title}</Text>
+                  <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                </View>
+                {item.showChevron && <Ionicons name="chevron-forward" size={20} color="#c7c7cc" />}
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F8F9FF'
   },
   header: {
     backgroundColor: '#fff',
     alignItems: 'center',
     paddingVertical: 32,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6
   },
   avatarContainer: {
     marginBottom: 16
@@ -193,9 +186,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8
   },
   avatarText: {
     fontSize: 32,
@@ -203,111 +201,125 @@ const styles = StyleSheet.create({
     color: '#fff'
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
     marginBottom: 4
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 12
+    color: '#718096',
+    marginBottom: 16
   },
   planBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16
+    backgroundColor: '#F7FAFC',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  planIconContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8
   },
   planText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-    marginLeft: 4
+    fontWeight: '600',
+    color: '#4A5568'
   },
   premiumText: {
     color: '#ffd700'
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginTop: 16,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    paddingVertical: 20
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 12
   },
-  statItem: {
+  statCard: {
     flex: 1,
-    alignItems: 'center'
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#007AFF',
+    fontWeight: '700',
+    color: '#2D3748',
     marginBottom: 4
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    fontWeight: '500',
+    color: '#718096',
     textAlign: 'center'
   },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 8
-  },
   menuContainer: {
-    marginTop: 16,
-    marginHorizontal: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden'
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0'
+    paddingBottom: 20
   },
-  destructiveItem: {
-    borderBottomWidth: 0
+  menuCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6
   },
-  menuItemLeft: {
+  menuCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1
+    padding: 20
   },
-  iconContainer: {
+  menuIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16
   },
-  destructiveIcon: {
-    backgroundColor: '#ffebee'
+  discordIconContainer: {
+    backgroundColor: 'rgba(88, 101, 242, 0.1)'
   },
-  menuItemText: {
+  menuTextContainer: {
     flex: 1
   },
-  menuItemTitle: {
+  menuTitle: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
+    color: '#2D3748',
     marginBottom: 2
   },
-  menuItemSubtitle: {
+  menuSubtitle: {
     fontSize: 14,
-    color: '#666'
-  },
-  destructiveText: {
-    color: '#ff3b30'
+    fontWeight: '500',
+    color: '#718096'
   }
 });
