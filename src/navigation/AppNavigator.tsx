@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/auth';
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -23,6 +24,8 @@ const OnboardingStack = createStackNavigator<{ SetPseudo: undefined }>();
 
 // Main Tab Navigator
 function MainTabNavigator() {
+  const { t } = useTranslation();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -39,13 +42,44 @@ function MainTabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#667eea',
+        tabBarInactiveTintColor: '#718096',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 0,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          height: 90,
+          paddingBottom: 20,
+          paddingTop: 12,
+          paddingHorizontal: 20,
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: -4
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 8
+        },
+        tabBarLabelStyle: {
+          fontSize: 14,
+          fontWeight: '600',
+          marginTop: 4
+        },
         headerShown: false
       })}
     >
-      <Tab.Screen name="Groups" component={GroupsScreen} options={{ title: 'Mes Groupes' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+      <Tab.Screen
+        name="Groups"
+        component={GroupsScreen}
+        options={{ title: t('navigation.groups') }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: t('navigation.profile') }}
+      />
     </Tab.Navigator>
   );
 }

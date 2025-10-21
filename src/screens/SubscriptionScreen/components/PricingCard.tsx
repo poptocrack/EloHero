@@ -23,7 +23,7 @@ export default function PricingCard() {
           </View>
           <Text style={styles.pricingName}>{t('subscription.premiumPlan')}</Text>
           <View style={styles.pricingPriceContainer}>
-            <Text style={styles.pricingPrice}>4,99€</Text>
+            <Text style={styles.pricingPrice}>2,99€</Text>
             <Text style={styles.pricingPeriod}>{t('subscription.monthly')}</Text>
           </View>
         </View>
