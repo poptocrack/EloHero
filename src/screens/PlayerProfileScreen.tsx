@@ -44,18 +44,30 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   const loadPlayerData = async () => {
     try {
       setIsLoading(true);
+      console.log('Loading player data for uid:', uid, 'groupId:', groupId);
+
       // For now, we'll load the first season's data
       // In a real app, you'd want to get the current season
       const seasons = await FirestoreService.getGroupSeasons(groupId);
+      console.log('Found seasons:', seasons.length);
+
       const currentSeason = seasons.find((s) => s.isActive) || seasons[0];
+      console.log('Using season:', currentSeason?.id, 'isActive:', currentSeason?.isActive);
 
       if (currentSeason) {
         const ratings = await FirestoreService.getSeasonRatings(currentSeason.id);
+        console.log('Found ratings:', ratings.length);
+
         const playerRatingData = ratings.find((r) => r.uid === uid);
+        console.log('Player rating data:', playerRatingData);
         setPlayerRating(playerRatingData || null);
 
         const history = await FirestoreService.getUserRatingHistory(uid, currentSeason.id);
+        console.log('Found rating history:', history.length, 'items');
+        console.log('Rating history data:', history);
         setRatingHistory(history);
+      } else {
+        console.log('No season found for group');
       }
     } catch (error) {
       console.error('Error loading player data:', error);
@@ -71,6 +83,8 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   };
 
   const renderRatingChange = ({ item }: { item: RatingChange }) => {
+    console.log('Rendering rating change item:', item);
+
     const isPositive = item.ratingChange > 0;
     const isNegative = item.ratingChange < 0;
 
@@ -273,6 +287,20 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
         {/* Rating History Section */}
         <View style={styles.historySection}>
           <Text style={styles.historyTitle}>{t('playerProfile.ratingHistory')}</Text>
+
+          {/* Debug info - remove this after fixing */}
+          {__DEV__ && (
+            <View style={styles.card}>
+              <View style={styles.cardGradient}>
+                <Text style={styles.debugText}>Debug: {ratingHistory.length} history items</Text>
+                {ratingHistory.length > 0 && (
+                  <Text style={styles.debugText}>
+                    First item: {JSON.stringify(ratingHistory[0], null, 2)}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
 
           {ratingHistory.length === 0 ? (
             <View style={styles.card}>
@@ -597,5 +625,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#4A5568',
     textAlign: 'center'
+  },
+  debugText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#718096',
+    fontFamily: 'monospace'
   }
 });

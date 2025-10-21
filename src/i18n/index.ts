@@ -30,7 +30,7 @@ const LANGUAGE_DETECTOR = {
     } catch (error) {
       console.log('Error saving language to storage:', error);
     }
-  },
+  }
 };
 
 i18n
@@ -39,18 +39,17 @@ i18n
   .init({
     compatibilityJSON: 'v3',
     fallbackLng: 'fr',
-    debug: __DEV__,
     resources: {
       en: {
-        translation: en,
+        translation: en
       },
       fr: {
-        translation: fr,
-      },
+        translation: fr
+      }
     },
     interpolation: {
-      escapeValue: false,
-    },
+      escapeValue: false
+    }
   });
 
 export default i18n;

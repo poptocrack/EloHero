@@ -336,6 +336,8 @@ export class FirestoreService {
     limitCount: number = 50
   ): Promise<RatingChange[]> {
     try {
+      console.log('Getting rating history for uid:', uid, 'seasonId:', seasonId);
+
       // First try with orderBy, if it fails due to missing index, try without
       let ratingChangesQuery;
       try {
@@ -346,6 +348,7 @@ export class FirestoreService {
           orderBy('createdAt', 'desc'),
           limit(limitCount)
         );
+        console.log('Using rating changes query with orderBy');
       } catch (indexError) {
         console.log('Index not found for rating changes query, trying without orderBy');
         ratingChangesQuery = query(
@@ -357,11 +360,19 @@ export class FirestoreService {
       }
 
       const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
-      const ratingChanges = ratingChangesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      })) as RatingChange[];
+      console.log('Rating changes snapshot size:', ratingChangesSnapshot.size);
+
+      const ratingChanges = ratingChangesSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        console.log('Rating change doc:', doc.id, data);
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date()
+        };
+      }) as RatingChange[];
+
+      console.log('Processed rating changes:', ratingChanges.length);
 
       // Sort manually if we couldn't use orderBy
       return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
