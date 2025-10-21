@@ -9,7 +9,6 @@ export interface User {
   photoURL?: string;
   plan: UserPlan;
   groupsCount: number;
-  stripeCustomerId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -110,8 +109,6 @@ export interface Invite {
 
 export interface Subscription {
   uid: string;
-  stripeCustomerId: string;
-  stripeSubscriptionId: string;
   plan: UserPlan;
   status: 'active' | 'canceled' | 'past_due' | 'unpaid';
   currentPeriodStart: Date;

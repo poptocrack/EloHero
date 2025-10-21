@@ -199,8 +199,7 @@
     "upgradeAlertMessage": "La fonctionnalité d'abonnement sera bientôt disponible. Contactez-nous pour plus d'informations.",
     "manageAlert": "Gérer l'abonnement",
     "manageAlertMessage": "La gestion d'abonnement sera bientôt disponible.",
-    "cancelAnytime": "Annulez à tout moment. Aucun engagement.",
-    "securePayment": "Paiement sécurisé via Stripe."
+    "cancelAnytime": "Annulez à tout moment. Aucun engagement."
   },
   "navigation": {
     "groups": "Groupes",

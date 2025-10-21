@@ -199,8 +199,7 @@
     "upgradeAlertMessage": "Subscription feature will be available soon. Contact us for more information.",
     "manageAlert": "Manage Subscription",
     "manageAlertMessage": "Subscription management will be available soon.",
-    "cancelAnytime": "Cancel anytime. No commitment.",
-    "securePayment": "Secure payment via Stripe."
+    "cancelAnytime": "Cancel anytime. No commitment."
   },
   "navigation": {
     "groups": "Groups",
