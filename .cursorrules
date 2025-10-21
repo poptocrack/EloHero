@@ -548,3 +548,215 @@ export default function MyComponent() {
 Remember: **Consistency is key!** Every screen should feel like part of the same beautiful, modern, and playful app experience. Use the GroupsScreen as your reference implementation and apply these patterns consistently across all screens.
 
 **🌍 TRANSLATION RULE: NO HARDCODED TEXT ALLOWED - EVERY STRING MUST USE TRANSLATIONS!**
+
+## 🚫 **TypeScript & Code Quality Rules**
+
+### **MANDATORY TypeScript Rules:**
+
+#### **1. NO `any` Type Allowed:**
+
+- **NEVER use `any` type** - Always provide proper type definitions
+- **Use specific types** or create interfaces for all data structures
+- **Use generics** when types can vary but structure is known
+
+```typescript
+// ❌ WRONG - Using any
+function handleData(data: any) {
+  return data.something;
+}
+
+// ✅ CORRECT - Proper typing
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+}
+
+function handleData(data: UserData) {
+  return data.name;
+}
+
+// ✅ CORRECT - Using generics
+function handleData<T>(data: T): T {
+  return data;
+}
+```
+
+#### **2. ALL Function Parameters Must Be Typed:**
+
+- **Every function parameter** must have explicit type annotations
+- **No implicit typing** - TypeScript should never infer parameter types
+- **Use proper interfaces** for complex objects
+
+```typescript
+// ❌ WRONG - Untyped parameters
+function createUser(name, email, age) {
+  return { name, email, age };
+}
+
+// ✅ CORRECT - Fully typed parameters
+interface CreateUserParams {
+  name: string;
+  email: string;
+  age: number;
+}
+
+function createUser(params: CreateUserParams): User {
+  return {
+    name: params.name,
+    email: params.email,
+    age: params.age
+  };
+}
+```
+
+#### **3. Error Handling Must Be Typed:**
+
+- **All error objects** must have proper type definitions
+- **Use specific error types** instead of generic Error
+- **Create custom error interfaces** for different error scenarios
+
+```typescript
+// ❌ WRONG - Generic error handling
+catch (error) {
+  console.error(error);
+}
+
+// ✅ CORRECT - Typed error handling
+interface ApiError {
+  code: string;
+  message: string;
+  details?: string;
+}
+
+catch (error: ApiError) {
+  console.error(`API Error ${error.code}: ${error.message}`);
+}
+```
+
+### **Optimistic UI Rules:**
+
+#### **MANDATORY Optimistic Updates:**
+
+1. **ALL user actions with API calls** must be optimistic by default
+2. **Update UI immediately** before server response
+3. **Implement rollback logic** for failed operations
+4. **Show loading states** only when necessary
+5. **Provide instant feedback** for all user interactions
+
+#### **Optimistic Update Pattern:**
+
+```typescript
+// ✅ CORRECT - Optimistic update pattern
+const handleUserAction = async (data: ActionData) => {
+  // 1. Update UI immediately (optimistic)
+  setState((prevState) => ({
+    ...prevState,
+    items: [...prevState.items, newItem],
+    isLoading: false
+  }));
+
+  try {
+    // 2. Make API call in background
+    const response = await apiCall(data);
+
+    // 3. Success - UI already updated
+    return response;
+  } catch (error) {
+    // 4. Rollback on error
+    setState((prevState) => ({
+      ...prevState,
+      items: prevState.items.filter((item) => item.id !== newItem.id),
+      error: error.message
+    }));
+    throw error;
+  }
+};
+```
+
+#### **When to Use Optimistic Updates:**
+
+- ✅ **Creating items** (groups, members, games)
+- ✅ **Deleting items** (leaving groups, removing members)
+- ✅ **Updating items** (editing names, descriptions)
+- ✅ **User interactions** (likes, favorites, selections)
+- ❌ **Authentication** (login, logout, signup)
+- ❌ **Critical operations** (payments, data deletion)
+
+#### **Optimistic Update Checklist:**
+
+- [ ] UI updates immediately on user action
+- [ ] Loading states are minimal or hidden
+- [ ] Rollback logic handles all error cases
+- [ ] User gets instant feedback
+- [ ] Error messages are clear and actionable
+- [ ] No unnecessary waiting for server responses
+
+### **Code Quality Standards:**
+
+#### **Interface Definitions:**
+
+```typescript
+// ✅ ALWAYS define interfaces for props
+interface ComponentProps {
+  title: string;
+  onPress: () => void;
+  isVisible: boolean;
+  data: UserData[];
+}
+
+// ✅ Use proper generic constraints
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+```
+
+#### **Function Signatures:**
+
+```typescript
+// ✅ ALWAYS type all parameters and return values
+function processUserData(user: User, options: ProcessOptions): ProcessedUser {
+  // Implementation
+}
+
+// ✅ Use proper async/await typing
+async function fetchData(id: string): Promise<ApiResponse<UserData>> {
+  // Implementation
+}
+```
+
+#### **Event Handlers:**
+
+```typescript
+// ✅ Properly type event handlers
+const handlePress = (event: GestureResponderEvent): void => {
+  // Implementation
+};
+
+const handleTextChange = (text: string): void => {
+  // Implementation
+};
+```
+
+### **Enforcement Rules:**
+
+1. **Code Review**: All code must pass TypeScript strict mode
+2. **Linting**: ESLint rules must enforce no-any and explicit typing
+3. **Testing**: All optimistic updates must be tested for rollback scenarios
+4. **Documentation**: Complex types must be documented with JSDoc
+
+### **Quality Checklist:**
+
+- [ ] No `any` types used anywhere
+- [ ] All function parameters are explicitly typed
+- [ ] All return types are specified
+- [ ] Error handling uses typed interfaces
+- [ ] User actions are optimistic by default
+- [ ] Rollback logic is implemented for all optimistic updates
+- [ ] Loading states are minimal and user-friendly
+- [ ] All interfaces are properly documented
+
+**🚫 TYPESCRIPT RULE: NO `any` TYPES ALLOWED - ALL CODE MUST BE FULLY TYPED!**
+**⚡ OPTIMISTIC RULE: ALL USER ACTIONS MUST BE OPTIMISTIC - INSTANT UI UPDATES REQUIRED!**
