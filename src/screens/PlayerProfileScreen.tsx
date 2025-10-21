@@ -9,13 +9,16 @@ import {
   RefreshControl,
   TouchableOpacity,
   Dimensions,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { FirestoreService } from '../services/firestore';
 import { RatingChange, Rating } from '../types';
+import { useAuthStore } from '../store/authStore';
+import { useGroupStore } from '../store/groupStore';
 
 interface PlayerProfileScreenProps {
   navigation: any;
@@ -32,10 +35,13 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   const { uid, groupId, displayName } = route.params;
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { user } = useAuthStore();
+  const { currentGroup, removeMember } = useGroupStore();
   const [playerRating, setPlayerRating] = useState<Rating | null>(null);
   const [ratingHistory, setRatingHistory] = useState<RatingChange[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   useEffect(() => {
     loadPlayerData();
@@ -80,6 +86,41 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
     setRefreshing(true);
     await loadPlayerData();
     setRefreshing(false);
+  };
+
+  // Check if current user is admin of the group
+  const isAdmin = currentGroup?.ownerId === user?.uid;
+
+  const handleRemoveMember = async () => {
+    if (!isAdmin) return;
+
+    Alert.alert(
+      t('playerProfile.confirmRemove'),
+      `${t('playerProfile.confirmRemoveMessage')}\n\n${t('playerProfile.removeWarning')}`,
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel'
+        },
+        {
+          text: t('playerProfile.confirmRemove'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsRemoving(true);
+              await removeMember(groupId, uid);
+              Alert.alert(t('common.success'), t('playerProfile.removeSuccess'));
+              navigation.goBack();
+            } catch (error) {
+              console.error('Error removing member:', error);
+              Alert.alert(t('common.error'), t('playerProfile.removeError'));
+            } finally {
+              setIsRemoving(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderRatingChange = ({ item }: { item: RatingChange }) => {
@@ -198,6 +239,28 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
             </View>
           </View>
         </View>
+
+        {/* Admin Remove Button */}
+        {isAdmin && (
+          <View style={styles.adminActionsCard}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={handleRemoveMember}
+              disabled={isRemoving}
+            >
+              <View style={[styles.removeButtonGradient, { backgroundColor: '#c62828' }]}>
+                <View style={styles.removeButtonContent}>
+                  <View style={styles.removeButtonIconContainer}>
+                    <Ionicons name="person-remove" size={20} color="#fff" />
+                  </View>
+                  <Text style={styles.removeButtonText}>
+                    {isRemoving ? t('common.loading') : t('playerProfile.removeFromGroup')}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
@@ -631,5 +694,40 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#718096',
     fontFamily: 'monospace'
+  },
+  adminActionsCard: {
+    paddingHorizontal: 20,
+    paddingBottom: 20
+  },
+  removeButton: {
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  removeButtonGradient: {
+    borderRadius: 20,
+    padding: 20
+  },
+  removeButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  removeButtonIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  removeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff'
   }
 });

@@ -29,6 +29,26 @@ export default function RankingList({
 }: RankingListProps) {
   const { t } = useTranslation();
 
+  // Sort members by their ELO rating (highest first)
+  const sortedMembers = React.useMemo(() => {
+    return [...members].sort((a, b) => {
+      const ratingA = ratings.find((r) => r.uid === a.uid);
+      const ratingB = ratings.find((r) => r.uid === b.uid);
+
+      // If both have ratings, sort by rating (highest first)
+      if (ratingA && ratingB) {
+        return ratingB.currentRating - ratingA.currentRating;
+      }
+
+      // If only one has rating, prioritize the one with rating
+      if (ratingA && !ratingB) return -1;
+      if (!ratingA && ratingB) return 1;
+
+      // If neither has rating, maintain original order
+      return 0;
+    });
+  }, [members, ratings]);
+
   const renderRankingItem = ({ item, index }: { item: Rating; index: number }) => {
     const member = members.find((m) => m.uid === item.uid);
     if (!member) return null;
@@ -195,7 +215,7 @@ export default function RankingList({
 
   return (
     <FlatList
-      data={members}
+      data={sortedMembers}
       renderItem={({ item: member, index }) => {
         // Find rating for this member
         const rating = ratings.find((r) => r.uid === member.uid);
@@ -206,7 +226,9 @@ export default function RankingList({
         }
       }}
       keyExtractor={(item) => item.uid}
-      contentContainerStyle={members.length === 0 ? styles.emptyContainer : styles.listContainer}
+      contentContainerStyle={
+        sortedMembers.length === 0 ? styles.emptyContainer : styles.listContainer
+      }
       ListEmptyComponent={renderEmptyRanking}
       ListFooterComponent={renderLeaveGroupFooter}
       scrollEnabled={false}

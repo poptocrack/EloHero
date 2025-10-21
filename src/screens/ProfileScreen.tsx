@@ -11,7 +11,7 @@ interface ProfileScreenProps {
 }
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const { user } = useAuthStore();
+  const { user, signOut } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -44,6 +44,23 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     }
   };
 
+  const handleDisconnect = () => {
+    Alert.alert(t('profile.disconnectConfirm'), t('profile.disconnectMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('auth.signOut'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut();
+          } catch (error) {
+            Alert.alert(t('common.error'), 'Failed to disconnect');
+          }
+        }
+      }
+    ]);
+  };
+
   const menuItems = [
     {
       title: t('profile.subscription'),
@@ -72,7 +89,20 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       icon: 'help-circle-outline',
       onPress: handleSupport,
       showChevron: false
-    }
+    },
+    // Development-only disconnect button
+    ...(__DEV__
+      ? [
+          {
+            title: t('profile.disconnect'),
+            subtitle: t('profile.disconnectSubtitle'),
+            icon: 'log-out-outline',
+            onPress: handleDisconnect,
+            showChevron: false,
+            isDestructive: true
+          }
+        ]
+      : [])
   ];
 
   return (
@@ -137,17 +167,26 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
                 <View
                   style={[
                     styles.menuIconContainer,
-                    item.icon === 'logo-discord' && styles.discordIconContainer
+                    item.icon === 'logo-discord' && styles.discordIconContainer,
+                    item.isDestructive && styles.destructiveIconContainer
                   ]}
                 >
                   <Ionicons
                     name={item.icon as any}
                     size={24}
-                    color={item.icon === 'logo-discord' ? '#5865F2' : '#667eea'}
+                    color={
+                      item.icon === 'logo-discord'
+                        ? '#5865F2'
+                        : item.isDestructive
+                        ? '#c62828'
+                        : '#667eea'
+                    }
                   />
                 </View>
                 <View style={styles.menuTextContainer}>
-                  <Text style={styles.menuTitle}>{item.title}</Text>
+                  <Text style={[styles.menuTitle, item.isDestructive && styles.destructiveText]}>
+                    {item.title}
+                  </Text>
                   <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
                 </View>
                 {item.showChevron && <Ionicons name="chevron-forward" size={20} color="#c7c7cc" />}
@@ -321,5 +360,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#718096'
+  },
+  destructiveIconContainer: {
+    backgroundColor: 'rgba(198, 40, 40, 0.1)'
+  },
+  destructiveText: {
+    color: '#c62828'
   }
 });

@@ -49,6 +49,15 @@
             "newArchEnabled": true
           }
         }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "fr"],
+            "android": ["en", "fr"]
+          }
+        }
       ]
     ],
     "experiments": {

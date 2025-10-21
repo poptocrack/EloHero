@@ -44,6 +44,7 @@ interface GroupState {
     >[]
   ) => Promise<void>;
   addMember: (groupId: string, memberName: string) => Promise<Member>;
+  removeMember: (groupId: string, memberUid: string) => Promise<void>;
 
   // Match entry actions
   setSelectedPlayers: (players: Member[]) => void;
@@ -445,6 +446,48 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to add member',
         isLoading: false
       }));
+      throw error;
+    }
+  },
+
+  removeMember: async (groupId: string, memberUid: string) => {
+    set({ isLoading: true, error: null });
+
+    // Store the member being removed for potential rollback
+    const memberToRemove = get().currentGroupMembers.find((m) => m.uid === memberUid);
+
+    // Optimistically remove member from UI immediately
+    set((state) => ({
+      currentGroupMembers: state.currentGroupMembers.filter((m) => m.uid !== memberUid),
+      isLoading: false
+    }));
+
+    try {
+      const response = await CloudFunctionsService.removeMember(groupId, memberUid);
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to remove member');
+      }
+
+      // Success - member is already removed from UI
+      // Refresh all group data in the background to get the latest values
+      get().loadGroupMembers(groupId);
+      get().loadSeasonRatings(get().currentSeason?.id || '');
+
+      return;
+    } catch (error) {
+      // Rollback optimistic update on error
+      if (memberToRemove) {
+        set((state) => ({
+          currentGroupMembers: [...state.currentGroupMembers, memberToRemove],
+          error: error instanceof Error ? error.message : 'Failed to remove member',
+          isLoading: false
+        }));
+      } else {
+        set({
+          error: error instanceof Error ? error.message : 'Failed to remove member',
+          isLoading: false
+        });
+      }
       throw error;
     }
   },

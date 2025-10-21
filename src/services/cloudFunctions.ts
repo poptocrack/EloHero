@@ -200,4 +200,15 @@ export class CloudFunctionsService {
       throw new Error(`Failed to add member: ${error}`);
     }
   }
+
+  // Remove a member from a group (Admin only)
+  static async removeMember(groupId: string, memberUid: string): Promise<ApiResponse<void>> {
+    try {
+      const removeMember = httpsCallable(functions, 'removeMember');
+      const result = await removeMember({ groupId, memberUid });
+      return result.data as ApiResponse<void>;
+    } catch (error) {
+      throw new Error(`Failed to remove member: ${error}`);
+    }
+  }
 }

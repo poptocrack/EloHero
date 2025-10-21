@@ -122,7 +122,11 @@
     "aboutMessage": "Version 1.0.0\n\nEloHero is a community ELO ranking application that allows groups of players to track their performance and create dynamic rankings based on their games.",
     "supportMessage": "For any questions or problems, join our Discord community for help and support.",
     "goToDiscord": "Go to Discord",
-    "cannotOpenDiscord": "Cannot open Discord"
+    "cannotOpenDiscord": "Cannot open Discord",
+    "disconnect": "Disconnect (Dev)",
+    "disconnectSubtitle": "Switch to another user",
+    "disconnectConfirm": "Are you sure you want to disconnect?",
+    "disconnectMessage": "This will sign you out and return to the login screen."
   },
   "matchEntry": {
     "title": "New Match",
@@ -218,7 +222,13 @@
     "ratingHistory": "Rating History",
     "noHistory": "No history available",
     "position": "Position",
-    "tied": "(tied)"
+    "tied": "(tied)",
+    "removeFromGroup": "Remove from Group",
+    "confirmRemove": "Remove Player",
+    "confirmRemoveMessage": "Are you sure you want to remove this player from the group?",
+    "removeWarning": "Warning: The player's rating will be lost, but their match history will be preserved.",
+    "removeSuccess": "Player removed successfully",
+    "removeError": "Failed to remove player"
   },
   "errors": {
     "networkError": "Network error. Please check your connection.",

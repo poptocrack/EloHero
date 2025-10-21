@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 
 // Import translation files
 import en from './locales/en.json';
@@ -15,12 +16,16 @@ const LANGUAGE_DETECTOR = {
       if (savedLanguage) {
         callback(savedLanguage);
       } else {
-        // Default to French since the app was originally in French
-        callback('fr');
+        // Use device language, fallback to English
+        const locales = Localization.getLocales();
+        const deviceLanguage = locales[0]?.languageCode || 'en'; // Get language code (e.g., 'en' from 'en-US')
+        const supportedLanguages = ['en', 'fr'];
+        const language = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
+        callback(language);
       }
     } catch (error) {
       console.log('Error reading language from storage:', error);
-      callback('fr');
+      callback('en');
     }
   },
   init: () => {},
