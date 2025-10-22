@@ -9,6 +9,10 @@ export interface User {
   photoURL?: string;
   plan: UserPlan;
   groupsCount: number;
+  subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'unpaid';
+  subscriptionProductId?: string;
+  subscriptionStartDate?: Date;
+  subscriptionEndDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

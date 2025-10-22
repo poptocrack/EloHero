@@ -1,10 +1,11 @@
 // Subscription Screen
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
+import { subscriptionService, SubscriptionProduct } from '../../services/subscription';
 
 // Import components
 import CurrentUsageCard from './components/CurrentUsageCard';
@@ -13,20 +14,77 @@ import PricingCard from './components/PricingCard';
 import ActionButton from './components/ActionButton';
 
 export default function SubscriptionScreen({ navigation }: any) {
-  const { user } = useAuthStore();
+  const { user, purchasePremium, restorePurchases, openSubscriptionManagement, isLoading, error } =
+    useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const [premiumProduct, setPremiumProduct] = useState<SubscriptionProduct | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  const handleUpgrade = () => {
-    Alert.alert(t('subscription.upgradeAlert'), t('subscription.upgradeAlertMessage'), [
-      { text: t('common.confirm') }
-    ]);
+  useEffect(() => {
+    initializeSubscription();
+  }, []);
+
+  const initializeSubscription = async () => {
+    try {
+      await subscriptionService.initialize();
+      const product = subscriptionService.getPremiumProduct();
+      setPremiumProduct(product);
+    } catch (error) {
+      console.error('Failed to initialize subscription:', error);
+    } finally {
+      setIsInitializing(false);
+    }
   };
 
-  const handleManageSubscription = () => {
-    Alert.alert(t('subscription.manageAlert'), t('subscription.manageAlertMessage'), [
-      { text: t('common.confirm') }
-    ]);
+  const handleUpgrade = async () => {
+    try {
+      const result = await purchasePremium();
+
+      if (result.success) {
+        Alert.alert(t('subscription.success'), t('subscription.purchaseSuccess'), [
+          { text: t('common.ok') }
+        ]);
+      } else {
+        Alert.alert(t('subscription.error'), result.error || t('subscription.purchaseFailed'), [
+          { text: t('common.ok') }
+        ]);
+      }
+    } catch (error) {
+      Alert.alert(t('subscription.error'), t('subscription.purchaseFailed'), [
+        { text: t('common.ok') }
+      ]);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      const result = await restorePurchases();
+
+      if (result.success) {
+        Alert.alert(t('subscription.success'), t('subscription.restoreSuccess'), [
+          { text: t('common.ok') }
+        ]);
+      } else {
+        Alert.alert(t('subscription.error'), result.error || t('subscription.restoreFailed'), [
+          { text: t('common.ok') }
+        ]);
+      }
+    } catch (error) {
+      Alert.alert(t('subscription.error'), t('subscription.restoreFailed'), [
+        { text: t('common.ok') }
+      ]);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      await openSubscriptionManagement();
+    } catch (error) {
+      Alert.alert(t('subscription.error'), t('subscription.manageFailed'), [
+        { text: t('common.ok') }
+      ]);
+    }
   };
 
   const features = [
@@ -100,6 +158,9 @@ export default function SubscriptionScreen({ navigation }: any) {
           isPremium={user?.plan === 'premium'}
           onUpgrade={handleUpgrade}
           onManageSubscription={handleManageSubscription}
+          onRestorePurchases={handleRestorePurchases}
+          isLoading={isLoading || isInitializing}
+          premiumProduct={premiumProduct}
         />
 
         {/* Footer */}

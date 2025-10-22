@@ -14,7 +14,8 @@
     "previous": "Précédent",
     "done": "Terminé",
     "retry": "Réessayer",
-    "refresh": "Actualiser"
+    "refresh": "Actualiser",
+    "ok": "OK"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -199,7 +200,16 @@
     "upgradeAlertMessage": "La fonctionnalité d'abonnement sera bientôt disponible. Contactez-nous pour plus d'informations.",
     "manageAlert": "Gérer l'abonnement",
     "manageAlertMessage": "La gestion d'abonnement sera bientôt disponible.",
-    "cancelAnytime": "Annulez à tout moment. Aucun engagement."
+    "cancelAnytime": "Annulez à tout moment. Aucun engagement.",
+    "securePayment": "Paiement sécurisé via App Store",
+    "success": "Succès",
+    "error": "Erreur",
+    "purchaseSuccess": "Votre abonnement a été activé avec succès !",
+    "purchaseFailed": "Échec de l'achat de l'abonnement. Veuillez réessayer.",
+    "restoreSuccess": "Vos achats précédents ont été restaurés !",
+    "restoreFailed": "Aucun achat précédent trouvé ou échec de la restauration.",
+    "manageFailed": "Impossible d'ouvrir la gestion d'abonnement.",
+    "restorePurchases": "Restaurer les achats"
   },
   "navigation": {
     "groups": "Groupes",

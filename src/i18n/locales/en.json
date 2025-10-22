@@ -14,7 +14,8 @@
     "previous": "Previous",
     "done": "Done",
     "retry": "Retry",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "ok": "OK"
   },
   "auth": {
     "signIn": "Sign In",
@@ -199,7 +200,16 @@
     "upgradeAlertMessage": "Subscription feature will be available soon. Contact us for more information.",
     "manageAlert": "Manage Subscription",
     "manageAlertMessage": "Subscription management will be available soon.",
-    "cancelAnytime": "Cancel anytime. No commitment."
+    "cancelAnytime": "Cancel anytime. No commitment.",
+    "securePayment": "Secure payment via App Store",
+    "success": "Success",
+    "error": "Error",
+    "purchaseSuccess": "Your subscription has been activated successfully!",
+    "purchaseFailed": "Failed to purchase subscription. Please try again.",
+    "restoreSuccess": "Your previous purchases have been restored!",
+    "restoreFailed": "No previous purchases found or restore failed.",
+    "manageFailed": "Failed to open subscription management.",
+    "restorePurchases": "Restore Purchases"
   },
   "navigation": {
     "groups": "Groups",

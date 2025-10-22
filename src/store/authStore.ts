@@ -1,6 +1,7 @@
 // Authentication Store using Zustand
 import { create } from 'zustand';
 import { AuthService } from '../services/auth';
+import { subscriptionService, PurchaseResult, SubscriptionStatus } from '../services/subscription';
 import { User } from '../types';
 
 interface AuthState {
@@ -8,6 +9,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  subscriptionStatus: SubscriptionStatus | null;
 
   // Actions
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -21,6 +23,12 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+
+  // Subscription actions
+  purchasePremium: () => Promise<PurchaseResult>;
+  restorePurchases: () => Promise<PurchaseResult>;
+  checkSubscriptionStatus: () => Promise<void>;
+  openSubscriptionManagement: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -28,6 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
   error: null,
+  subscriptionStatus: null,
 
   signInWithEmail: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
@@ -134,5 +143,85 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  // Subscription actions
+  purchasePremium: async (): Promise<PurchaseResult> => {
+    const { user } = get();
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      const result = await subscriptionService.purchasePremium(user.uid);
+
+      if (result.success) {
+        // Update user plan optimistically
+        set((state) => ({
+          user: state.user ? { ...state.user, plan: 'premium' } : null,
+          isLoading: false
+        }));
+      } else {
+        set({ isLoading: false, error: result.error || 'Purchase failed' });
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Purchase failed';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  restorePurchases: async (): Promise<PurchaseResult> => {
+    const { user } = get();
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      const result = await subscriptionService.restorePurchases(user.uid);
+
+      if (result.success) {
+        // Update user plan optimistically
+        set((state) => ({
+          user: state.user ? { ...state.user, plan: 'premium' } : null,
+          isLoading: false
+        }));
+      } else {
+        set({ isLoading: false, error: result.error || 'Restore failed' });
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Restore failed';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  checkSubscriptionStatus: async (): Promise<void> => {
+    const { user } = get();
+    if (!user) return;
+
+    try {
+      const status = await subscriptionService.getSubscriptionStatus(user.uid);
+      set({ subscriptionStatus: status });
+    } catch (error) {
+      console.error('Failed to check subscription status:', error);
+    }
+  },
+
+  openSubscriptionManagement: async (): Promise<void> => {
+    try {
+      await subscriptionService.openSubscriptionManagement();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to open subscription management';
+      set({ error: errorMessage });
+      throw error;
+    }
   }
 }));

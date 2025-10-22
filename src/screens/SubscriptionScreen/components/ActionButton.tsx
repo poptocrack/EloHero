@@ -1,26 +1,37 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { SubscriptionProduct } from '../../../services/subscription';
 
 interface ActionButtonProps {
   isPremium: boolean;
   onUpgrade: () => void;
   onManageSubscription: () => void;
+  onRestorePurchases: () => void;
+  isLoading: boolean;
+  premiumProduct: SubscriptionProduct | null;
 }
 
 export default function ActionButton({
   isPremium,
   onUpgrade,
-  onManageSubscription
+  onManageSubscription,
+  onRestorePurchases,
+  isLoading,
+  premiumProduct
 }: ActionButtonProps) {
   const { t } = useTranslation();
 
   return (
     <View style={styles.actionContainer}>
       {isPremium ? (
-        <TouchableOpacity style={styles.manageButton} onPress={onManageSubscription}>
+        <TouchableOpacity
+          style={styles.manageButton}
+          onPress={onManageSubscription}
+          disabled={isLoading}
+        >
           <LinearGradient
             colors={['#4ECDC4', '#44A08D']}
             style={styles.buttonGradient}
@@ -32,17 +43,37 @@ export default function ActionButton({
           </LinearGradient>
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity style={styles.upgradeButton} onPress={onUpgrade}>
-          <LinearGradient
-            colors={['#FF6B9D', '#C44569']}
-            style={styles.buttonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        <View>
+          <TouchableOpacity style={styles.upgradeButton} onPress={onUpgrade} disabled={isLoading}>
+            <LinearGradient
+              colors={['#FF6B9D', '#C44569']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="diamond" size={20} color="#fff" />
+              )}
+              <Text style={styles.buttonText}>
+                {isLoading
+                  ? t('common.loading')
+                  : `${t('subscription.upgrade')} ${
+                      premiumProduct ? `- ${premiumProduct.price}` : ''
+                    }`}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={onRestorePurchases}
+            disabled={isLoading}
           >
-            <Ionicons name="diamond" size={20} color="#fff" />
-            <Text style={styles.buttonText}>{t('subscription.upgrade')}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <Text style={styles.restoreButtonText}>{t('subscription.restorePurchases')}</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -82,5 +113,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     marginLeft: 8
+  },
+  restoreButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center'
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#667eea',
+    textDecorationLine: 'underline'
   }
 });
