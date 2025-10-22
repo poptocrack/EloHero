@@ -40,7 +40,7 @@ const ELO_CONFIG = {
 // Plan Limits
 const PLAN_LIMITS = {
     free: {
-        maxGroups: 10,
+        maxGroups: 2,
         maxMembersPerGroup: 5,
         seasonsEnabled: false
     },
@@ -159,7 +159,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         const currentGroupsCount = ((_b = userDoc.data()) === null || _b === void 0 ? void 0 : _b.groupsCount) || 0;
         console.log('createGroup: Current groups count:', currentGroupsCount);
         if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
-            throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan');
+            throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.');
         }
         // Generate unique invitation code
         console.log('createGroup: Generating unique invitation code...');
@@ -264,6 +264,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
 });
 // 2. Join Group with Code Function
 exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
+    var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -305,13 +306,19 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         if (existingMember.exists) {
             throw new functions.https.HttpsError('already-exists', 'You are already a member of this group');
         }
+        // Check user's total group count limit
+        const plan = await getUserPlan(uid);
+        const userDoc = await db.collection('users').doc(uid).get();
+        const currentGroupsCount = ((_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.groupsCount) || 0;
+        if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
+            throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Upgrade to premium for unlimited groups.');
+        }
         // Check if group admin is premium
         const adminPlan = await getUserPlan(groupData.ownerId);
         if (adminPlan !== 'premium' && groupData.memberCount >= 5) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group admin is not premium and group is at member limit');
         }
         // Check user plan and group member limit
-        const plan = await getUserPlan(uid);
         if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
             throw new functions.https.HttpsError('resource-exhausted', 'Group member limit reached for your plan');
         }
@@ -338,6 +345,14 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
             .doc(groupId)
             .update({
             memberCount: admin.firestore.FieldValue.increment(1),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        // Update user's group count
+        await db
+            .collection('users')
+            .doc(uid)
+            .update({
+            groupsCount: admin.firestore.FieldValue.increment(1),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         // Initialize user rating for current season
