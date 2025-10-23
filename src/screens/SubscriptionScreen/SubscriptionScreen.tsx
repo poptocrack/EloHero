@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
-import { subscriptionService, SubscriptionProduct } from '../../services/subscription';
+import { useSubscription, PurchaseResult } from '../../hooks/useSubscription';
 
 // Import components
 import CurrentUsageCard from './components/CurrentUsageCard';
@@ -14,28 +14,30 @@ import PricingCard from './components/PricingCard';
 import ActionButton from './components/ActionButton';
 
 export default function SubscriptionScreen({ navigation }: any) {
-  const { user, purchasePremium, restorePurchases, openSubscriptionManagement, isLoading, error } =
-    useAuthStore();
+  const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const [premiumProduct, setPremiumProduct] = useState<SubscriptionProduct | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
+
+  const {
+    connected,
+    isLoading,
+    error,
+    subscriptions,
+    getPremiumProduct,
+    purchasePremium,
+    restorePurchases,
+    openSubscriptionManagement,
+    initializeProducts
+  } = useSubscription(user?.uid || '');
 
   useEffect(() => {
-    initializeSubscription();
-  }, []);
-
-  const initializeSubscription = async () => {
-    try {
-      await subscriptionService.initialize();
-      const product = subscriptionService.getPremiumProduct();
-      setPremiumProduct(product);
-    } catch (error) {
-      console.error('Failed to initialize subscription:', error);
-    } finally {
-      setIsInitializing(false);
+    if (connected) {
+      initializeProducts();
     }
-  };
+  }, [connected, initializeProducts]);
+
+  // Get premium product directly from the hook
+  const premiumProduct = getPremiumProduct();
 
   const handleUpgrade = async () => {
     try {
@@ -59,7 +61,7 @@ export default function SubscriptionScreen({ navigation }: any) {
 
   const handleRestorePurchases = async () => {
     try {
-      const result = await restorePurchases();
+      const result: PurchaseResult = await restorePurchases();
 
       if (result.success) {
         Alert.alert(t('subscription.success'), t('subscription.restoreSuccess'), [
@@ -131,7 +133,7 @@ export default function SubscriptionScreen({ navigation }: any) {
     //   premium: t('subscription.available')
     // }
   ];
-
+  console.log(premiumProduct);
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
@@ -159,7 +161,7 @@ export default function SubscriptionScreen({ navigation }: any) {
           onUpgrade={handleUpgrade}
           onManageSubscription={handleManageSubscription}
           onRestorePurchases={handleRestorePurchases}
-          isLoading={isLoading || isInitializing}
+          isLoading={isLoading}
           premiumProduct={premiumProduct}
         />
 

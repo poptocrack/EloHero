@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/auth';
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -25,6 +26,7 @@ const OnboardingStack = createStackNavigator<{ SetPseudo: undefined }>();
 // Main Tab Navigator
 function MainTabNavigator() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -49,8 +51,8 @@ function MainTabNavigator() {
           borderTopWidth: 0,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          height: 90,
-          paddingBottom: 20,
+          height: 70 + insets.bottom,
+          paddingBottom: 20 + insets.bottom,
           paddingTop: 12,
           paddingHorizontal: 20,
           shadowColor: '#000',
