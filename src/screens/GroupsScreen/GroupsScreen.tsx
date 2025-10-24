@@ -137,7 +137,9 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
       end={{ x: 1, y: 1 }}
       style={[styles.container, { paddingTop: insets.top }]}
     >
-      <ActionCards onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
+      {groups.length > 0 && (
+        <ActionCards onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
+      )}
 
       <ErrorDisplay error={error as string | null} onDismiss={clearError} />
 
@@ -146,7 +148,9 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         renderItem={renderGroupItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={groups.length === 0 ? styles.emptyContainer : styles.listContainer}
-        ListEmptyComponent={EmptyState}
+        ListEmptyComponent={() => (
+          <EmptyState onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
+        )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#FF6B9D']} />
         }

@@ -133,7 +133,7 @@ export default function SubscriptionScreen({ navigation }: any) {
     //   premium: t('subscription.available')
     // }
   ];
-  console.log(premiumProduct);
+  console.log('>>>>', premiumProduct);
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
       {/* Header */}

@@ -15,7 +15,8 @@
     "done": "Done",
     "retry": "Retry",
     "refresh": "Refresh",
-    "ok": "OK"
+    "ok": "OK",
+    "or": "or"
   },
   "auth": {
     "signIn": "Sign In",
@@ -127,7 +128,12 @@
     "disconnect": "Disconnect (Dev)",
     "disconnectSubtitle": "Switch to another user",
     "disconnectConfirm": "Are you sure you want to disconnect?",
-    "disconnectMessage": "This will sign you out and return to the login screen."
+    "disconnectMessage": "This will sign you out and return to the login screen.",
+    "termsOfUse": "Terms of Use",
+    "termsOfUseSubtitle": "View our terms and conditions",
+    "privacyPolicy": "Privacy Policy",
+    "privacyPolicySubtitle": "View our privacy policy",
+    "cannotOpenLink": "Cannot open link"
   },
   "matchEntry": {
     "title": "New Match",
@@ -138,6 +144,7 @@
     "selectPlayersBelow": "Select players below",
     "allPlayersSelected": "All players are selected",
     "position": "Position",
+    "winner": "Winner",
     "saveMatch": "Save Match",
     "confirmMatch": "Confirm Match",
     "confirmMatchMessage": "Are you sure you want to record this match with {{count}} players?",

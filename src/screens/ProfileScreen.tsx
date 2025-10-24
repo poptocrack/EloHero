@@ -44,6 +44,34 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     }
   };
 
+  const handleTermsOfUse = async () => {
+    const termsUrl = 'https://sites.google.com/view/elohero/terms-of-use-eula?authuser=0';
+    try {
+      const supported = await Linking.canOpenURL(termsUrl);
+      if (supported) {
+        await Linking.openURL(termsUrl);
+      } else {
+        Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
+      }
+    } catch (error) {
+      Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
+    }
+  };
+
+  const handlePrivacyPolicy = async () => {
+    const privacyUrl = 'https://sites.google.com/view/elohero/privacy?authuser=0';
+    try {
+      const supported = await Linking.canOpenURL(privacyUrl);
+      if (supported) {
+        await Linking.openURL(privacyUrl);
+      } else {
+        Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
+      }
+    } catch (error) {
+      Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
+    }
+  };
+
   const handleDisconnect = () => {
     Alert.alert(t('profile.disconnectConfirm'), t('profile.disconnectMessage'), [
       { text: t('common.cancel'), style: 'cancel' },
@@ -88,6 +116,20 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       subtitle: t('profile.supportSubtitle'),
       icon: 'help-circle-outline',
       onPress: handleSupport,
+      showChevron: false
+    },
+    {
+      title: t('profile.termsOfUse'),
+      subtitle: t('profile.termsOfUseSubtitle'),
+      icon: 'document-text-outline',
+      onPress: handleTermsOfUse,
+      showChevron: false
+    },
+    {
+      title: t('profile.privacyPolicy'),
+      subtitle: t('profile.privacyPolicySubtitle'),
+      icon: 'shield-checkmark-outline',
+      onPress: handlePrivacyPolicy,
       showChevron: false
     },
     // Development-only disconnect button

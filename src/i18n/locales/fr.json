@@ -15,7 +15,8 @@
     "done": "Terminé",
     "retry": "Réessayer",
     "refresh": "Actualiser",
-    "ok": "OK"
+    "ok": "OK",
+    "or": "ou"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -127,7 +128,12 @@
     "disconnect": "Déconnexion (Dev)",
     "disconnectSubtitle": "Changer d'utilisateur",
     "disconnectConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
-    "disconnectMessage": "Cela vous déconnectera et vous ramènera à l'écran de connexion."
+    "disconnectMessage": "Cela vous déconnectera et vous ramènera à l'écran de connexion.",
+    "termsOfUse": "Conditions d'utilisation",
+    "termsOfUseSubtitle": "Voir nos conditions d'utilisation",
+    "privacyPolicy": "Politique de confidentialité",
+    "privacyPolicySubtitle": "Voir notre politique de confidentialité",
+    "cannotOpenLink": "Impossible d'ouvrir le lien"
   },
   "matchEntry": {
     "title": "Nouvelle Partie",
@@ -138,6 +144,7 @@
     "selectPlayersBelow": "Sélectionnez des joueurs ci-dessous",
     "allPlayersSelected": "Tous les joueurs sont sélectionnés",
     "position": "Position",
+    "winner": "Gagnant",
     "saveMatch": "Enregistrer la partie",
     "confirmMatch": "Confirmer la partie",
     "confirmMatchMessage": "Êtes-vous sûr de vouloir enregistrer cette partie avec {{count}} joueurs ?",
