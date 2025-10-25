@@ -69,7 +69,7 @@ export function useSubscription(userId: string): {
       handlePurchaseError(error);
     }
   });
-
+  console.log('products', products);
   const initializeProducts = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -82,8 +82,6 @@ export function useSubscription(userId: string): {
         skus: [PREMIUM_PRODUCT_ID],
         type: 'subs'
       });
-
-      console.log('Products fetched successfully');
     } catch (err) {
       console.error('Failed to fetch products:', err);
       setError(
