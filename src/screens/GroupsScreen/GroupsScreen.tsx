@@ -117,6 +117,10 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
     navigation.navigate('GroupDetails', { groupId: group.id });
   };
 
+  const handleUpgrade = () => {
+    navigation.navigate('Subscription');
+  };
+
   const renderGroupItem = ({ item }: { item: Group }) => (
     <GroupItem group={item} onPress={handleGroupPress} />
   );
@@ -138,7 +142,13 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
       style={[styles.container, { paddingTop: insets.top }]}
     >
       {groups.length > 0 && (
-        <ActionCards onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
+        <ActionCards
+          onCreateGroup={handleCreateGroup}
+          onJoinGroup={handleJoinGroup}
+          groupsCount={groups.length}
+          isPremium={user?.plan === 'premium'}
+          onUpgrade={handleUpgrade}
+        />
       )}
 
       <ErrorDisplay error={error as string | null} onDismiss={clearError} />

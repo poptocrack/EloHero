@@ -1,5 +1,5 @@
 // Modern subscription hook using expo-iap
-import { useIAP, ErrorCode } from 'expo-iap';
+import { useIAP, ErrorCode, deepLinkToSubscriptions } from 'expo-iap';
 import { useState, useEffect, useCallback } from 'react';
 import { Platform, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +32,7 @@ const PREMIUM_PRODUCT_ID = 'premium1';
 const ANDROID_PACKAGE_NAME = 'com.elohero.app';
 
 // Development mode toggle - set to false to disable automatic subscription success
-const DEV_AUTO_SUBSCRIPTION = false;
+const DEV_AUTO_SUBSCRIPTION = true;
 
 export function useSubscription(userId: string): {
   connected: boolean;
@@ -58,8 +58,7 @@ export function useSubscription(userId: string): {
     fetchProducts,
     requestPurchase,
     restorePurchases: restorePurchasesIAP,
-    getAvailablePurchases,
-    deepLinkToSubscriptions
+    getAvailablePurchases
   } = useIAP({
     onPurchaseSuccess: async (purchase) => {
       console.log('Purchase successful:', purchase);
@@ -257,7 +256,7 @@ export function useSubscription(userId: string): {
         console.log('Android subscription structure:', JSON.stringify(subscription, null, 2));
 
         // Android subscription handling with offers
-        const offers = subscription.subscriptionOfferDetails;
+        const offers = (subscription as any).subscriptionOfferDetails;
         console.log('Available offers:', offers);
 
         if (!offers || offers.length === 0) {

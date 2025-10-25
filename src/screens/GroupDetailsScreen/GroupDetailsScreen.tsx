@@ -249,6 +249,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
       <ScrollView
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#667eea']} />
         }

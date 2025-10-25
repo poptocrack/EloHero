@@ -67,7 +67,13 @@
     "upgradeToJoin": "Upgrade to Premium",
     "groupLimitReached": "Group limit reached",
     "groupLimitMessage": "Free users can create or join up to 2 groups. Upgrade to Premium for unlimited groups.",
-    "upgradeToPremium": "Upgrade to Premium"
+    "upgradeToPremium": "Upgrade to Premium",
+    "upgradeRequired": "Upgrade Required",
+    "upgradeToCreate": "Upgrade to create more groups",
+    "upgradeToJoinMore": "Upgrade to join more groups",
+    "upgradeBannerTitle": "Unlock Premium Features",
+    "upgradeBannerSubtitle": "Create unlimited groups and access all premium features",
+    "upgradeNow": "Upgrade Now"
   },
   "groupDetails": {
     "title": "Group Details",
