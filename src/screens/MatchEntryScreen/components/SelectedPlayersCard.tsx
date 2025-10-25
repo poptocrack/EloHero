@@ -10,12 +10,16 @@ interface SelectedPlayersCardProps {
   selectedPlayers: Member[];
   onDragEnd: ({ data }: { data: Member[] }) => void;
   onRemovePlayer: (uid: string) => void;
+  onMovePlayerUp: (uid: string) => void;
+  onMovePlayerDown: (uid: string) => void;
 }
 
 export default function SelectedPlayersCard({
   selectedPlayers,
   onDragEnd,
-  onRemovePlayer
+  onRemovePlayer,
+  onMovePlayerUp,
+  onMovePlayerDown
 }: SelectedPlayersCardProps) {
   const { t } = useTranslation();
 
@@ -30,6 +34,9 @@ export default function SelectedPlayersCard({
         getIndex={getIndex}
         onRemove={onRemovePlayer}
         playerIndex={playerIndex}
+        onMoveUp={onMovePlayerUp}
+        onMoveDown={onMovePlayerDown}
+        totalPlayers={selectedPlayers.length}
       />
     );
   };

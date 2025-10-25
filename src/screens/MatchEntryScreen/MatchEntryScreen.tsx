@@ -63,6 +63,36 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     setPlayerOrder(data);
   };
 
+  const handleMovePlayerUp = (uid: string) => {
+    const currentOrder = [...matchEntry.playerOrder];
+    const currentIndex = currentOrder.findIndex((player) => player.uid === uid);
+
+    if (currentIndex > 0) {
+      // Swap with the player above
+      const newOrder = [...currentOrder];
+      [newOrder[currentIndex - 1], newOrder[currentIndex]] = [
+        newOrder[currentIndex],
+        newOrder[currentIndex - 1]
+      ];
+      setPlayerOrder(newOrder);
+    }
+  };
+
+  const handleMovePlayerDown = (uid: string) => {
+    const currentOrder = [...matchEntry.playerOrder];
+    const currentIndex = currentOrder.findIndex((player) => player.uid === uid);
+
+    if (currentIndex < currentOrder.length - 1) {
+      // Swap with the player below
+      const newOrder = [...currentOrder];
+      [newOrder[currentIndex], newOrder[currentIndex + 1]] = [
+        newOrder[currentIndex + 1],
+        newOrder[currentIndex]
+      ];
+      setPlayerOrder(newOrder);
+    }
+  };
+
   const handleSubmitMatch = async () => {
     if (matchEntry.playerOrder.length < 2) {
       Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoPlayers'));
@@ -124,6 +154,8 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           selectedPlayers={matchEntry.playerOrder}
           onDragEnd={handleDragEnd}
           onRemovePlayer={handleRemovePlayer}
+          onMovePlayerUp={handleMovePlayerUp}
+          onMovePlayerDown={handleMovePlayerDown}
         />
 
         {/* Available Players Card */}

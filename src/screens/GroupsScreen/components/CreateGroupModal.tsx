@@ -50,6 +50,7 @@ export default function CreateGroupModal({ isVisible, onClose, onCreate }: Creat
             autoCapitalize="words"
             autoCorrect={false}
             autoFocus={true}
+            placeholderTextColor="#718096"
           />
         </View>
 

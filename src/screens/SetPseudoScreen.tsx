@@ -46,6 +46,7 @@ export default function SetPseudoScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('onboarding.pseudoPlaceholder')}
+            placeholderTextColor="#718096"
             value={pseudo}
             onChangeText={setPseudo}
             autoCapitalize="none"

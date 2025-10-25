@@ -8,6 +8,9 @@ import { Member } from '../../../types';
 interface SelectedPlayerItemProps extends RenderItemParams<Member> {
   onRemove: (uid: string) => void;
   playerIndex: number;
+  onMoveUp?: (uid: string) => void;
+  onMoveDown?: (uid: string) => void;
+  totalPlayers: number;
 }
 
 export default function SelectedPlayerItem({
@@ -15,7 +18,10 @@ export default function SelectedPlayerItem({
   drag,
   isActive,
   onRemove,
-  playerIndex
+  playerIndex,
+  onMoveUp,
+  onMoveDown,
+  totalPlayers
 }: SelectedPlayerItemProps) {
   const { t } = useTranslation();
   const isWinner = playerIndex === 0;
@@ -33,8 +39,26 @@ export default function SelectedPlayerItem({
       >
         {isWinner && <View style={styles.winnerAura} />}
 
-        <View style={styles.dragHandle}>
-          <Ionicons name="reorder-three" size={20} color="#666" />
+        <View style={styles.reorderControls}>
+          <TouchableOpacity
+            style={[styles.arrowButton, playerIndex === 0 && styles.disabledButton]}
+            onPress={() => onMoveUp?.(item.uid)}
+            disabled={playerIndex === 0}
+          >
+            <Ionicons name="chevron-up" size={16} color={playerIndex === 0 ? '#ccc' : '#667eea'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.arrowButton, playerIndex === totalPlayers - 1 && styles.disabledButton]}
+            onPress={() => onMoveDown?.(item.uid)}
+            disabled={playerIndex === totalPlayers - 1}
+          >
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color={playerIndex === totalPlayers - 1 ? '#ccc' : '#667eea'}
+            />
+          </TouchableOpacity>
         </View>
 
         <View style={[styles.playerAvatar, isWinner && styles.winnerAvatar]}>
@@ -80,9 +104,26 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8
   },
-  dragHandle: {
+  reorderControls: {
     marginRight: 12,
-    padding: 4
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  arrowButton: {
+    width: 32,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: '#F7FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 2
+  },
+  disabledButton: {
+    backgroundColor: '#F7FAFC',
+    borderColor: '#E2E8F0'
   },
   playerAvatar: {
     width: 40,

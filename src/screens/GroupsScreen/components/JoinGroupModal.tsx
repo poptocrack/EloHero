@@ -45,6 +45,8 @@ export default function JoinGroupModal({ isVisible, onClose, onJoin }: JoinGroup
           <TextInput
             style={styles.input}
             placeholder={t('groups.invitationCode')}
+            placeholderTextColor="#718096"
+            autoFocus={true}
             value={joinCode}
             onChangeText={setJoinCode}
             autoCapitalize="characters"
