@@ -133,9 +133,14 @@ export default function SubscriptionScreen({ navigation }: any) {
     //   premium: t('subscription.available')
     // }
   ];
-  console.log('>>>>', premiumProduct);
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: '#F8F9FF' }
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

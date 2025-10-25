@@ -31,6 +31,9 @@ export interface SubscriptionStatus {
 const PREMIUM_PRODUCT_ID = 'premium1';
 const ANDROID_PACKAGE_NAME = 'com.elohero.app';
 
+// Development mode toggle - set to false to disable automatic subscription success
+const DEV_AUTO_SUBSCRIPTION = false;
+
 export function useSubscription(userId: string): {
   connected: boolean;
   isLoading: boolean;
@@ -144,23 +147,48 @@ export function useSubscription(userId: string): {
         errorMessage = 'Purchase cancelled by user';
         break;
       case ErrorCode.ItemUnavailable:
-        errorMessage =
-          'This subscription is not available for purchase. Please check:\n1. The subscription is active in Google Play Console\n2. The app is uploaded to Internal Testing track\n3. You are signed in with a test account\n4. The subscription is properly configured';
+        if (__DEV__) {
+          errorMessage =
+            'Development mode: This subscription is not available for purchase. This is normal in development. To test subscriptions:\n1. Upload the app to Google Play Console\n2. Configure the subscription product\n3. Add test accounts\n4. Use a signed APK in Internal Testing track';
+        } else {
+          errorMessage =
+            'This subscription is not available for purchase. Please check:\n1. The subscription is active in Google Play Console\n2. The app is uploaded to Internal Testing track\n3. You are signed in with a test account\n4. The subscription is properly configured';
+        }
         break;
       case ErrorCode.ServiceError:
         errorMessage = 'Google Play services are unavailable';
         break;
       case ErrorCode.DeveloperError:
-        errorMessage = 'Configuration error - please contact support';
+        if (__DEV__) {
+          errorMessage =
+            'Development mode: Billing configuration error. This is normal in development. The app needs to be properly configured in Google Play Console for billing to work.';
+        } else {
+          errorMessage = 'Configuration error - please contact support';
+        }
         break;
       case ErrorCode.BillingUnavailable:
-        errorMessage = 'Purchases are not allowed on this device';
+        if (__DEV__) {
+          errorMessage =
+            'Development mode: Billing is not available. This is normal in development. The app needs to be uploaded to Google Play Console and configured for billing.';
+        } else {
+          errorMessage = 'Purchases are not allowed on this device';
+        }
         break;
       case ErrorCode.PurchaseError:
         errorMessage = 'Invalid payment information';
         break;
       default:
-        errorMessage = error.message || 'Purchase failed';
+        // Check for specific billing configuration error
+        if (error.message && error.message.includes('not configured for billing')) {
+          if (__DEV__) {
+            errorMessage =
+              'Development mode: App not configured for billing. This is normal in development. To test subscriptions, you need to upload the app to Google Play Console and configure billing.';
+          } else {
+            errorMessage = 'App not configured for billing. Please contact support.';
+          }
+        } else {
+          errorMessage = error.message || 'Purchase failed';
+        }
     }
 
     setError(errorMessage);
@@ -171,8 +199,8 @@ export function useSubscription(userId: string): {
       setIsLoading(true);
       setError(null);
 
-      // Development mode fallback
-      if (__DEV__) {
+      // Development mode fallback (only if DEV_AUTO_SUBSCRIPTION is true)
+      if (__DEV__ && DEV_AUTO_SUBSCRIPTION) {
         console.log('Development mode: Simulating successful purchase');
 
         // Update user's subscription status in Firestore
@@ -190,12 +218,33 @@ export function useSubscription(userId: string): {
         };
       }
 
+      // Development mode: Check if billing is properly configured
+      if (__DEV__ && !DEV_AUTO_SUBSCRIPTION) {
+        // If we're in dev mode and auto-subscription is disabled,
+        // provide helpful guidance instead of failing
+        return {
+          success: false,
+          error:
+            'Development mode: Billing not configured. This is normal in development. To test subscriptions:\n1. Set DEV_AUTO_SUBSCRIPTION = true for mock testing\n2. Or upload app to Google Play Console for real testing\n3. Configure subscription products in Google Play Console'
+        };
+      }
+
       const subscription = subscriptions.find((sub) => sub.id === PREMIUM_PRODUCT_ID);
       if (!subscription) {
         console.log(
           'Available subscriptions:',
           subscriptions.map((sub) => ({ id: sub.id, title: sub.title }))
         );
+
+        // In development mode, provide more helpful error message
+        if (__DEV__) {
+          return {
+            success: false,
+            error:
+              'Development mode: Subscription not configured for billing. This is normal in development. To test subscriptions, you need to:\n1. Upload the app to Google Play Console\n2. Configure the subscription product\n3. Add test accounts\n4. Use a signed APK in Internal Testing track'
+          };
+        }
+
         return {
           success: false,
           error:
