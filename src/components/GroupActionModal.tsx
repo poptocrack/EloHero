@@ -118,7 +118,7 @@ export default function GroupActionModal({
     <TouchableWithoutFeedback onPress={handleClose}>
       <View style={styles.modalOverlay}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
           style={styles.keyboardAvoidingView}
         >
           <TouchableWithoutFeedback onPress={() => {}}>

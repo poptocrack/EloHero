@@ -62,7 +62,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'ranking' | 'games'>('ranking');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [newMemberName, setNewMemberName] = useState('');
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [membersLoaded, setMembersLoaded] = useState(false);
@@ -126,8 +125,8 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     }
   };
 
-  const handleAddMember = async () => {
-    if (!newMemberName.trim()) {
+  const handleAddMember = async (memberName: string) => {
+    if (!memberName.trim()) {
       Alert.alert(t('common.error'), t('matchEntry.addMemberModal.memberNameRequired'));
       return;
     }
@@ -150,9 +149,8 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
     setIsAddingMember(true);
     try {
-      await addMember(groupId, newMemberName.trim());
+      await addMember(groupId, memberName.trim());
       setShowAddMemberModal(false);
-      setNewMemberName('');
       // No need for success alert - member is already visible optimistically
     } catch (error) {
       Alert.alert(t('common.error'), t('matchEntry.addMemberModal.addMemberError'));
@@ -163,7 +161,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
 
   const handleCancelAddMember = () => {
     setShowAddMemberModal(false);
-    setNewMemberName('');
   };
 
   const isAdmin = !!(currentGroup && user && currentGroup.ownerId === user.uid);
@@ -295,9 +292,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
       {/* Add Member Modal */}
       <AddMemberModal
         visible={showAddMemberModal}
-        memberName={newMemberName}
         isAddingMember={isAddingMember}
-        onNameChange={setNewMemberName}
         onAddMember={handleAddMember}
         onCancel={handleCancelAddMember}
       />

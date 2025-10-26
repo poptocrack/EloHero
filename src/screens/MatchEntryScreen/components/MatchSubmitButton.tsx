@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MatchSubmitButtonProps {
   onPress: () => void;
@@ -15,9 +16,10 @@ export default function MatchSubmitButton({
   isLoading
 }: MatchSubmitButtonProps) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.submitContainer}>
+    <View style={[styles.submitContainer, { paddingBottom: insets.bottom + 20 }]}>
       <TouchableOpacity
         style={[styles.submitButton, isDisabled && styles.disabledButton]}
         onPress={onPress}
@@ -39,7 +41,7 @@ export default function MatchSubmitButton({
 const styles = StyleSheet.create({
   submitContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingTop: 20,
     backgroundColor: '#F8F9FF',
     borderTopWidth: 1,
     borderTopColor: 'rgba(0, 0, 0, 0.05)'
