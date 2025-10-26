@@ -169,6 +169,13 @@ class SubscriptionService {
           subscriptionEndDate: this.calculateSubscriptionEndDate()
         });
 
+        // Update auth store immediately for instant UI update
+        const { useAuthStore } = await import('../store/authStore');
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
+        }
+
         return {
           success: true,
           transactionId: 'dev-mock-transaction-' + Date.now()
@@ -246,6 +253,13 @@ class SubscriptionService {
               subscriptionStartDate: new Date(transactionDate),
               subscriptionEndDate: this.calculateSubscriptionEndDate(new Date(transactionDate))
             });
+
+            // Update auth store immediately for instant UI update
+            const { useAuthStore } = await import('../store/authStore');
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser) {
+              useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
+            }
 
             return {
               success: true,
@@ -325,6 +339,13 @@ class SubscriptionService {
           subscriptionStartDate: new Date(transactionDate),
           subscriptionEndDate: this.calculateSubscriptionEndDate(new Date(transactionDate))
         });
+
+        // Update auth store immediately for instant UI update
+        const { useAuthStore } = await import('../store/authStore');
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
+        }
 
         return {
           success: true,

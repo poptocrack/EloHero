@@ -3,10 +3,15 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { SubscriptionProduct } from '../../../hooks/useSubscription';
 
-export default function PricingCard() {
+interface PricingCardProps {
+  premiumProduct: SubscriptionProduct | null;
+}
+
+export default function PricingCard({ premiumProduct }: PricingCardProps) {
   const { t } = useTranslation();
-
+  console.log(premiumProduct);
   return (
     <View style={styles.card}>
       <Text style={styles.sectionTitle}>{t('subscription.pricing')}</Text>
@@ -23,7 +28,7 @@ export default function PricingCard() {
           </View>
           <Text style={styles.pricingName}>{t('subscription.premiumPlan')}</Text>
           <View style={styles.pricingPriceContainer}>
-            <Text style={styles.pricingPrice}>2,99€</Text>
+            <Text style={styles.pricingPrice}>{premiumProduct?.price || '2,99€'}</Text>
             <Text style={styles.pricingPeriod}>{t('subscription.monthly')}</Text>
           </View>
         </View>

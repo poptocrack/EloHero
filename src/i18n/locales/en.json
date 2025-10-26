@@ -222,7 +222,8 @@
     "restoreSuccess": "Your previous purchases have been restored!",
     "restoreFailed": "No previous purchases found or restore failed.",
     "manageFailed": "Failed to open subscription management.",
-    "restorePurchases": "Restore Purchases"
+    "restorePurchases": "Restore Purchases",
+    "comingSoon": "Coming Soon"
   },
   "navigation": {
     "groups": "Groups",

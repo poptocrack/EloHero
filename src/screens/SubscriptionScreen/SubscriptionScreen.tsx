@@ -14,7 +14,7 @@ import PricingCard from './components/PricingCard';
 import ActionButton from './components/ActionButton';
 
 export default function SubscriptionScreen({ navigation }: any) {
-  const { user } = useAuthStore();
+  const { user, checkSubscriptionStatus } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -44,6 +44,9 @@ export default function SubscriptionScreen({ navigation }: any) {
       const result = await purchasePremium();
 
       if (result.success) {
+        // Refresh subscription status to ensure UI is updated
+        await checkSubscriptionStatus();
+
         Alert.alert(t('subscription.success'), t('subscription.purchaseSuccess'), [
           { text: t('common.ok') }
         ]);
@@ -64,6 +67,9 @@ export default function SubscriptionScreen({ navigation }: any) {
       const result: PurchaseResult = await restorePurchases();
 
       if (result.success) {
+        // Refresh subscription status to ensure UI is updated
+        await checkSubscriptionStatus();
+
         Alert.alert(t('subscription.success'), t('subscription.restoreSuccess'), [
           { text: t('common.ok') }
         ]);
@@ -109,21 +115,24 @@ export default function SubscriptionScreen({ navigation }: any) {
       title: t('subscription.seasons'),
       description: t('subscription.seasonsDesc'),
       free: t('subscription.notAvailable'),
-      premium: t('subscription.available')
+      premium: t('subscription.available'),
+      comingSoon: true
     },
     {
       icon: 'refresh',
       title: t('subscription.resetElo'),
       description: t('subscription.resetEloDesc'),
       free: t('subscription.notAvailable'),
-      premium: t('subscription.available')
+      premium: t('subscription.available'),
+      comingSoon: true
     },
     {
       icon: 'analytics',
       title: t('subscription.advancedStats'),
       description: t('subscription.advancedStatsDesc'),
       free: t('subscription.basic'),
-      premium: t('subscription.advanced')
+      premium: t('subscription.advanced'),
+      comingSoon: true
     }
     // {
     //   icon: 'cloud-upload',
@@ -158,7 +167,7 @@ export default function SubscriptionScreen({ navigation }: any) {
         <FeaturesComparison features={features} />
 
         {/* Pricing Card */}
-        <PricingCard />
+        <PricingCard premiumProduct={premiumProduct} />
 
         {/* Action Button */}
         <ActionButton

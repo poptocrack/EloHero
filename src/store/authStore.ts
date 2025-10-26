@@ -160,6 +160,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Update user plan optimistically
         set((state) => ({
           user: state.user ? { ...state.user, plan: 'premium' } : null,
+          subscriptionStatus: { isActive: true, productId: 'premium1' },
           isLoading: false
         }));
       } else {
@@ -188,6 +189,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Update user plan optimistically
         set((state) => ({
           user: state.user ? { ...state.user, plan: 'premium' } : null,
+          subscriptionStatus: { isActive: true, productId: 'premium1' },
           isLoading: false
         }));
       } else {

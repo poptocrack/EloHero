@@ -127,6 +127,13 @@ export function useSubscription(userId: string): {
         subscriptionEndDate: calculateSubscriptionEndDate(new Date(transactionDate))
       });
 
+      // Import and update auth store immediately for instant UI update
+      const { useAuthStore } = await import('../store/authStore');
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
+      }
+
       console.log('Subscription updated successfully');
     } catch (error) {
       console.error('Failed to update subscription:', error);
@@ -208,6 +215,13 @@ export function useSubscription(userId: string): {
           subscriptionStartDate: new Date(),
           subscriptionEndDate: calculateSubscriptionEndDate()
         });
+
+        // Update auth store immediately for instant UI update
+        const { useAuthStore } = await import('../store/authStore');
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
+        }
 
         return {
           success: true,
@@ -326,9 +340,9 @@ export function useSubscription(userId: string): {
       await restorePurchasesIAP();
 
       // Get available purchases to check for restored items
-      const purchases = await getAvailablePurchases();
-      const premiumPurchase = purchases.find(
-        (purchase) => purchase.productId === PREMIUM_PRODUCT_ID
+      const purchases = (await getAvailablePurchases()) as unknown as any[];
+      const premiumPurchase = purchases?.find(
+        (purchase: any) => purchase.productId === PREMIUM_PRODUCT_ID
       );
 
       if (premiumPurchase) {
@@ -356,6 +370,13 @@ export function useSubscription(userId: string): {
           subscriptionEndDate: calculateSubscriptionEndDate(new Date(transactionDate))
         });
 
+        // Update auth store immediately for instant UI update
+        const { useAuthStore } = await import('../store/authStore');
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
+        }
+
         return {
           success: true,
           transactionId: transactionId
@@ -376,9 +397,9 @@ export function useSubscription(userId: string): {
 
   const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
     try {
-      const purchases = await getAvailablePurchases();
-      const premiumPurchase = purchases.find(
-        (purchase) => purchase.productId === PREMIUM_PRODUCT_ID
+      const purchases = (await getAvailablePurchases()) as unknown as any[];
+      const premiumPurchase = purchases?.find(
+        (purchase: any) => purchase.productId === PREMIUM_PRODUCT_ID
       );
 
       if (premiumPurchase) {

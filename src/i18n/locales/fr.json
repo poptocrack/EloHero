@@ -222,7 +222,8 @@
     "restoreSuccess": "Vos achats précédents ont été restaurés !",
     "restoreFailed": "Aucun achat précédent trouvé ou échec de la restauration.",
     "manageFailed": "Impossible d'ouvrir la gestion d'abonnement.",
-    "restorePurchases": "Restaurer les achats"
+    "restorePurchases": "Restaurer les achats",
+    "comingSoon": "Bientôt disponible"
   },
   "navigation": {
     "groups": "Groupes",

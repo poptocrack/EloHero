@@ -9,6 +9,7 @@ interface Feature {
   description: string;
   free: string;
   premium: string;
+  comingSoon?: boolean;
 }
 
 interface FeaturesComparisonProps {
@@ -25,7 +26,14 @@ export default function FeaturesComparison({ features }: FeaturesComparisonProps
           <Ionicons name={feature.icon as any} size={24} color="#667eea" />
         </View>
         <View style={styles.featureInfo}>
-          <Text style={styles.featureTitle}>{feature.title}</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.featureTitle}>{feature.title}</Text>
+            {feature.comingSoon && (
+              <View style={styles.comingSoonBadge}>
+                <Text style={styles.comingSoonText}>{t('subscription.comingSoon')}</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.featureDescription}>{feature.description}</Text>
         </View>
       </View>
@@ -103,11 +111,29 @@ const styles = StyleSheet.create({
   featureInfo: {
     flex: 1
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4
+  },
   featureTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#2D3748',
-    marginBottom: 4
+    flex: 1
+  },
+  comingSoonBadge: {
+    backgroundColor: '#FF6B9D',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8
+  },
+  comingSoonText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#fff',
+    textTransform: 'uppercase'
   },
   featureDescription: {
     fontSize: 14,
