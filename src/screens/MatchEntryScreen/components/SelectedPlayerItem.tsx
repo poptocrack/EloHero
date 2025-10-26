@@ -164,8 +164,7 @@ const styles = StyleSheet.create({
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8
+    shadowRadius: 12
   },
   winnerAura: {
     position: 'absolute',
@@ -178,8 +177,7 @@ const styles = StyleSheet.create({
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
-    shadowRadius: 16,
-    elevation: 12
+    shadowRadius: 16
   },
   winnerAvatar: {
     backgroundColor: '#FFD700',
