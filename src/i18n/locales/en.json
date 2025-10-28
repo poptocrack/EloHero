@@ -223,7 +223,9 @@
     "restoreFailed": "No previous purchases found or restore failed.",
     "manageFailed": "Failed to open subscription management.",
     "restorePurchases": "Restore Purchases",
-    "comingSoon": "Coming Soon"
+    "comingSoon": "Coming Soon",
+    "availableSoon": "Available Soon",
+    "upgradeAvailableSoon": "Upgrade to Premium - Available Soon"
   },
   "navigation": {
     "groups": "Groups",

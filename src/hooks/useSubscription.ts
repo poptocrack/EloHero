@@ -41,6 +41,7 @@ export function useSubscription(userId: string): {
   products: any[];
   subscriptions: any[];
   getPremiumProduct: () => SubscriptionProduct | null;
+  areProductsAvailable: () => boolean;
   purchasePremium: () => Promise<PurchaseResult>;
   restorePurchases: () => Promise<PurchaseResult>;
   getSubscriptionStatus: () => Promise<SubscriptionStatus>;
@@ -474,6 +475,11 @@ export function useSubscription(userId: string): {
     return endDate;
   };
 
+  // Check if products are available (not null or empty)
+  const areProductsAvailable = useCallback((): boolean => {
+    return products && products.length > 0 && subscriptions && subscriptions.length > 0;
+  }, [products, subscriptions]);
+
   // Get the premium product from subscriptions
   const getPremiumProduct = useCallback((): SubscriptionProduct | null => {
     const subscription = subscriptions.find((sub) => sub.id === PREMIUM_PRODUCT_ID);
@@ -499,6 +505,7 @@ export function useSubscription(userId: string): {
     products,
     subscriptions,
     getPremiumProduct,
+    areProductsAvailable,
 
     // Actions
     purchasePremium: purchasePremium,

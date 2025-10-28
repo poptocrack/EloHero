@@ -7,9 +7,10 @@ import { SubscriptionProduct } from '../../../hooks/useSubscription';
 
 interface PricingCardProps {
   premiumProduct: SubscriptionProduct | null;
+  areProductsAvailable: () => boolean;
 }
 
-export default function PricingCard({ premiumProduct }: PricingCardProps) {
+export default function PricingCard({ premiumProduct, areProductsAvailable }: PricingCardProps) {
   const { t } = useTranslation();
   console.log(premiumProduct);
   return (
@@ -28,8 +29,14 @@ export default function PricingCard({ premiumProduct }: PricingCardProps) {
           </View>
           <Text style={styles.pricingName}>{t('subscription.premiumPlan')}</Text>
           <View style={styles.pricingPriceContainer}>
-            <Text style={styles.pricingPrice}>{premiumProduct?.price || '2,99€'}</Text>
-            <Text style={styles.pricingPeriod}>{t('subscription.monthly')}</Text>
+            <Text style={styles.pricingPrice}>
+              {areProductsAvailable()
+                ? premiumProduct?.price || '2,99€'
+                : t('subscription.availableSoon')}
+            </Text>
+            {areProductsAvailable() && (
+              <Text style={styles.pricingPeriod}>{t('subscription.monthly')}</Text>
+            )}
           </View>
         </View>
 

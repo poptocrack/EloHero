@@ -24,6 +24,7 @@ export default function SubscriptionScreen({ navigation }: any) {
     error,
     subscriptions,
     getPremiumProduct,
+    areProductsAvailable,
     purchasePremium,
     restorePurchases,
     openSubscriptionManagement,
@@ -167,7 +168,7 @@ export default function SubscriptionScreen({ navigation }: any) {
         <FeaturesComparison features={features} />
 
         {/* Pricing Card */}
-        <PricingCard premiumProduct={premiumProduct} />
+        <PricingCard premiumProduct={premiumProduct} areProductsAvailable={areProductsAvailable} />
 
         {/* Action Button */}
         <ActionButton
@@ -177,6 +178,7 @@ export default function SubscriptionScreen({ navigation }: any) {
           onRestorePurchases={handleRestorePurchases}
           isLoading={isLoading}
           premiumProduct={premiumProduct}
+          areProductsAvailable={areProductsAvailable}
         />
 
         {/* Footer */}

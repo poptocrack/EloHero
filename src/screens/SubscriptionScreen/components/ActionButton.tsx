@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { SubscriptionProduct } from '../../../services/subscription';
+import { SubscriptionProduct } from '../../../hooks/useSubscription';
 
 interface ActionButtonProps {
   isPremium: boolean;
@@ -12,6 +12,7 @@ interface ActionButtonProps {
   onRestorePurchases: () => void;
   isLoading: boolean;
   premiumProduct: SubscriptionProduct | null;
+  areProductsAvailable: () => boolean;
 }
 
 export default function ActionButton({
@@ -20,7 +21,8 @@ export default function ActionButton({
   onManageSubscription,
   onRestorePurchases,
   isLoading,
-  premiumProduct
+  premiumProduct,
+  areProductsAvailable
 }: ActionButtonProps) {
   const { t } = useTranslation();
 
@@ -44,9 +46,13 @@ export default function ActionButton({
         </TouchableOpacity>
       ) : (
         <View>
-          <TouchableOpacity style={styles.upgradeButton} onPress={onUpgrade} disabled={isLoading}>
+          <TouchableOpacity
+            style={styles.upgradeButton}
+            onPress={areProductsAvailable() ? onUpgrade : undefined}
+            disabled={isLoading || !areProductsAvailable()}
+          >
             <LinearGradient
-              colors={['#FF6B9D', '#C44569']}
+              colors={areProductsAvailable() ? ['#FF6B9D', '#C44569'] : ['#718096', '#4A5568']}
               style={styles.buttonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -54,25 +60,33 @@ export default function ActionButton({
               {isLoading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Ionicons name="diamond" size={20} color="#fff" />
+                <Ionicons
+                  name={areProductsAvailable() ? 'diamond' : 'time'}
+                  size={20}
+                  color="#fff"
+                />
               )}
               <Text style={styles.buttonText}>
                 {isLoading
                   ? t('common.loading')
-                  : `${t('subscription.upgrade')} ${
+                  : areProductsAvailable()
+                  ? `${t('subscription.upgrade')} ${
                       premiumProduct ? `- ${premiumProduct.price}` : ''
-                    }`}
+                    }`
+                  : t('subscription.upgradeAvailableSoon')}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.restoreButton}
-            onPress={onRestorePurchases}
-            disabled={isLoading}
-          >
-            <Text style={styles.restoreButtonText}>{t('subscription.restorePurchases')}</Text>
-          </TouchableOpacity>
+          {areProductsAvailable() && (
+            <TouchableOpacity
+              style={styles.restoreButton}
+              onPress={onRestorePurchases}
+              disabled={isLoading}
+            >
+              <Text style={styles.restoreButtonText}>{t('subscription.restorePurchases')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>

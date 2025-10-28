@@ -223,7 +223,9 @@
     "restoreFailed": "Aucun achat précédent trouvé ou échec de la restauration.",
     "manageFailed": "Impossible d'ouvrir la gestion d'abonnement.",
     "restorePurchases": "Restaurer les achats",
-    "comingSoon": "Bientôt disponible"
+    "comingSoon": "Bientôt disponible",
+    "availableSoon": "Bientôt disponible",
+    "upgradeAvailableSoon": "Passer à Premium - Bientôt disponible"
   },
   "navigation": {
     "groups": "Groupes",
