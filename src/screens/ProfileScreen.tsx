@@ -1,6 +1,6 @@
 // Profile Screen
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Linking, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
@@ -90,13 +90,18 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   };
 
   const menuItems = [
-    {
-      title: t('profile.subscription'),
-      subtitle: user?.plan === 'premium' ? t('profile.premiumActive') : t('profile.freePlan'),
-      icon: 'diamond-outline',
-      onPress: handleSubscription,
-      showChevron: true
-    },
+    // Hide subscription menu item on iOS
+    ...(Platform.OS !== 'ios'
+      ? [
+          {
+            title: t('profile.subscription'),
+            subtitle: user?.plan === 'premium' ? t('profile.premiumActive') : t('profile.freePlan'),
+            icon: 'diamond-outline',
+            onPress: handleSubscription,
+            showChevron: true
+          }
+        ]
+      : []),
     {
       title: t('profile.discord'),
       subtitle: t('profile.discordSubtitle'),
@@ -162,21 +167,24 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <Text style={styles.userName}>{user?.displayName || t('profile.user')}</Text>
           <Text style={styles.userEmail}>{user?.uid}</Text>
 
-          <View style={styles.planBadge}>
-            <View style={styles.planIconContainer}>
-              <Ionicons
-                name={user?.plan === 'premium' ? 'diamond' : 'person'}
-                size={16}
-                color={user?.plan === 'premium' ? '#ffd700' : '#667eea'}
-              />
+          {/* Hide plan badge on iOS */}
+          {Platform.OS !== 'ios' && (
+            <View style={styles.planBadge}>
+              <View style={styles.planIconContainer}>
+                <Ionicons
+                  name={user?.plan === 'premium' ? 'diamond' : 'person'}
+                  size={16}
+                  color={user?.plan === 'premium' ? '#ffd700' : '#667eea'}
+                />
+              </View>
+              <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
+                {user?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+              </Text>
             </View>
-            <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
-              {user?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
-            </Text>
-          </View>
+          )}
         </View>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Hide premium-related stats on iOS */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <View style={styles.statIconContainer}>
@@ -185,20 +193,24 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             <Text style={styles.statNumber}>{user?.groupsCount || 0}</Text>
             <Text style={styles.statLabel}>{t('profile.groups')}</Text>
           </View>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="trending-up" size={20} color="#4ECDC4" />
-            </View>
-            <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '2'}</Text>
-            <Text style={styles.statLabel}>{t('profile.groupLimit')}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="person-add" size={20} color="#FF6B9D" />
-            </View>
-            <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '5'}</Text>
-            <Text style={styles.statLabel}>{t('profile.memberLimit')}</Text>
-          </View>
+          {Platform.OS !== 'ios' && (
+            <>
+              <View style={styles.statCard}>
+                <View style={styles.statIconContainer}>
+                  <Ionicons name="trending-up" size={20} color="#4ECDC4" />
+                </View>
+                <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '2'}</Text>
+                <Text style={styles.statLabel}>{t('profile.groupLimit')}</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={styles.statIconContainer}>
+                  <Ionicons name="person-add" size={20} color="#FF6B9D" />
+                </View>
+                <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '5'}</Text>
+                <Text style={styles.statLabel}>{t('profile.memberLimit')}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Menu Cards */}

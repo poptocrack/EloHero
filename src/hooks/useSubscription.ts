@@ -1,11 +1,16 @@
-// Modern subscription hook using expo-iap
-import { useIAP, ErrorCode, deepLinkToSubscriptions } from 'expo-iap';
+// Modern subscription hook using RevenueCat
 import { useState, useEffect, useCallback } from 'react';
-import { Platform, Alert } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { purchaseValidationService } from '../services/purchaseValidation';
+import Purchases, {
+  CustomerInfo,
+  PurchasesOffering,
+  PurchasesPackage,
+  PurchasesStoreProduct,
+  PURCHASES_ERROR_CODE
+} from 'react-native-purchases';
 
 export interface SubscriptionProduct {
   productId: string;
@@ -30,7 +35,12 @@ export interface SubscriptionStatus {
 }
 
 const PREMIUM_PRODUCT_ID = 'premium1';
-const ANDROID_PACKAGE_NAME = 'com.elohero.app';
+const PREMIUM_ENTITLEMENT_ID = 'premium'; // RevenueCat entitlement ID
+
+// RevenueCat API Keys - These should be set from environment variables
+// For now, you'll need to add them to your app config
+const REVENUECAT_API_KEY_IOS = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || '';
+const REVENUECAT_API_KEY_ANDROID = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || '';
 
 // Development mode toggle - set to false to disable automatic subscription success
 const DEV_AUTO_SUBSCRIPTION = true;
@@ -39,8 +49,8 @@ export function useSubscription(userId: string): {
   connected: boolean;
   isLoading: boolean;
   error: string | null;
-  products: any[];
-  subscriptions: any[];
+  products: PurchasesStoreProduct[];
+  subscriptions: PurchasesStoreProduct[];
   getPremiumProduct: () => SubscriptionProduct | null;
   areProductsAvailable: () => boolean;
   purchasePremium: () => Promise<PurchaseResult>;
@@ -52,187 +62,175 @@ export function useSubscription(userId: string): {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connected, setConnected] = useState(false);
+  const [offerings, setOfferings] = useState<PurchasesOffering[]>([]);
+  const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
+  const [subscriptions, setSubscriptions] = useState<PurchasesStoreProduct[]>([]);
 
-  const {
-    connected,
-    products,
-    subscriptions,
-    fetchProducts,
-    requestPurchase,
-    restorePurchases: restorePurchasesIAP,
-    getAvailablePurchases
-  } = useIAP({
-    onPurchaseSuccess: async (purchase) => {
-      console.log('Purchase successful:', purchase);
-      await handleSuccessfulPurchase(purchase, userId);
-    },
-    onPurchaseError: (error) => {
-      console.error('Purchase failed:', error);
-      handlePurchaseError(error);
-    }
-  });
-  console.log('products', products);
+  // Initialize RevenueCat
+  useEffect(() => {
+    const initializeRevenueCat = async (): Promise<void> => {
+      try {
+        const apiKey = Platform.OS === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
+
+        if (!apiKey) {
+          console.warn(
+            'RevenueCat API key not configured. Please set EXPO_PUBLIC_REVENUECAT_API_KEY_IOS and EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID in your environment variables.'
+          );
+          setError('RevenueCat not configured');
+          return;
+        }
+
+        await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
+
+        // Configure RevenueCat
+        await Purchases.configure({ apiKey });
+
+        // Set user ID for RevenueCat
+        if (userId) {
+          await Purchases.logIn(userId);
+        }
+
+        setConnected(true);
+        console.log('RevenueCat initialized successfully');
+      } catch (err) {
+        console.error('Failed to initialize RevenueCat:', err);
+        setError('Failed to initialize RevenueCat');
+        setConnected(false);
+      }
+    };
+
+    initializeRevenueCat();
+  }, [userId]);
+
   const initializeProducts = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('Fetching subscription products for:', PREMIUM_PRODUCT_ID);
+      if (!connected) {
+        console.log('RevenueCat not connected yet, waiting...');
+        return;
+      }
 
-      // Fetch subscription products
-      await fetchProducts({
-        skus: [PREMIUM_PRODUCT_ID],
-        type: 'subs'
-      });
-    } catch (err) {
-      console.error('Failed to fetch products:', err);
-      setError(
-        'Failed to load subscription products. Please check if the subscription is properly configured in Google Play Console.'
-      );
+      console.log('Fetching offerings from RevenueCat');
+
+      // Fetch offerings from RevenueCat
+      const offeringsData = await Purchases.getOfferings();
+
+      if (offeringsData.current !== null) {
+        setOfferings([offeringsData.current]);
+
+        // Extract available packages and their products
+        const allPackages: PurchasesPackage[] = [];
+        offeringsData.current.availablePackages.forEach((pkg) => {
+          allPackages.push(pkg);
+        });
+
+        // Extract products from packages
+        const allProducts: PurchasesStoreProduct[] = [];
+        allPackages.forEach((pkg) => {
+          // PurchasesPackage has product property, not storeProduct
+          const product = (pkg as any).product || (pkg as any).storeProduct;
+          if (product) {
+            allProducts.push(product);
+          }
+        });
+
+        setProducts(allProducts);
+        setSubscriptions(
+          allProducts.filter((product) => product.identifier === PREMIUM_PRODUCT_ID)
+        );
+
+        console.log('Successfully loaded products:', allProducts.length);
+      } else {
+        console.log(
+          'No current offering available - this is normal in development if products are not configured in App Store Connect'
+        );
+        setProducts([]);
+        setSubscriptions([]);
+        // In development, don't set error state - this is expected behavior
+        if (!__DEV__) {
+          setError('No subscription products available');
+        }
+      }
+    } catch (err: any) {
+      const errorMessage =
+        err.userInfo?.readableErrorCode || err.message || 'Failed to load subscription products';
+      console.warn('Failed to fetch offerings (this is normal in development):', errorMessage);
+
+      // In development mode, don't set error state when products aren't configured
+      // This is expected when testing without App Store Connect configuration
+      if (__DEV__) {
+        console.log(
+          'Development mode: Products not available. This is expected if products are not configured in App Store Connect.'
+        );
+        setError(null); // Clear any previous errors
+      } else {
+        setError(errorMessage);
+      }
+
+      setProducts([]);
+      setSubscriptions([]);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchProducts]);
+  }, [connected]);
 
-  // Initialize and fetch products when connected
+  // Initialize products when connected
   useEffect(() => {
     if (connected) {
       initializeProducts();
     }
   }, [connected, initializeProducts]);
 
-  const handleSuccessfulPurchase = useCallback(async (purchase: any, userId: string) => {
-    try {
-      console.log('Processing successful purchase:', purchase);
+  const handleSuccessfulPurchase = useCallback(
+    async (customerInfo: CustomerInfo, userId: string) => {
+      try {
+        console.log('Processing successful purchase:', customerInfo);
 
-      // Extract transaction details
-      const transactionDate =
-        purchase.transactionDate ||
-        (purchase as any).purchaseTime ||
-        (purchase as any).purchaseDate ||
-        (purchase as any).date ||
-        new Date();
+        // Check if user has premium entitlement
+        const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
 
-      const transactionId =
-        purchase.transactionId ||
-        (purchase as any).purchaseToken ||
-        purchase.id ||
-        (purchase as any).orderId ||
-        `purchase-${Date.now()}`;
-
-      // Validate purchase with server
-      let validationResult;
-
-      if (Platform.OS === 'ios') {
-        // For iOS, we need the receipt data
-        const receiptData = (purchase as any).receiptData || (purchase as any).receipt;
-        if (!receiptData) {
-          throw new Error('iOS receipt data not found');
+        if (!isPremium) {
+          throw new Error('Purchase completed but premium entitlement not found');
         }
 
-        validationResult = await purchaseValidationService.validateIOSReceipt({
-          receiptData: receiptData,
-          productId: PREMIUM_PRODUCT_ID
+        const entitlement = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
+        const expirationDate = entitlement.expirationDate
+          ? new Date(entitlement.expirationDate)
+          : null;
+        const latestTransactionDate = entitlement.latestPurchaseDate
+          ? new Date(entitlement.latestPurchaseDate)
+          : new Date();
+
+        console.log('Premium entitlement active, updating user subscription');
+
+        // Update user's subscription status in Firestore
+        await updateUserSubscription(userId, {
+          plan: 'premium',
+          subscriptionStatus: 'active',
+          subscriptionProductId: PREMIUM_PRODUCT_ID,
+          subscriptionStartDate: latestTransactionDate,
+          subscriptionEndDate: expirationDate || calculateSubscriptionEndDate(latestTransactionDate)
         });
-      } else {
-        // For Android, we need the purchase token
-        const purchaseToken = (purchase as any).purchaseToken || (purchase as any).token;
-        if (!purchaseToken) {
-          throw new Error('Android purchase token not found');
+
+        // Update auth store immediately for instant UI update
+        const { useAuthStore } = await import('../store/authStore');
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
         }
 
-        validationResult = await purchaseValidationService.validateAndroidPurchase({
-          purchaseToken: purchaseToken,
-          productId: PREMIUM_PRODUCT_ID,
-          packageName: ANDROID_PACKAGE_NAME
-        });
+        console.log('Subscription updated successfully');
+      } catch (error) {
+        console.error('Failed to update subscription:', error);
+        setError('Failed to validate purchase');
+        throw error;
       }
-
-      if (!validationResult.success || !validationResult.data?.valid) {
-        throw new Error(validationResult.error || 'Purchase validation failed');
-      }
-
-      console.log('Purchase validated successfully with server');
-
-      // Update user's subscription status in Firestore (server already updated it, but we'll update locally too)
-      await updateUserSubscription(userId, {
-        plan: 'premium',
-        subscriptionStatus: 'active',
-        subscriptionProductId: PREMIUM_PRODUCT_ID,
-        subscriptionStartDate: new Date(transactionDate),
-        subscriptionEndDate: calculateSubscriptionEndDate(new Date(transactionDate))
-      });
-
-      // Import and update auth store immediately for instant UI update
-      const { useAuthStore } = await import('../store/authStore');
-      const currentUser = useAuthStore.getState().user;
-      if (currentUser) {
-        useAuthStore.getState().setUser({ ...currentUser, plan: 'premium' });
-      }
-
-      console.log('Subscription updated successfully');
-    } catch (error) {
-      console.error('Failed to validate or update subscription:', error);
-      setError('Failed to validate purchase with server');
-    }
-  }, []);
-
-  const handlePurchaseError = useCallback((error: any) => {
-    console.error('Purchase error:', error);
-
-    let errorMessage = 'Purchase failed';
-
-    switch (error.code) {
-      case ErrorCode.UserCancelled:
-        errorMessage = 'Purchase cancelled by user';
-        break;
-      case ErrorCode.ItemUnavailable:
-        if (__DEV__) {
-          errorMessage =
-            'Development mode: This subscription is not available for purchase. This is normal in development. To test subscriptions:\n1. Upload the app to Google Play Console\n2. Configure the subscription product\n3. Add test accounts\n4. Use a signed APK in Internal Testing track';
-        } else {
-          errorMessage =
-            'This subscription is not available for purchase. Please check:\n1. The subscription is active in Google Play Console\n2. The app is uploaded to Internal Testing track\n3. You are signed in with a test account\n4. The subscription is properly configured';
-        }
-        break;
-      case ErrorCode.ServiceError:
-        errorMessage = 'Google Play services are unavailable';
-        break;
-      case ErrorCode.DeveloperError:
-        if (__DEV__) {
-          errorMessage =
-            'Development mode: Billing configuration error. This is normal in development. The app needs to be properly configured in Google Play Console for billing to work.';
-        } else {
-          errorMessage = 'Configuration error - please contact support';
-        }
-        break;
-      case ErrorCode.BillingUnavailable:
-        if (__DEV__) {
-          errorMessage =
-            'Development mode: Billing is not available. This is normal in development. The app needs to be uploaded to Google Play Console and configured for billing.';
-        } else {
-          errorMessage = 'Purchases are not allowed on this device';
-        }
-        break;
-      case ErrorCode.PurchaseError:
-        errorMessage = 'Invalid payment information';
-        break;
-      default:
-        // Check for specific billing configuration error
-        if (error.message && error.message.includes('not configured for billing')) {
-          if (__DEV__) {
-            errorMessage =
-              'Development mode: App not configured for billing. This is normal in development. To test subscriptions, you need to upload the app to Google Play Console and configure billing.';
-          } else {
-            errorMessage = 'App not configured for billing. Please contact support.';
-          }
-        } else {
-          errorMessage = error.message || 'Purchase failed';
-        }
-    }
-
-    setError(errorMessage);
-  }, []);
+    },
+    []
+  );
 
   const purchasePremium = async (): Promise<PurchaseResult> => {
     try {
@@ -265,103 +263,101 @@ export function useSubscription(userId: string): {
         };
       }
 
-      // Development mode: Check if billing is properly configured
-      if (__DEV__ && !DEV_AUTO_SUBSCRIPTION) {
-        // If we're in dev mode and auto-subscription is disabled,
-        // provide helpful guidance instead of failing
+      if (!connected) {
         return {
           success: false,
-          error:
-            'Development mode: Billing not configured. This is normal in development. To test subscriptions:\n1. Set DEV_AUTO_SUBSCRIPTION = true for mock testing\n2. Or upload app to Google Play Console for real testing\n3. Configure subscription products in Google Play Console'
+          error: 'RevenueCat not connected. Please check your configuration.'
         };
       }
 
-      const subscription = subscriptions.find((sub) => sub.id === PREMIUM_PRODUCT_ID);
-      if (!subscription) {
-        console.log(
-          'Available subscriptions:',
-          subscriptions.map((sub) => ({ id: sub.id, title: sub.title }))
-        );
+      // Get current offering
+      let offeringsData;
+      try {
+        offeringsData = await Purchases.getOfferings();
+      } catch (offeringsError: any) {
+        // If offerings fail in development, fall back to dev auto subscription if enabled
+        if (__DEV__ && DEV_AUTO_SUBSCRIPTION) {
+          console.log('Development mode: Offerings unavailable, using dev auto subscription');
+          // Fall through to dev auto subscription (already handled above)
+          // But we need to return early since we can't continue without offerings
+          return {
+            success: false,
+            error:
+              'Products not configured in App Store Connect. Enable DEV_AUTO_SUBSCRIPTION for development testing.'
+          };
+        }
+        return {
+          success: false,
+          error: __DEV__
+            ? 'Products not available. Configure products in App Store Connect or use StoreKit Configuration file for testing.'
+            : 'No subscription offering available. Please check your RevenueCat configuration.'
+        };
+      }
 
-        // In development mode, provide more helpful error message
+      if (!offeringsData.current) {
+        // In development, this is expected if products aren't configured
         if (__DEV__) {
           return {
             success: false,
             error:
-              'Development mode: Subscription not configured for billing. This is normal in development. To test subscriptions, you need to:\n1. Upload the app to Google Play Console\n2. Configure the subscription product\n3. Add test accounts\n4. Use a signed APK in Internal Testing track'
+              'No subscription offering available. This is normal in development if products are not configured in App Store Connect. Enable DEV_AUTO_SUBSCRIPTION for testing.'
           };
         }
-
         return {
           success: false,
-          error:
-            'Premium subscription not available. Please check if the subscription is properly configured in Google Play Console.'
+          error: 'No subscription offering available. Please check your RevenueCat configuration.'
         };
       }
 
-      if (Platform.OS === 'android') {
-        // Debug: Log subscription structure
-        console.log('Android subscription structure:', JSON.stringify(subscription, null, 2));
+      // Find the premium package
+      const premiumPackage = offeringsData.current.availablePackages.find((pkg) => {
+        const product = (pkg as any).product || (pkg as any).storeProduct;
+        return product?.identifier === PREMIUM_PRODUCT_ID;
+      });
 
-        // Android subscription handling with offers
-        const offers = (subscription as any).subscriptionOfferDetails;
-        console.log('Available offers:', offers);
-
-        if (!offers || offers.length === 0) {
-          console.log('No subscription offers found, trying without offers...');
-          // Try without subscription offers (fallback)
-          await requestPurchase({
-            request: {
-              android: { skus: [PREMIUM_PRODUCT_ID] }
-            },
-            type: 'subs'
-          });
-        } else {
-          const offer = offers[0];
-          console.log('Using offer:', offer);
-
-          if (!offer.offerToken) {
-            console.log('No offer token found, trying without offers...');
-            // Fallback to simple purchase without offers
-            await requestPurchase({
-              request: {
-                android: { skus: [PREMIUM_PRODUCT_ID] }
-              },
-              type: 'subs'
-            });
-          } else {
-            await requestPurchase({
-              request: {
-                android: {
-                  skus: [PREMIUM_PRODUCT_ID],
-                  subscriptionOffers: [
-                    {
-                      sku: PREMIUM_PRODUCT_ID,
-                      offerToken: offer.offerToken
-                    }
-                  ]
-                }
-              },
-              type: 'subs'
-            });
-          }
-        }
-      } else {
-        // iOS subscription handling
-        await requestPurchase({
-          request: {
-            ios: { sku: PREMIUM_PRODUCT_ID }
-          },
-          type: 'subs'
-        });
+      if (!premiumPackage) {
+        return {
+          success: false,
+          error: `Premium subscription (${PREMIUM_PRODUCT_ID}) not found in RevenueCat offerings.`
+        };
       }
 
-      return { success: true };
+      // Purchase the package
+      const { customerInfo } = await Purchases.purchasePackage(premiumPackage);
+
+      // Handle successful purchase
+      await handleSuccessfulPurchase(customerInfo, userId);
+
+      return {
+        success: true,
+        transactionId:
+          (customerInfo as any).originalTransactionIdentifier ||
+          customerInfo.firstSeen ||
+          `purchase-${Date.now()}`
+      };
     } catch (error: any) {
       console.error('Purchase failed:', error);
+
+      let errorMessage = 'Purchase failed';
+
+      if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+        errorMessage = 'Purchase cancelled by user';
+      } else if (error.code === PURCHASES_ERROR_CODE.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR) {
+        errorMessage = 'Product not available for purchase';
+      } else if (error.code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR) {
+        errorMessage = 'Purchases are not allowed on this device';
+      } else if (error.code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+        errorMessage = 'Payment is pending';
+      } else if (error.userInfo?.readableErrorCode) {
+        errorMessage = error.userInfo.readableErrorCode;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
       return {
         success: false,
-        error: error.message || 'Purchase failed'
+        error: errorMessage
       };
     } finally {
       setIsLoading(false);
@@ -373,69 +369,35 @@ export function useSubscription(userId: string): {
       setIsLoading(true);
       setError(null);
 
-      await restorePurchasesIAP();
+      if (!connected) {
+        return {
+          success: false,
+          error: 'RevenueCat not connected. Please check your configuration.'
+        };
+      }
 
-      // Get available purchases to check for restored items
-      const purchases = (await getAvailablePurchases()) as unknown as any[];
-      const premiumPurchase = purchases?.find(
-        (purchase: any) => purchase.productId === PREMIUM_PRODUCT_ID
-      );
+      // Restore purchases using RevenueCat
+      const customerInfo = await Purchases.restorePurchases();
 
-      if (premiumPurchase) {
-        // Extract transaction details
-        const transactionDate =
-          premiumPurchase.transactionDate ||
-          (premiumPurchase as any).purchaseTime ||
-          (premiumPurchase as any).purchaseDate ||
-          (premiumPurchase as any).date ||
-          new Date();
+      // Check if user has premium entitlement
+      const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
 
-        const transactionId =
-          premiumPurchase.transactionId ||
-          (premiumPurchase as any).purchaseToken ||
-          premiumPurchase.id ||
-          (premiumPurchase as any).orderId ||
-          `restore-${Date.now()}`;
-
-        // Validate purchase with server
-        let validationResult;
-
-        if (Platform.OS === 'ios') {
-          const receiptData =
-            (premiumPurchase as any).receiptData || (premiumPurchase as any).receipt;
-          if (receiptData) {
-            validationResult = await purchaseValidationService.validateIOSReceipt({
-              receiptData: receiptData,
-              productId: PREMIUM_PRODUCT_ID
-            });
-          }
-        } else {
-          const purchaseToken =
-            (premiumPurchase as any).purchaseToken || (premiumPurchase as any).token;
-          if (purchaseToken) {
-            validationResult = await purchaseValidationService.validateAndroidPurchase({
-              purchaseToken: purchaseToken,
-              productId: PREMIUM_PRODUCT_ID,
-              packageName: ANDROID_PACKAGE_NAME
-            });
-          }
-        }
-
-        // If server validation fails, still allow restore but log the issue
-        if (validationResult && !validationResult.success) {
-          console.warn(
-            'Server validation failed for restored purchase, but allowing restore:',
-            validationResult.error
-          );
-        }
+      if (isPremium) {
+        const entitlement = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
+        const expirationDate = entitlement.expirationDate
+          ? new Date(entitlement.expirationDate)
+          : null;
+        const latestTransactionDate = entitlement.latestPurchaseDate
+          ? new Date(entitlement.latestPurchaseDate)
+          : new Date();
 
         // Update user's subscription status
         await updateUserSubscription(userId, {
           plan: 'premium',
           subscriptionStatus: 'active',
           subscriptionProductId: PREMIUM_PRODUCT_ID,
-          subscriptionStartDate: new Date(transactionDate),
-          subscriptionEndDate: calculateSubscriptionEndDate(new Date(transactionDate))
+          subscriptionStartDate: latestTransactionDate,
+          subscriptionEndDate: expirationDate || calculateSubscriptionEndDate(latestTransactionDate)
         });
 
         // Update auth store immediately for instant UI update
@@ -447,16 +409,19 @@ export function useSubscription(userId: string): {
 
         return {
           success: true,
-          transactionId: transactionId
+          transactionId:
+            (customerInfo as any).originalTransactionIdentifier ||
+            customerInfo.firstSeen ||
+            `restore-${Date.now()}`
         };
       }
 
-      return { success: false, error: 'No previous purchases found' };
+      return { success: false, error: 'No active premium subscription found' };
     } catch (error: any) {
       console.error('Restore purchases failed:', error);
       return {
         success: false,
-        error: error.message || 'Restore failed'
+        error: error.userInfo?.readableErrorCode || error.message || 'Restore failed'
       };
     } finally {
       setIsLoading(false);
@@ -465,28 +430,25 @@ export function useSubscription(userId: string): {
 
   const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
     try {
-      const purchases = (await getAvailablePurchases()) as unknown as any[];
-      const premiumPurchase = purchases?.find(
-        (purchase: any) => purchase.productId === PREMIUM_PRODUCT_ID
-      );
+      if (!connected) {
+        return { isActive: false };
+      }
 
-      if (premiumPurchase) {
-        const transactionDate =
-          premiumPurchase.transactionDate ||
-          (premiumPurchase as any).purchaseTime ||
-          (premiumPurchase as any).purchaseDate ||
-          (premiumPurchase as any).date ||
-          new Date();
+      const customerInfo = await Purchases.getCustomerInfo();
+      const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
 
-        const purchaseDate = new Date(transactionDate);
-        const expirationDate = calculateSubscriptionEndDate(purchaseDate);
-        const isActive = expirationDate > new Date();
+      if (isPremium) {
+        const entitlement = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
+        const expirationDate = entitlement.expirationDate
+          ? new Date(entitlement.expirationDate)
+          : null;
+        const isTrial = entitlement.periodType === 'trial';
 
         return {
-          isActive,
+          isActive: true,
           productId: PREMIUM_PRODUCT_ID,
-          expirationDate,
-          isTrial: false
+          expirationDate: expirationDate || undefined,
+          isTrial
         };
       }
 
@@ -499,10 +461,13 @@ export function useSubscription(userId: string): {
 
   const openSubscriptionManagement = async (): Promise<void> => {
     try {
-      await deepLinkToSubscriptions({
-        skuAndroid: PREMIUM_PRODUCT_ID,
-        packageNameAndroid: ANDROID_PACKAGE_NAME
-      });
+      if (Platform.OS === 'ios') {
+        // Open iOS Settings
+        await Linking.openURL('https://apps.apple.com/account/subscriptions');
+      } else {
+        // Open Google Play subscriptions
+        await Linking.openURL('https://play.google.com/store/account/subscriptions');
+      }
     } catch (error) {
       console.error('Failed to open subscription management:', error);
       throw new Error('Failed to open subscription management');
@@ -542,20 +507,20 @@ export function useSubscription(userId: string): {
     return endDate;
   };
 
-  // Check if products are available (not null or empty)
+  // Check if products are available
   const areProductsAvailable = useCallback((): boolean => {
-    return products && products.length > 0 && subscriptions && subscriptions.length > 0;
-  }, [products, subscriptions]);
+    return subscriptions && subscriptions.length > 0;
+  }, [subscriptions]);
 
   // Get the premium product from subscriptions
   const getPremiumProduct = useCallback((): SubscriptionProduct | null => {
-    const subscription = subscriptions.find((sub) => sub.id === PREMIUM_PRODUCT_ID);
+    const subscription = subscriptions.find((sub) => sub.identifier === PREMIUM_PRODUCT_ID);
     if (!subscription) return null;
 
     return {
-      productId: subscription.id,
-      price: subscription.displayPrice || subscription.price?.toString() || 'N/A',
-      currency: subscription.currency || 'USD',
+      productId: subscription.identifier,
+      price: subscription.priceString || subscription.price.toString(),
+      currency: subscription.currencyCode || 'USD',
       title: subscription.title,
       description: subscription.description,
       type: 'subscription'

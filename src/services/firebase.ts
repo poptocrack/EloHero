@@ -35,14 +35,6 @@ const firebaseConfig = {
     'demo-app-id'
 };
 
-// Log Firebase configuration status (without sensitive data)
-console.log('Firebase Config Status:', {
-  hasApiKey: !!firebaseConfig.apiKey && firebaseConfig.apiKey !== 'demo-key',
-  hasProjectId: !!firebaseConfig.projectId && firebaseConfig.projectId !== 'demo-project',
-  hasAppId: !!firebaseConfig.appId && firebaseConfig.appId !== 'demo-app-id',
-  projectId: firebaseConfig.projectId
-});
-
 // Initialize Firebase (only if not already initialized)
 let app;
 if (getApps().length === 0) {

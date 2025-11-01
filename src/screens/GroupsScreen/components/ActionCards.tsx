@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +24,8 @@ export default function ActionCards({
 
   // Check if user has reached the free limit
   const isLimitReached = groupsCount >= 2 && !isPremium;
-  const showBanner = isLimitReached && !bannerDismissed;
+  // Hide banner on iOS
+  const showBanner = isLimitReached && !bannerDismissed && Platform.OS !== 'ios';
 
   const handleCreateGroup = () => {
     if (isLimitReached) {

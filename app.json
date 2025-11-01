@@ -61,8 +61,7 @@
             "android": ["en", "fr"]
           }
         }
-      ],
-      "expo-iap"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
