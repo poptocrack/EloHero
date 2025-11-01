@@ -5,6 +5,7 @@ import { Platform, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { purchaseValidationService } from '../services/purchaseValidation';
 
 export interface SubscriptionProduct {
   productId: string;
@@ -119,7 +120,41 @@ export function useSubscription(userId: string): {
         (purchase as any).orderId ||
         `purchase-${Date.now()}`;
 
-      // Update user's subscription status in Firestore
+      // Validate purchase with server
+      let validationResult;
+
+      if (Platform.OS === 'ios') {
+        // For iOS, we need the receipt data
+        const receiptData = (purchase as any).receiptData || (purchase as any).receipt;
+        if (!receiptData) {
+          throw new Error('iOS receipt data not found');
+        }
+
+        validationResult = await purchaseValidationService.validateIOSReceipt({
+          receiptData: receiptData,
+          productId: PREMIUM_PRODUCT_ID
+        });
+      } else {
+        // For Android, we need the purchase token
+        const purchaseToken = (purchase as any).purchaseToken || (purchase as any).token;
+        if (!purchaseToken) {
+          throw new Error('Android purchase token not found');
+        }
+
+        validationResult = await purchaseValidationService.validateAndroidPurchase({
+          purchaseToken: purchaseToken,
+          productId: PREMIUM_PRODUCT_ID,
+          packageName: ANDROID_PACKAGE_NAME
+        });
+      }
+
+      if (!validationResult.success || !validationResult.data?.valid) {
+        throw new Error(validationResult.error || 'Purchase validation failed');
+      }
+
+      console.log('Purchase validated successfully with server');
+
+      // Update user's subscription status in Firestore (server already updated it, but we'll update locally too)
       await updateUserSubscription(userId, {
         plan: 'premium',
         subscriptionStatus: 'active',
@@ -137,8 +172,8 @@ export function useSubscription(userId: string): {
 
       console.log('Subscription updated successfully');
     } catch (error) {
-      console.error('Failed to update subscription:', error);
-      setError('Failed to update subscription status');
+      console.error('Failed to validate or update subscription:', error);
+      setError('Failed to validate purchase with server');
     }
   }, []);
 
@@ -361,6 +396,38 @@ export function useSubscription(userId: string): {
           premiumPurchase.id ||
           (premiumPurchase as any).orderId ||
           `restore-${Date.now()}`;
+
+        // Validate purchase with server
+        let validationResult;
+
+        if (Platform.OS === 'ios') {
+          const receiptData =
+            (premiumPurchase as any).receiptData || (premiumPurchase as any).receipt;
+          if (receiptData) {
+            validationResult = await purchaseValidationService.validateIOSReceipt({
+              receiptData: receiptData,
+              productId: PREMIUM_PRODUCT_ID
+            });
+          }
+        } else {
+          const purchaseToken =
+            (premiumPurchase as any).purchaseToken || (premiumPurchase as any).token;
+          if (purchaseToken) {
+            validationResult = await purchaseValidationService.validateAndroidPurchase({
+              purchaseToken: purchaseToken,
+              productId: PREMIUM_PRODUCT_ID,
+              packageName: ANDROID_PACKAGE_NAME
+            });
+          }
+        }
+
+        // If server validation fails, still allow restore but log the issue
+        if (validationResult && !validationResult.success) {
+          console.warn(
+            'Server validation failed for restored purchase, but allowing restore:',
+            validationResult.error
+          );
+        }
 
         // Update user's subscription status
         await updateUserSubscription(userId, {
