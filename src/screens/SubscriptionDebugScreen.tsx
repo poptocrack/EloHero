@@ -143,7 +143,7 @@ export default function SubscriptionDebugScreen({ navigation }: SubscriptionDebu
             });
           }
         } catch (productsErr) {
-          console.log('Could not fetch products directly:', productsErr);
+          // Silently fail - products might not be available
         }
 
         setAllProducts(Array.from(productsMap.values()));
@@ -159,12 +159,10 @@ export default function SubscriptionDebugScreen({ navigation }: SubscriptionDebu
         const customerInfoData = await Purchases.getCustomerInfo();
         setCustomerInfo(customerInfoData);
       } catch (customerErr) {
-        console.log('Could not fetch customer info:', customerErr);
         setCustomerInfo(null);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error('Error fetching offerings:', errorMessage);
       setError(errorMessage);
       setIsConnected(false);
     } finally {
