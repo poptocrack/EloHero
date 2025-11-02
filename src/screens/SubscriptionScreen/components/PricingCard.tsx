@@ -12,10 +12,10 @@ interface PricingCardProps {
 
 export default function PricingCard({ premiumProduct, areProductsAvailable }: PricingCardProps) {
   const { t } = useTranslation();
-  console.log(premiumProduct);
+
   return (
     <View style={styles.card}>
-      <Text style={styles.sectionTitle}>{t('subscription.pricing')}</Text>
+      {/* <Text style={styles.sectionTitle}>{t('subscription.pricing')}</Text> */}
 
       <LinearGradient
         colors={['#FF6B9D', '#C44569']}

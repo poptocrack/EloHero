@@ -1,6 +1,15 @@
 // Profile Screen
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Linking, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  Linking,
+  Platform
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
@@ -91,17 +100,14 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   const menuItems = [
     // Hide subscription menu item on iOS
-    ...(Platform.OS !== 'ios'
-      ? [
-          {
-            title: t('profile.subscription'),
-            subtitle: user?.plan === 'premium' ? t('profile.premiumActive') : t('profile.freePlan'),
-            icon: 'diamond-outline',
-            onPress: handleSubscription,
-            showChevron: true
-          }
-        ]
-      : []),
+
+    {
+      title: t('profile.subscription'),
+      subtitle: user?.plan === 'premium' ? t('profile.premiumActive') : t('profile.freePlan'),
+      icon: 'diamond-outline',
+      onPress: handleSubscription,
+      showChevron: true
+    },
     {
       title: t('profile.discord'),
       subtitle: t('profile.discordSubtitle'),

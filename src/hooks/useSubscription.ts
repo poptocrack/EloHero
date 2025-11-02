@@ -34,13 +34,18 @@ export interface SubscriptionStatus {
   isTrial?: boolean;
 }
 
-const PREMIUM_PRODUCT_ID = 'premium1';
+// Product ID - Use the STORE product ID (not RevenueCat's internal identifier)
+// Different product IDs for test vs production:
+// - Test/Development: subscription_monthly_1 (for test stores)
+// - Production (iOS/Android): premium1 (actual store product)
+const PREMIUM_PRODUCT_ID = __DEV__ ? 'subscription_monthly_1' : 'premium1';
 const PREMIUM_ENTITLEMENT_ID = 'premium'; // RevenueCat entitlement ID
 
 // RevenueCat API Keys - These should be set from environment variables
 // For now, you'll need to add them to your app config
 const REVENUECAT_API_KEY_IOS = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || '';
 const REVENUECAT_API_KEY_ANDROID = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || '';
+const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY || '';
 
 // Development mode toggle - set to false to disable automatic subscription success
 const DEV_AUTO_SUBSCRIPTION = true;
@@ -63,7 +68,6 @@ export function useSubscription(userId: string): {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
-  const [offerings, setOfferings] = useState<PurchasesOffering[]>([]);
   const [products, setProducts] = useState<PurchasesStoreProduct[]>([]);
   const [subscriptions, setSubscriptions] = useState<PurchasesStoreProduct[]>([]);
 
@@ -71,8 +75,11 @@ export function useSubscription(userId: string): {
   useEffect(() => {
     const initializeRevenueCat = async (): Promise<void> => {
       try {
-        const apiKey = Platform.OS === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
-
+        const apiKey = __DEV__
+          ? REVENUECAT_TEST_API_KEY
+          : Platform.OS === 'ios'
+          ? REVENUECAT_API_KEY_IOS
+          : REVENUECAT_API_KEY_ANDROID;
         if (!apiKey) {
           console.warn(
             'RevenueCat API key not configured. Please set EXPO_PUBLIC_REVENUECAT_API_KEY_IOS and EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID in your environment variables.'
@@ -80,7 +87,6 @@ export function useSubscription(userId: string): {
           setError('RevenueCat not configured');
           return;
         }
-
         await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
 
         // Configure RevenueCat
@@ -113,39 +119,72 @@ export function useSubscription(userId: string): {
         return;
       }
 
-      console.log('Fetching offerings from RevenueCat');
+      console.log(`Fetching premium subscription product (${PREMIUM_PRODUCT_ID}) from RevenueCat`);
 
-      // Fetch offerings from RevenueCat
-      const offeringsData = await Purchases.getOfferings();
-
-      if (offeringsData.current !== null) {
-        setOfferings([offeringsData.current]);
-
-        // Extract available packages and their products
-        const allPackages: PurchasesPackage[] = [];
-        offeringsData.current.availablePackages.forEach((pkg) => {
-          allPackages.push(pkg);
-        });
-
-        // Extract products from packages
-        const allProducts: PurchasesStoreProduct[] = [];
-        allPackages.forEach((pkg) => {
-          // PurchasesPackage has product property, not storeProduct
-          const product = (pkg as any).product || (pkg as any).storeProduct;
-          if (product) {
-            allProducts.push(product);
-          }
-        });
-
-        setProducts(allProducts);
-        setSubscriptions(
-          allProducts.filter((product) => product.identifier === PREMIUM_PRODUCT_ID)
+      // Debug: Try to fetch offerings to see what RevenueCat actually has configured
+      // NOTE: Products MUST be added to an offering in RevenueCat dashboard, even if using getProducts()
+      try {
+        const offeringsData = await Purchases.getOfferings();
+        console.log('Available offerings:', offeringsData.current ? 'Yes' : 'No');
+        if (offeringsData.current) {
+          const offering: PurchasesOffering = offeringsData.current;
+          console.log('Offering packages:', offering.availablePackages.length);
+          offering.availablePackages.forEach((pkg: PurchasesPackage, index: number) => {
+            // Package has a product property that contains the store product
+            const product: PurchasesStoreProduct | undefined = (
+              pkg as PurchasesPackage & { product?: PurchasesStoreProduct }
+            ).product;
+            console.log(
+              `Package ${index}: identifier="${pkg.identifier}", product="${
+                product?.identifier || 'N/A'
+              }"`
+            );
+          });
+        } else {
+          console.warn(
+            '⚠️ No current offering found. Products must be added to an offering in RevenueCat dashboard.'
+          );
+          console.warn(
+            'Go to: RevenueCat Dashboard > Offerings > Create/Edit Offering > Add Product to Package'
+          );
+        }
+      } catch (offeringsErr: unknown) {
+        const errorMessage = offeringsErr instanceof Error ? offeringsErr.message : 'Unknown error';
+        console.error(
+          '❌ RevenueCat Configuration Error:',
+          errorMessage.includes('no products registered')
+            ? 'Products exist but are NOT added to any offering. Add products to an offering in RevenueCat dashboard.'
+            : errorMessage
         );
+      }
 
-        console.log('Successfully loaded products:', allProducts.length);
+      // Fetch the premium product directly - we only have one subscription
+      const productsData = await Purchases.getProducts([PREMIUM_PRODUCT_ID]);
+      console.log(
+        `getProducts([${PREMIUM_PRODUCT_ID}]) returned:`,
+        productsData?.length || 0,
+        'products'
+      );
+
+      if (productsData && productsData.length > 0) {
+        // Log the actual product details for debugging
+        productsData.forEach((product) => {
+          console.log(
+            `✅ Product found - ID: "${product.identifier}", Title: "${product.title}", Price: "${product.priceString}"`
+          );
+        });
+        // We requested only one product, so this is our premium subscription
+        setProducts(productsData);
+        setSubscriptions(productsData);
+        console.log('Successfully loaded premium subscription product');
       } else {
-        console.log(
-          'No current offering available - this is normal in development if products are not configured in App Store Connect'
+        console.error(`❌ Product "${PREMIUM_PRODUCT_ID}" not found in RevenueCat.`);
+        console.error(
+          '🔧 Troubleshooting steps:',
+          '\n1. Verify product ID in RevenueCat Dashboard > Products (use the "Subscription Id", not "Identifier")',
+          '\n2. Ensure product is added to an offering: Dashboard > Offerings > Add product to a package',
+          '\n3. Make sure the offering is set as "current"',
+          '\n4. Verify product is published/linked to your app'
         );
         setProducts([]);
         setSubscriptions([]);
@@ -157,7 +196,7 @@ export function useSubscription(userId: string): {
     } catch (err: any) {
       const errorMessage =
         err.userInfo?.readableErrorCode || err.message || 'Failed to load subscription products';
-      console.warn('Failed to fetch offerings (this is normal in development):', errorMessage);
+      console.warn('Failed to fetch products (this is normal in development):', errorMessage);
 
       // In development mode, don't set error state when products aren't configured
       // This is expected when testing without App Store Connect configuration
@@ -270,60 +309,8 @@ export function useSubscription(userId: string): {
         };
       }
 
-      // Get current offering
-      let offeringsData;
-      try {
-        offeringsData = await Purchases.getOfferings();
-      } catch (offeringsError: any) {
-        // If offerings fail in development, fall back to dev auto subscription if enabled
-        if (__DEV__ && DEV_AUTO_SUBSCRIPTION) {
-          console.log('Development mode: Offerings unavailable, using dev auto subscription');
-          // Fall through to dev auto subscription (already handled above)
-          // But we need to return early since we can't continue without offerings
-          return {
-            success: false,
-            error:
-              'Products not configured in App Store Connect. Enable DEV_AUTO_SUBSCRIPTION for development testing.'
-          };
-        }
-        return {
-          success: false,
-          error: __DEV__
-            ? 'Products not available. Configure products in App Store Connect or use StoreKit Configuration file for testing.'
-            : 'No subscription offering available. Please check your RevenueCat configuration.'
-        };
-      }
-
-      if (!offeringsData.current) {
-        // In development, this is expected if products aren't configured
-        if (__DEV__) {
-          return {
-            success: false,
-            error:
-              'No subscription offering available. This is normal in development if products are not configured in App Store Connect. Enable DEV_AUTO_SUBSCRIPTION for testing.'
-          };
-        }
-        return {
-          success: false,
-          error: 'No subscription offering available. Please check your RevenueCat configuration.'
-        };
-      }
-
-      // Find the premium package
-      const premiumPackage = offeringsData.current.availablePackages.find((pkg) => {
-        const product = (pkg as any).product || (pkg as any).storeProduct;
-        return product?.identifier === PREMIUM_PRODUCT_ID;
-      });
-
-      if (!premiumPackage) {
-        return {
-          success: false,
-          error: `Premium subscription (${PREMIUM_PRODUCT_ID}) not found in RevenueCat offerings.`
-        };
-      }
-
-      // Purchase the package
-      const { customerInfo } = await Purchases.purchasePackage(premiumPackage);
+      // Purchase the product directly (simpler than using packages)
+      const { customerInfo } = await Purchases.purchaseProduct(PREMIUM_PRODUCT_ID);
 
       // Handle successful purchase
       await handleSuccessfulPurchase(customerInfo, userId);
@@ -512,9 +499,9 @@ export function useSubscription(userId: string): {
     return subscriptions && subscriptions.length > 0;
   }, [subscriptions]);
 
-  // Get the premium product from subscriptions
+  // Get the premium product from subscriptions (we only have one, so take the first)
   const getPremiumProduct = useCallback((): SubscriptionProduct | null => {
-    const subscription = subscriptions.find((sub) => sub.identifier === PREMIUM_PRODUCT_ID);
+    const subscription = subscriptions[0]; // We only have one product
     if (!subscription) return null;
 
     return {
