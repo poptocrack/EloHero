@@ -22,12 +22,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.scheduledCleanups = exports.addMember = exports.resetSeasonRatings = exports.endSeason = exports.updateGroup = exports.deleteGroup = exports.leaveGroup = exports.generateInviteCode = exports.reportMatch = exports.createSeason = exports.joinGroupWithCode = exports.createGroup = void 0;
+exports.validateAndroidPurchase = exports.validateIOSReceipt = exports.scheduledCleanups = exports.addMember = exports.resetSeasonRatings = exports.endSeason = exports.updateGroup = exports.deleteGroup = exports.leaveGroup = exports.generateInviteCode = exports.reportMatch = exports.createSeason = exports.joinGroupWithCode = exports.createGroup = void 0;
 // Cloud Functions for EloHero
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-admin/firestore");
+const axios_1 = __importDefault(require("axios"));
+const googleapis_1 = require("googleapis");
 // Initialize Firebase Admin
 admin.initializeApp();
 const db = admin.firestore();
@@ -57,7 +62,57 @@ async function getUserPlan(uid) {
         console.log('getUserPlan: Getting user record for uid:', uid);
         const userRecord = await admin.auth().getUser(uid);
         console.log('getUserPlan: User record retrieved, custom claims:', userRecord.customClaims);
-        const plan = ((_a = userRecord.customClaims) === null || _a === void 0 ? void 0 : _a.plan) || 'free';
+        // First check custom claims (fastest, but may be stale)
+        const claimsPlan = (_a = userRecord.customClaims) === null || _a === void 0 ? void 0 : _a.plan;
+        if (claimsPlan === 'premium') {
+            console.log('getUserPlan: Premium status found in custom claims');
+            return 'premium';
+        }
+        // Fallback: Check Firestore user document (more reliable, checks actual subscription status)
+        console.log('getUserPlan: Checking Firestore user document for plan status...');
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            const firestorePlan = userData === null || userData === void 0 ? void 0 : userData.plan;
+            const subscriptionStatus = userData === null || userData === void 0 ? void 0 : userData.subscriptionStatus;
+            // Check if user has active premium subscription in Firestore
+            if (firestorePlan === 'premium' && subscriptionStatus === 'active') {
+                // Check if subscription hasn't expired
+                const subscriptionEndDate = userData === null || userData === void 0 ? void 0 : userData.subscriptionEndDate;
+                if (subscriptionEndDate) {
+                    const endDate = subscriptionEndDate.toDate ? subscriptionEndDate.toDate() : new Date(subscriptionEndDate);
+                    const now = new Date();
+                    if (endDate > now) {
+                        console.log('getUserPlan: Active premium subscription found in Firestore');
+                        // Sync custom claims if they're out of date
+                        if (!claimsPlan || claimsPlan === 'free') {
+                            console.log('getUserPlan: Syncing custom claims with Firestore...');
+                            try {
+                                await admin.auth().setCustomUserClaims(uid, {
+                                    plan: 'premium',
+                                    subscriptionStatus: 'active'
+                                });
+                                console.log('getUserPlan: Custom claims updated successfully');
+                            }
+                            catch (claimsError) {
+                                console.error('getUserPlan: Failed to update custom claims:', claimsError);
+                                // Continue anyway, we still return premium based on Firestore
+                            }
+                        }
+                        return 'premium';
+                    }
+                    else {
+                        console.log('getUserPlan: Premium subscription expired');
+                    }
+                }
+                else {
+                    // No expiration date, assume active
+                    console.log('getUserPlan: Premium plan found in Firestore (no expiration date)');
+                    return 'premium';
+                }
+            }
+        }
+        const plan = claimsPlan || 'free';
         console.log('getUserPlan: Returning plan:', plan);
         return plan;
     }
@@ -74,7 +129,7 @@ function checkPlanLimit(plan, limitType, currentCount) {
 }
 // Helper function to generate invite code
 function generateInviteCodeHelper() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = 'ABCDEFGHIJKLMNPQRSTUVWYZ123456789';
     let result = '';
     for (let i = 0; i < 8; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -121,7 +176,7 @@ function calculateEloChanges(participants) {
 }
 // 1. Create Group Function
 exports.createGroup = functions.https.onCall(async (data, context) => {
-    var _a, _b;
+    var _a, _b, _c, _d;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -153,14 +208,23 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
                 updatedAt: firestore_1.FieldValue.serverTimestamp()
             });
             console.log('createGroup: User document created');
+            // Refresh userDoc after creating it
+            const refreshedUserDoc = await db.collection('users').doc(uid).get();
+            const currentGroupsCount = ((_a = refreshedUserDoc.data()) === null || _a === void 0 ? void 0 : _a.groupsCount) || 0;
+            console.log('createGroup: Current groups count:', currentGroupsCount);
+            if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
+                throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.');
+            }
+        }
+        else {
+            const currentGroupsCount = ((_b = userDoc.data()) === null || _b === void 0 ? void 0 : _b.groupsCount) || 0;
+            console.log('createGroup: Current groups count:', currentGroupsCount);
+            if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
+                throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.');
+            }
         }
         // Always resolve displayName from Firestore to reflect user-updated pseudo
-        const userDisplayName = ((_a = (await db.collection('users').doc(uid).get()).data()) === null || _a === void 0 ? void 0 : _a.displayName) || 'Anonymous';
-        const currentGroupsCount = ((_b = userDoc.data()) === null || _b === void 0 ? void 0 : _b.groupsCount) || 0;
-        console.log('createGroup: Current groups count:', currentGroupsCount);
-        if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
-            throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.');
-        }
+        const userDisplayName = ((_c = (await db.collection('users').doc(uid).get()).data()) === null || _c === void 0 ? void 0 : _c.displayName) || 'Anonymous';
         // Generate unique invitation code
         console.log('createGroup: Generating unique invitation code...');
         let invitationCode;
@@ -205,14 +269,31 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         console.log('createGroup: Owner added as member');
         // Update user's group count
         console.log('createGroup: Updating user group count...');
-        await db
-            .collection('users')
-            .doc(uid)
-            .update({
-            groupsCount: firestore_1.FieldValue.increment(1),
-            updatedAt: firestore_1.FieldValue.serverTimestamp()
-        });
-        console.log('createGroup: User group count updated');
+        try {
+            await db
+                .collection('users')
+                .doc(uid)
+                .update({
+                groupsCount: firestore_1.FieldValue.increment(1),
+                updatedAt: firestore_1.FieldValue.serverTimestamp()
+            });
+            console.log('createGroup: User group count updated');
+        }
+        catch (updateError) {
+            // If update fails (e.g., document doesn't exist), use set with merge
+            const errorMessage = updateError instanceof Error ? updateError.message : String(updateError);
+            console.log('createGroup: Update failed, trying set with merge:', errorMessage);
+            const userDoc = await db.collection('users').doc(uid).get();
+            const currentCount = ((_d = userDoc.data()) === null || _d === void 0 ? void 0 : _d.groupsCount) || 0;
+            await db
+                .collection('users')
+                .doc(uid)
+                .set({
+                groupsCount: currentCount + 1,
+                updatedAt: firestore_1.FieldValue.serverTimestamp()
+            }, { merge: true });
+            console.log('createGroup: User group count updated via set');
+        }
         // Create default season
         console.log('createGroup: Creating default season...');
         const seasonRef = db.collection('seasons').doc();
@@ -259,7 +340,14 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
     catch (error) {
         console.error('createGroup: Error creating group:', error);
         console.error('createGroup: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-        throw new functions.https.HttpsError('internal', 'Failed to create group');
+        // If it's already an HttpsError, re-throw it with original details
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        // Otherwise, wrap it but include the original error message for debugging
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('createGroup: Original error message:', errorMessage);
+        throw new functions.https.HttpsError('internal', `Failed to create group: ${errorMessage}`);
     }
 });
 // 2. Join Group with Code Function
@@ -1061,4 +1149,197 @@ exports.scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(async (
         console.error('Error during scheduled cleanups:', error);
     }
 });
+// 13. Validate iOS Receipt Function
+exports.validateIOSReceipt = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    const { receiptData, productId } = data;
+    const uid = context.auth.uid;
+    if (!receiptData || !productId) {
+        throw new functions.https.HttpsError('invalid-argument', 'Receipt data and product ID are required');
+    }
+    try {
+        console.log('validateIOSReceipt: Validating receipt for user:', uid, 'product:', productId);
+        // Validate with Apple's servers
+        const validationResult = await validateWithApple(receiptData, productId);
+        if (validationResult.valid) {
+            // Update user's subscription status
+            await updateUserSubscriptionFromReceipt(uid, {
+                productId: productId,
+                transactionId: validationResult.transactionId,
+                purchaseDate: validationResult.purchaseDate,
+                expirationDate: validationResult.expirationDate,
+                isTrial: validationResult.isTrial || false,
+                platform: 'ios'
+            });
+            console.log('validateIOSReceipt: Receipt validated successfully for user:', uid);
+            return {
+                success: true,
+                data: {
+                    valid: true,
+                    transactionId: validationResult.transactionId,
+                    expirationDate: validationResult.expirationDate
+                }
+            };
+        }
+        else {
+            console.log('validateIOSReceipt: Receipt validation failed for user:', uid);
+            return {
+                success: false,
+                error: 'Invalid receipt'
+            };
+        }
+    }
+    catch (error) {
+        console.error('validateIOSReceipt: Error validating receipt:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to validate receipt');
+    }
+});
+// 14. Validate Android Purchase Function
+exports.validateAndroidPurchase = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    const { purchaseToken, productId, packageName } = data;
+    const uid = context.auth.uid;
+    if (!purchaseToken || !productId || !packageName) {
+        throw new functions.https.HttpsError('invalid-argument', 'Purchase token, product ID, and package name are required');
+    }
+    try {
+        console.log('validateAndroidPurchase: Validating purchase for user:', uid, 'product:', productId);
+        // Validate with Google Play
+        const validationResult = await validateWithGooglePlay(purchaseToken, productId, packageName);
+        if (validationResult.valid) {
+            // Update user's subscription status
+            await updateUserSubscriptionFromReceipt(uid, {
+                productId: productId,
+                transactionId: validationResult.transactionId,
+                purchaseDate: validationResult.purchaseDate,
+                expirationDate: validationResult.expirationDate,
+                isTrial: validationResult.isTrial || false,
+                platform: 'android'
+            });
+            console.log('validateAndroidPurchase: Purchase validated successfully for user:', uid);
+            return {
+                success: true,
+                data: {
+                    valid: true,
+                    transactionId: validationResult.transactionId,
+                    expirationDate: validationResult.expirationDate
+                }
+            };
+        }
+        else {
+            console.log('validateAndroidPurchase: Purchase validation failed for user:', uid);
+            return {
+                success: false,
+                error: 'Invalid purchase'
+            };
+        }
+    }
+    catch (error) {
+        console.error('validateAndroidPurchase: Error validating purchase:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to validate purchase');
+    }
+});
+// Helper function to validate with Apple's servers
+async function validateWithApple(receiptData, productId) {
+    var _a;
+    try {
+        const url = process.env.NODE_ENV === 'development'
+            ? 'https://sandbox.itunes.apple.com/verifyReceipt'
+            : 'https://buy.itunes.apple.com/verifyReceipt';
+        const response = await axios_1.default.post(url, {
+            'receipt-data': receiptData,
+            password: ((_a = functions.config().appstore) === null || _a === void 0 ? void 0 : _a.shared_secret) || '',
+            'exclude-old-transactions': true
+        });
+        const { status, receipt } = response.data;
+        if (status === 0) {
+            // Find the specific product in the receipt
+            const inAppPurchases = receipt.in_app || [];
+            const productPurchase = inAppPurchases.find((purchase) => purchase.product_id === productId);
+            if (productPurchase) {
+                return {
+                    valid: true,
+                    transactionId: productPurchase.transaction_id,
+                    purchaseDate: new Date(parseInt(productPurchase.purchase_date_ms)),
+                    expirationDate: productPurchase.expires_date_ms
+                        ? new Date(parseInt(productPurchase.expires_date_ms))
+                        : undefined,
+                    isTrial: productPurchase.is_trial_period === 'true'
+                };
+            }
+        }
+        return { valid: false };
+    }
+    catch (error) {
+        console.error('Error validating with Apple:', error);
+        return { valid: false };
+    }
+}
+// Helper function to validate with Google Play
+async function validateWithGooglePlay(purchaseToken, productId, packageName) {
+    try {
+        // You'll need to set up Google Play Console API credentials
+        const auth = new googleapis_1.google.auth.GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/androidpublisher']
+        });
+        const androidPublisher = googleapis_1.google.androidpublisher({
+            version: 'v3',
+            auth
+        });
+        const response = await androidPublisher.purchases.subscriptions.get({
+            packageName,
+            subscriptionId: productId,
+            token: purchaseToken
+        });
+        const subscription = response.data;
+        if (subscription && subscription.expiryTimeMillis) {
+            return {
+                valid: true,
+                transactionId: purchaseToken,
+                purchaseDate: new Date(parseInt(subscription.startTimeMillis || '0')),
+                expirationDate: new Date(parseInt(subscription.expiryTimeMillis)),
+                isTrial: subscription.autoRenewing === false // Trial if not auto-renewing
+            };
+        }
+        return { valid: false };
+    }
+    catch (error) {
+        console.error('Error validating with Google Play:', error);
+        return { valid: false };
+    }
+}
+// Helper function to update user subscription from receipt validation
+async function updateUserSubscriptionFromReceipt(uid, subscriptionData) {
+    try {
+        const userRef = db.collection('users').doc(uid);
+        // Calculate subscription end date (1 year from purchase if no expiration)
+        const subscriptionEndDate = subscriptionData.expirationDate ||
+            new Date(subscriptionData.purchaseDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+        await userRef.update({
+            plan: 'premium',
+            subscriptionStatus: 'active',
+            subscriptionProductId: subscriptionData.productId,
+            subscriptionStartDate: subscriptionData.purchaseDate,
+            subscriptionEndDate: subscriptionEndDate,
+            subscriptionPlatform: subscriptionData.platform,
+            subscriptionTransactionId: subscriptionData.transactionId,
+            isTrial: subscriptionData.isTrial,
+            updatedAt: firestore_1.FieldValue.serverTimestamp()
+        });
+        // Update custom claims for immediate effect
+        await admin.auth().setCustomUserClaims(uid, {
+            plan: 'premium',
+            subscriptionStatus: 'active'
+        });
+        console.log('User subscription updated successfully for:', uid);
+    }
+    catch (error) {
+        console.error('Failed to update user subscription:', error);
+        throw new Error('Failed to update subscription status');
+    }
+}
 //# sourceMappingURL=index.js.map

@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
 import { Member } from '../../types';
+import { calculateEloChanges } from '../../utils/eloCalculation';
+import { APP_CONSTANTS } from '../../utils/constants';
 import MatchEntryHeader from './components/MatchEntryHeader';
 import SelectedPlayersCard from './components/SelectedPlayersCard';
 import AvailablePlayersCard from './components/AvailablePlayersCard';
@@ -27,7 +29,11 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   const {
     currentGroupMembers,
     matchEntry,
+    currentSeason,
+    currentSeasonRatings,
     loadGroupMembers,
+    loadGroupSeasons,
+    loadSeasonRatings,
     setSelectedPlayers,
     setPlayerOrder,
     addPlayerToMatch,
@@ -38,10 +44,51 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
 
   const [availablePlayers, setAvailablePlayers] = useState<Member[]>([]);
 
+  // Calculate ELO changes for selected players based on their order
+  const eloPredictions = useMemo(() => {
+    if (!currentSeason || matchEntry.playerOrder.length < 2 || currentSeasonRatings.length === 0) {
+      return new Map<string, { currentElo: number; eloChange: number }>();
+    }
+
+    // Get current ratings for selected players
+    const participantsWithRatings = matchEntry.playerOrder.map((player, index) => {
+      const rating = currentSeasonRatings.find((r) => r.uid === player.uid);
+      return {
+        uid: player.uid,
+        ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
+        gamesPlayed: rating?.gamesPlayed || 0,
+        placement: index + 1,
+        isTied: false
+      };
+    });
+
+    // Calculate ELO changes
+    const eloResults = calculateEloChanges(participantsWithRatings);
+
+    // Create a map for easy lookup
+    const eloMap = new Map<string, { currentElo: number; eloChange: number }>();
+    eloResults.forEach((result) => {
+      eloMap.set(result.uid, {
+        currentElo: result.ratingBefore,
+        eloChange: result.ratingChange
+      });
+    });
+
+    return eloMap;
+  }, [matchEntry.playerOrder, currentSeason, currentSeasonRatings]);
+
   useEffect(() => {
     loadGroupMembers(groupId);
+    loadGroupSeasons(groupId);
     clearMatchEntry();
-  }, [groupId, loadGroupMembers, clearMatchEntry]);
+  }, [groupId, loadGroupMembers, loadGroupSeasons, clearMatchEntry]);
+
+  useEffect(() => {
+    // Ensure season ratings are loaded when season is available
+    if (currentSeason && currentSeasonRatings.length === 0) {
+      loadSeasonRatings(currentSeason.id);
+    }
+  }, [currentSeason, currentSeasonRatings.length, loadSeasonRatings]);
 
   useEffect(() => {
     // Update available players when group members change
@@ -156,6 +203,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           onRemovePlayer={handleRemovePlayer}
           onMovePlayerUp={handleMovePlayerUp}
           onMovePlayerDown={handleMovePlayerDown}
+          eloPredictions={eloPredictions}
         />
 
         {/* Available Players Card */}

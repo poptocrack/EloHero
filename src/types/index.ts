@@ -147,6 +147,7 @@ export type RootStackParamList = {
   SetPseudo: undefined;
   GroupDetails: { groupId: string };
   MatchEntry: { groupId: string };
+  MatchDetails: { gameId: string; groupId: string };
   PlayerProfile: { uid: string; groupId: string };
   Subscription: undefined;
   SubscriptionDebug: undefined;

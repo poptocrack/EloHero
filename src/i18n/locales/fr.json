@@ -294,6 +294,18 @@
     "removeSuccess": "Joueur retiré avec succès",
     "removeError": "Impossible de retirer le joueur"
   },
+  "matchDetails": {
+    "title": "Détails de la partie",
+    "matchInfo": "Informations de la partie",
+    "players": "joueurs",
+    "participants": "Participants",
+    "placement": "Placement",
+    "ratingBefore": "Classement avant",
+    "ratingAfter": "Classement après",
+    "eloPoints": "points ELO",
+    "viewDetails": "Voir les détails",
+    "noParticipants": "Aucun participant trouvé pour cette partie"
+  },
   "errors": {
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",

@@ -292,6 +292,25 @@ export class FirestoreService {
     }
   }
 
+  // Get single game by ID
+  static async getGameById(gameId: string): Promise<Game | null> {
+    try {
+      const gameDoc = await getDoc(doc(db, 'games', gameId));
+      if (!gameDoc.exists()) {
+        return null;
+      }
+      const gameData = gameDoc.data();
+      return {
+        id: gameDoc.id,
+        ...gameData,
+        createdAt: gameData.createdAt?.toDate() || new Date()
+      } as Game;
+    } catch (error) {
+      console.log('Failed to get game by ID:', error);
+      return null;
+    }
+  }
+
   // Get game participants
   static async getGameParticipants(gameId: string): Promise<Participant[]> {
     try {

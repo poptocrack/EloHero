@@ -16,6 +16,7 @@ import GroupsScreen from '../screens/GroupsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import GroupDetailsScreen from '../screens/GroupDetailsScreen';
 import MatchEntryScreen from '../screens/MatchEntryScreen';
+import MatchDetailsScreen from '../screens/MatchDetailsScreen';
 import PlayerProfileScreen from '../screens/PlayerProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import SubscriptionDebugScreen from '../screens/SubscriptionDebugScreen';
@@ -94,6 +95,7 @@ function RootStackNavigator() {
       <Stack.Screen name="Main" component={MainTabNavigator} />
       <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
       <Stack.Screen name="MatchEntry" component={MatchEntryScreen} />
+      <Stack.Screen name="MatchDetails" component={MatchDetailsScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
       <Stack.Screen name="SubscriptionDebug" component={SubscriptionDebugScreen} />

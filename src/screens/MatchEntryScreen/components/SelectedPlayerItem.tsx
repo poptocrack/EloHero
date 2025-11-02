@@ -11,6 +11,8 @@ interface SelectedPlayerItemProps extends RenderItemParams<Member> {
   onMoveUp?: (uid: string) => void;
   onMoveDown?: (uid: string) => void;
   totalPlayers: number;
+  currentElo?: number;
+  eloChange?: number;
 }
 
 export default function SelectedPlayerItem({
@@ -21,10 +23,15 @@ export default function SelectedPlayerItem({
   playerIndex,
   onMoveUp,
   onMoveDown,
-  totalPlayers
+  totalPlayers,
+  currentElo,
+  eloChange
 }: SelectedPlayerItemProps) {
   const { t } = useTranslation();
   const isWinner = playerIndex === 0;
+  const hasEloData = currentElo !== undefined && eloChange !== undefined;
+  const isEloGain = eloChange !== undefined && eloChange > 0;
+  const isEloLoss = eloChange !== undefined && eloChange < 0;
 
   return (
     <ScaleDecorator>
@@ -67,7 +74,37 @@ export default function SelectedPlayerItem({
         </View>
 
         <View style={styles.playerInfo}>
-          <Text style={[styles.playerName, isWinner && styles.winnerName]}>{item.displayName}</Text>
+          <View style={styles.playerNameRow}>
+            <Text style={[styles.playerName, isWinner && styles.winnerName]}>
+              {item.displayName}
+            </Text>
+            {hasEloData && (
+              <View style={styles.eloContainer}>
+                <Text style={styles.eloText}>{Math.round(currentElo!)}</Text>
+                {eloChange !== 0 && (
+                  <View
+                    style={[
+                      styles.triangle,
+                      isEloGain && styles.triangleUp,
+                      isEloLoss && styles.triangleDown
+                    ]}
+                  />
+                )}
+                {eloChange !== undefined && eloChange !== 0 && (
+                  <Text
+                    style={[
+                      styles.eloChangeText,
+                      isEloGain && styles.eloChangePositive,
+                      isEloLoss && styles.eloChangeNegative
+                    ]}
+                  >
+                    {eloChange > 0 ? '+' : ''}
+                    {Math.round(eloChange)}
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
           <Text style={[styles.placementText, isWinner && styles.winnerPlacement]}>
             {isWinner ? t('matchEntry.winner') : `${t('matchEntry.position')}: ${playerIndex + 1}`}
           </Text>
@@ -142,11 +179,60 @@ const styles = StyleSheet.create({
   playerInfo: {
     flex: 1
   },
+  playerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4
+  },
   playerName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#2D3748',
-    marginBottom: 4
+    flex: 1
+  },
+  eloContainer: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  eloText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D3748',
+    marginRight: 6
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    marginHorizontal: 3
+  },
+  triangleUp: {
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderBottomWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#4ECDC4'
+  },
+  triangleDown: {
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#FF6B9D'
+  },
+  eloChangeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 3
+  },
+  eloChangePositive: {
+    color: '#4ECDC4'
+  },
+  eloChangeNegative: {
+    color: '#FF6B9D'
   },
   placementText: {
     fontSize: 14,

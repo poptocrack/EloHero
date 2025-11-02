@@ -1,18 +1,23 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Game } from '../../../types';
 
 interface GamesListProps {
   games: Game[];
+  onGamePress?: (game: Game) => void;
 }
 
-export default function GamesList({ games }: GamesListProps) {
+export default function GamesList({ games, onGamePress }: GamesListProps) {
   const { t } = useTranslation();
 
   const renderGameItem = ({ item }: { item: Game }) => (
-    <View style={styles.gameItem}>
+    <TouchableOpacity
+      style={styles.gameItem}
+      onPress={() => onGamePress?.(item)}
+      activeOpacity={0.7}
+    >
       <View style={styles.gameHeader}>
         <Text style={styles.gameDate}>{item.createdAt.toLocaleDateString('fr-FR')}</Text>
         <Text style={styles.gameTime}>
@@ -22,8 +27,11 @@ export default function GamesList({ games }: GamesListProps) {
           })}
         </Text>
       </View>
-      <Text style={styles.gameParticipants}>Game completed</Text>
-    </View>
+      <View style={styles.gameFooter}>
+        <Text style={styles.gameParticipants}>{t('matchDetails.viewDetails')}</Text>
+        <Ionicons name="chevron-forward" size={20} color="#667eea" />
+      </View>
+    </TouchableOpacity>
   );
 
   const renderEmptyGames = () => (
@@ -83,10 +91,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#718096'
   },
+  gameFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8
+  },
   gameParticipants: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#718096'
+    color: '#667eea'
   },
   emptyState: {
     alignItems: 'center'

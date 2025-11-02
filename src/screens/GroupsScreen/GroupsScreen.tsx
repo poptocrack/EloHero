@@ -40,6 +40,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -60,12 +61,11 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   };
 
   const handleCreateWithName = async (name: string) => {
+    setIsCreatingGroup(true);
     try {
-      console.log('Creating group with name:', name);
       await createGroup(name);
-      console.log('Group created successfully');
+      setShowCreateModal(false);
     } catch (error) {
-      console.error('Error creating group:', error);
       const errorMessage = error instanceof Error ? error.message : t('groups.unknownError');
 
       // Handle group limit error with upgrade option
@@ -81,6 +81,8 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         Alert.alert(t('common.error'), `${t('groups.errorCreatingGroup')}: ${errorMessage}`);
       }
       throw error; // Re-throw to prevent modal from closing
+    } finally {
+      setIsCreatingGroup(false);
     }
   };
 
@@ -90,11 +92,9 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
   const handleJoinWithCode = async (code: string) => {
     try {
-      console.log('GroupsScreen: Attempting to join group with code:', code);
       await joinGroupWithCode(code);
       Alert.alert(t('common.success'), t('groups.groupJoinedSuccessfully'));
     } catch (error) {
-      console.error('GroupsScreen: Error joining group:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to join group';
 
       // Handle admin premium limit error with upgrade option
@@ -181,8 +181,12 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
       <CreateGroupModal
         isVisible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          setIsCreatingGroup(false);
+        }}
         onCreate={handleCreateWithName}
+        isLoading={isCreatingGroup}
       />
 
       {__DEV__ && (

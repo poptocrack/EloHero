@@ -143,11 +143,22 @@ export default function GroupActionModal({
 
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
+                  style={[
+                    styles.modalButton,
+                    styles.cancelButton,
+                    isLoading && styles.disabledButton
+                  ]}
                   onPress={handleClose}
                   disabled={isLoading}
                 >
-                  <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
+                  <Text
+                    style={[
+                      styles.cancelButtonText,
+                      isLoading && styles.disabledButtonText
+                    ]}
+                  >
+                    {t('common.cancel')}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

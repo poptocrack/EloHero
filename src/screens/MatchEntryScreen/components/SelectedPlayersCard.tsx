@@ -12,6 +12,7 @@ interface SelectedPlayersCardProps {
   onRemovePlayer: (uid: string) => void;
   onMovePlayerUp: (uid: string) => void;
   onMovePlayerDown: (uid: string) => void;
+  eloPredictions: Map<string, { currentElo: number; eloChange: number }>;
 }
 
 export default function SelectedPlayersCard({
@@ -19,12 +20,14 @@ export default function SelectedPlayersCard({
   onDragEnd,
   onRemovePlayer,
   onMovePlayerUp,
-  onMovePlayerDown
+  onMovePlayerDown,
+  eloPredictions
 }: SelectedPlayersCardProps) {
   const { t } = useTranslation();
 
   const renderSelectedPlayer = ({ item, drag, isActive, getIndex }: RenderItemParams<Member>) => {
     const playerIndex = selectedPlayers.findIndex((p) => p.uid === item.uid);
+    const eloData = eloPredictions.get(item.uid);
 
     return (
       <SelectedPlayerItem
@@ -37,6 +40,8 @@ export default function SelectedPlayersCard({
         onMoveUp={onMovePlayerUp}
         onMoveDown={onMovePlayerDown}
         totalPlayers={selectedPlayers.length}
+        currentElo={eloData?.currentElo}
+        eloChange={eloData?.eloChange}
       />
     );
   };

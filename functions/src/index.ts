@@ -34,14 +34,58 @@ const PLAN_LIMITS = {
 // Helper function to get user plan
 async function getUserPlan(uid: string): Promise<'free' | 'premium'> {
   try {
-    console.log('getUserPlan: Getting user record for uid:', uid);
     const userRecord = await admin.auth().getUser(uid);
-    console.log('getUserPlan: User record retrieved, custom claims:', userRecord.customClaims);
-    const plan = (userRecord.customClaims?.plan as 'free' | 'premium') || 'free';
-    console.log('getUserPlan: Returning plan:', plan);
+
+    // First check custom claims (fastest, but may be stale)
+    const claimsPlan = userRecord.customClaims?.plan as 'free' | 'premium' | undefined;
+
+    if (claimsPlan === 'premium') {
+      return 'premium';
+    }
+
+    // Fallback: Check Firestore user document (more reliable, checks actual subscription status)
+    const userDoc = await db.collection('users').doc(uid).get();
+
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const firestorePlan = userData?.plan as 'free' | 'premium' | undefined;
+      const subscriptionStatus = userData?.subscriptionStatus as string | undefined;
+
+      // Check if user has active premium subscription in Firestore
+      if (firestorePlan === 'premium' && subscriptionStatus === 'active') {
+        // Check if subscription hasn't expired
+        const subscriptionEndDate = userData?.subscriptionEndDate;
+        if (subscriptionEndDate) {
+          const endDate = subscriptionEndDate.toDate
+            ? subscriptionEndDate.toDate()
+            : new Date(subscriptionEndDate);
+          const now = new Date();
+
+          if (endDate > now) {
+            // Sync custom claims if they're out of date
+            if (!claimsPlan || claimsPlan === 'free') {
+              try {
+                await admin.auth().setCustomUserClaims(uid, {
+                  plan: 'premium',
+                  subscriptionStatus: 'active'
+                });
+              } catch (claimsError) {
+                // Continue anyway, we still return premium based on Firestore
+              }
+            }
+
+            return 'premium';
+          }
+        } else {
+          // No expiration date, assume active
+          return 'premium';
+        }
+      }
+    }
+
+    const plan = claimsPlan || 'free';
     return plan;
   } catch (error) {
-    console.error('getUserPlan: Error getting user plan:', error);
     return 'free';
   }
 }
@@ -59,7 +103,7 @@ function checkPlanLimit(
 
 // Helper function to generate invite code
 function generateInviteCodeHelper(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars = 'ABCDEFGHIJKLMNPQRSTUVWYZ123456789';
   let result = '';
   for (let i = 0; i < 8; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -131,19 +175,11 @@ export const createGroup = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    console.log('createGroup: Starting for user:', uid, 'name:', name);
-
     // Check user plan and current group count
-    console.log('createGroup: Getting user plan...');
     const plan = await getUserPlan(uid);
-    console.log('createGroup: User plan:', plan);
-
-    console.log('createGroup: Getting user document...');
     const userDoc = await db.collection('users').doc(uid).get();
-    console.log('createGroup: User document exists:', userDoc.exists);
 
     if (!userDoc.exists) {
-      console.log('createGroup: User document does not exist, creating it...');
       // Create user document if it doesn't exist
       await db
         .collection('users')
@@ -155,25 +191,32 @@ export const createGroup = functions.https.onCall(async (data, context) => {
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp()
         });
-      console.log('createGroup: User document created');
+      // Refresh userDoc after creating it
+      const refreshedUserDoc = await db.collection('users').doc(uid).get();
+      const currentGroupsCount = refreshedUserDoc.data()?.groupsCount || 0;
+
+      if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
+        throw new functions.https.HttpsError(
+          'resource-exhausted',
+          'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.'
+        );
+      }
+    } else {
+      const currentGroupsCount = userDoc.data()?.groupsCount || 0;
+
+      if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
+        throw new functions.https.HttpsError(
+          'resource-exhausted',
+          'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.'
+        );
+      }
     }
 
     // Always resolve displayName from Firestore to reflect user-updated pseudo
     const userDisplayName =
       (await db.collection('users').doc(uid).get()).data()?.displayName || 'Anonymous';
 
-    const currentGroupsCount = userDoc.data()?.groupsCount || 0;
-    console.log('createGroup: Current groups count:', currentGroupsCount);
-
-    if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
-      throw new functions.https.HttpsError(
-        'resource-exhausted',
-        'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.'
-      );
-    }
-
     // Generate unique invitation code
-    console.log('createGroup: Generating unique invitation code...');
     let invitationCode: string;
     let attempts = 0;
     do {
@@ -188,10 +231,8 @@ export const createGroup = functions.https.onCall(async (data, context) => {
     } while (
       (await db.collection('groups').where('invitationCode', '==', invitationCode).get()).size > 0
     );
-    console.log('createGroup: Generated invitation code:', invitationCode);
 
     // Create group
-    console.log('createGroup: Creating group document...');
     const groupRef = db.collection('groups').doc();
     const groupData = {
       name: name.trim(),
@@ -206,10 +247,8 @@ export const createGroup = functions.https.onCall(async (data, context) => {
     };
 
     await groupRef.set(groupData);
-    console.log('createGroup: Group document created with ID:', groupRef.id);
 
     // Add owner as member (composite membership id to support multi-group)
-    console.log('createGroup: Adding owner as member...');
     await db
       .collection('members')
       .doc(`${uid}_${groupRef.id}`)
@@ -221,21 +260,33 @@ export const createGroup = functions.https.onCall(async (data, context) => {
         joinedAt: FieldValue.serverTimestamp(),
         isActive: true
       });
-    console.log('createGroup: Owner added as member');
 
     // Update user's group count
-    console.log('createGroup: Updating user group count...');
-    await db
-      .collection('users')
-      .doc(uid)
-      .update({
-        groupsCount: FieldValue.increment(1),
-        updatedAt: FieldValue.serverTimestamp()
-      });
-    console.log('createGroup: User group count updated');
+    try {
+      await db
+        .collection('users')
+        .doc(uid)
+        .update({
+          groupsCount: FieldValue.increment(1),
+          updatedAt: FieldValue.serverTimestamp()
+        });
+    } catch (updateError: unknown) {
+      // If update fails (e.g., document doesn't exist), use set with merge
+      const userDoc = await db.collection('users').doc(uid).get();
+      const currentCount = userDoc.data()?.groupsCount || 0;
+      await db
+        .collection('users')
+        .doc(uid)
+        .set(
+          {
+            groupsCount: currentCount + 1,
+            updatedAt: FieldValue.serverTimestamp()
+          },
+          { merge: true }
+        );
+    }
 
     // Create default season
-    console.log('createGroup: Creating default season...');
     const seasonRef = db.collection('seasons').doc();
     await seasonRef.set({
       id: seasonRef.id,
@@ -246,17 +297,13 @@ export const createGroup = functions.https.onCall(async (data, context) => {
       gameCount: 0,
       createdAt: FieldValue.serverTimestamp()
     });
-    console.log('createGroup: Default season created with ID:', seasonRef.id);
 
     // Update group with current season
-    console.log('createGroup: Updating group with current season...');
     await groupRef.update({
       currentSeasonId: seasonRef.id
     });
-    console.log('createGroup: Group updated with current season');
 
     // Create initial rating for the group owner
-    console.log('createGroup: Creating initial rating for owner...');
     await db
       .collection('ratings')
       .doc(`${seasonRef.id}_${uid}`)
@@ -272,9 +319,7 @@ export const createGroup = functions.https.onCall(async (data, context) => {
         draws: 0,
         lastUpdated: FieldValue.serverTimestamp()
       });
-    console.log('createGroup: Initial rating created for owner');
 
-    console.log('createGroup: Function completed successfully');
     return {
       success: true,
       data: {
@@ -284,12 +329,14 @@ export const createGroup = functions.https.onCall(async (data, context) => {
       }
     };
   } catch (error) {
-    console.error('createGroup: Error creating group:', error);
-    console.error(
-      'createGroup: Error stack:',
-      error instanceof Error ? error.stack : 'No stack trace'
-    );
-    throw new functions.https.HttpsError('internal', 'Failed to create group');
+    // If it's already an HttpsError, re-throw it with original details
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+
+    // Otherwise, wrap it but include the original error message for debugging
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new functions.https.HttpsError('internal', `Failed to create group: ${errorMessage}`);
   }
 });
 
@@ -308,7 +355,6 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
 
   try {
     const upperCode = code.toUpperCase();
-    console.log('joinGroupWithCode: Searching for code:', upperCode);
 
     // Find group by invitation code
     const groupsQuery = await db
@@ -316,8 +362,6 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       .where('invitationCode', '==', upperCode)
       .where('isActive', '==', true)
       .get();
-
-    console.log('joinGroupWithCode: Query returned', groupsQuery.size, 'results');
 
     if (groupsQuery.empty) {
       // Let's also check if the code exists but group is inactive
@@ -327,10 +371,8 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
         .get();
 
       if (inactiveQuery.empty) {
-        console.log('joinGroupWithCode: Code does not exist in database');
         throw new functions.https.HttpsError('not-found', 'Invalid invite code');
       } else {
-        console.log('joinGroupWithCode: Code exists but group is inactive');
         throw new functions.https.HttpsError('not-found', 'Group is no longer active');
       }
     }
@@ -441,7 +483,6 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
       }
     };
   } catch (error) {
-    console.error('Error joining group:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -549,7 +590,6 @@ export const createSeason = functions.https.onCall(async (data, context) => {
       data: seasonData
     };
   } catch (error) {
-    console.error('Error creating season:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -713,7 +753,6 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
       }
     };
   } catch (error) {
-    console.error('Error reporting match:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -782,7 +821,6 @@ export const generateInviteCode = functions.https.onCall(async (data, context) =
       data: inviteData
     };
   } catch (error) {
-    console.error('Error generating invite code:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -853,8 +891,6 @@ export const leaveGroup = functions.https.onCall(async (data, context) => {
       success: true
     };
   } catch (error: any) {
-    console.error('Error leaving group:', error);
-
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -909,7 +945,6 @@ export const deleteGroup = functions.https.onCall(async (data, context) => {
       success: true
     };
   } catch (error) {
-    console.error('Error deleting group:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -972,7 +1007,6 @@ export const updateGroup = functions.https.onCall(async (data, context) => {
       }
     };
   } catch (error) {
-    console.error('Error updating group:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -1072,7 +1106,6 @@ export const endSeason = functions.https.onCall(async (data, context) => {
       data: newSeasonData
     };
   } catch (error) {
-    console.error('Error ending season:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -1138,7 +1171,6 @@ export const resetSeasonRatings = functions.https.onCall(async (data, context) =
       success: true
     };
   } catch (error) {
-    console.error('Error resetting season ratings:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -1236,7 +1268,6 @@ export const addMember = functions.https.onCall(async (data, context) => {
       }
     };
   } catch (error) {
-    console.error('Error adding member:', error);
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
@@ -1246,8 +1277,6 @@ export const addMember = functions.https.onCall(async (data, context) => {
 
 // 12. Scheduled Cleanup Function
 export const scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(async (context) => {
-  console.log('Running scheduled cleanups...');
-
   try {
     // Clean up expired invites
     const expiredInvites = await db
@@ -1262,7 +1291,6 @@ export const scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(as
 
     if (expiredInvites.docs.length > 0) {
       await batch.commit();
-      console.log(`Cleaned up ${expiredInvites.docs.length} expired invites`);
     }
 
     // Clean up inactive groups older than 30 days
@@ -1282,12 +1310,9 @@ export const scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(as
 
     if (inactiveGroups.docs.length > 0) {
       await groupBatch.commit();
-      console.log(`Cleaned up ${inactiveGroups.docs.length} inactive groups`);
     }
-
-    console.log('Scheduled cleanups completed successfully');
   } catch (error) {
-    console.error('Error during scheduled cleanups:', error);
+    // Silent failure for scheduled tasks
   }
 });
 
@@ -1308,8 +1333,6 @@ export const validateIOSReceipt = functions.https.onCall(async (data, context) =
   }
 
   try {
-    console.log('validateIOSReceipt: Validating receipt for user:', uid, 'product:', productId);
-
     // Validate with Apple's servers
     const validationResult = await validateWithApple(receiptData, productId);
 
@@ -1324,7 +1347,6 @@ export const validateIOSReceipt = functions.https.onCall(async (data, context) =
         platform: 'ios'
       });
 
-      console.log('validateIOSReceipt: Receipt validated successfully for user:', uid);
       return {
         success: true,
         data: {
@@ -1334,14 +1356,12 @@ export const validateIOSReceipt = functions.https.onCall(async (data, context) =
         }
       };
     } else {
-      console.log('validateIOSReceipt: Receipt validation failed for user:', uid);
       return {
         success: false,
         error: 'Invalid receipt'
       };
     }
   } catch (error) {
-    console.error('validateIOSReceipt: Error validating receipt:', error);
     throw new functions.https.HttpsError('internal', 'Failed to validate receipt');
   }
 });
@@ -1363,13 +1383,6 @@ export const validateAndroidPurchase = functions.https.onCall(async (data, conte
   }
 
   try {
-    console.log(
-      'validateAndroidPurchase: Validating purchase for user:',
-      uid,
-      'product:',
-      productId
-    );
-
     // Validate with Google Play
     const validationResult = await validateWithGooglePlay(purchaseToken, productId, packageName);
 
@@ -1384,7 +1397,6 @@ export const validateAndroidPurchase = functions.https.onCall(async (data, conte
         platform: 'android'
       });
 
-      console.log('validateAndroidPurchase: Purchase validated successfully for user:', uid);
       return {
         success: true,
         data: {
@@ -1394,14 +1406,12 @@ export const validateAndroidPurchase = functions.https.onCall(async (data, conte
         }
       };
     } else {
-      console.log('validateAndroidPurchase: Purchase validation failed for user:', uid);
       return {
         success: false,
         error: 'Invalid purchase'
       };
     }
   } catch (error) {
-    console.error('validateAndroidPurchase: Error validating purchase:', error);
     throw new functions.https.HttpsError('internal', 'Failed to validate purchase');
   }
 });
@@ -1453,7 +1463,6 @@ async function validateWithApple(
 
     return { valid: false };
   } catch (error) {
-    console.error('Error validating with Apple:', error);
     return { valid: false };
   }
 }
@@ -1501,7 +1510,6 @@ async function validateWithGooglePlay(
 
     return { valid: false };
   } catch (error) {
-    console.error('Error validating with Google Play:', error);
     return { valid: false };
   }
 }
@@ -1543,10 +1551,7 @@ async function updateUserSubscriptionFromReceipt(
       plan: 'premium',
       subscriptionStatus: 'active'
     });
-
-    console.log('User subscription updated successfully for:', uid);
   } catch (error) {
-    console.error('Failed to update user subscription:', error);
     throw new Error('Failed to update subscription status');
   }
 }

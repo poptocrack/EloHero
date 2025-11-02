@@ -275,7 +275,10 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
             memberLimitReached={memberLimitReached}
           />
         ) : (
-          <GamesList games={groupGames} />
+          <GamesList
+            games={groupGames}
+            onGamePress={(game) => navigation.navigate('MatchDetails', { gameId: game.id, groupId })}
+          />
         )}
       </ScrollView>
 
