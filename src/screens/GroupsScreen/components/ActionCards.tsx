@@ -25,7 +25,7 @@ export default function ActionCards({
   // Check if user has reached the free limit
   const isLimitReached = groupsCount >= 2 && !isPremium;
   // Hide banner on iOS
-  const showBanner = isLimitReached && !bannerDismissed && Platform.OS !== 'ios';
+  const showBanner = isLimitReached && !bannerDismissed;
 
   const handleCreateGroup = () => {
     if (isLimitReached) {

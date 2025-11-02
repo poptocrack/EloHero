@@ -173,21 +173,18 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <Text style={styles.userName}>{user?.displayName || t('profile.user')}</Text>
           <Text style={styles.userEmail}>{user?.uid}</Text>
 
-          {/* Hide plan badge on iOS */}
-          {Platform.OS !== 'ios' && (
-            <View style={styles.planBadge}>
-              <View style={styles.planIconContainer}>
-                <Ionicons
-                  name={user?.plan === 'premium' ? 'diamond' : 'person'}
-                  size={16}
-                  color={user?.plan === 'premium' ? '#ffd700' : '#667eea'}
-                />
-              </View>
-              <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
-                {user?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
-              </Text>
+          <View style={styles.planBadge}>
+            <View style={styles.planIconContainer}>
+              <Ionicons
+                name={user?.plan === 'premium' ? 'diamond' : 'person'}
+                size={16}
+                color={user?.plan === 'premium' ? '#ffd700' : '#667eea'}
+              />
             </View>
-          )}
+            <Text style={[styles.planText, user?.plan === 'premium' && styles.premiumText]}>
+              {user?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+            </Text>
+          </View>
         </View>
 
         {/* Stats Cards - Hide premium-related stats on iOS */}

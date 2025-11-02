@@ -60,7 +60,7 @@ class SubscriptionService {
       }
 
       await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
-      
+
       // Configure RevenueCat
       await Purchases.configure({ apiKey });
 
@@ -71,7 +71,9 @@ class SubscriptionService {
     } catch (error) {
       console.error('Failed to initialize subscription service:', error);
       throw new Error(
-        `Failed to initialize subscription service: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to initialize subscription service: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
       );
     }
   }
@@ -107,7 +109,9 @@ class SubscriptionService {
         this.products = allProducts;
         console.log('Successfully loaded products:', this.products.length);
       } else {
-        console.log('No current offering available - this is normal in development if products are not configured in App Store Connect');
+        console.log(
+          'No current offering available - this is normal in development if products are not configured in App Store Connect'
+        );
         this.products = [];
         // In development, don't throw error - this is expected behavior
         if (!__DEV__) {
@@ -117,11 +121,13 @@ class SubscriptionService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.warn('Failed to load products (this is normal in development):', errorMessage);
-      
+
       // In development mode, don't throw error when products aren't configured
       // This is expected when testing without App Store Connect configuration
       if (__DEV__) {
-        console.log('Development mode: Products not available. This is expected if products are not configured in App Store Connect.');
+        console.log(
+          'Development mode: Products not available. This is expected if products are not configured in App Store Connect.'
+        );
         this.products = [];
       } else {
         throw new Error(`Failed to load subscription products: ${errorMessage}`);
@@ -182,12 +188,10 @@ class SubscriptionService {
       }
 
       // Find the premium package
-      const premiumPackage = offeringsData.current.availablePackages.find(
-        (pkg) => {
-          const product = (pkg as any).product || (pkg as any).storeProduct;
-          return product?.identifier === this.PREMIUM_PRODUCT_ID;
-        }
-      );
+      const premiumPackage = offeringsData.current.availablePackages.find((pkg) => {
+        const product = (pkg as any).product || (pkg as any).storeProduct;
+        return product?.identifier === this.PREMIUM_PRODUCT_ID;
+      });
 
       if (!premiumPackage) {
         return {
@@ -210,9 +214,11 @@ class SubscriptionService {
       }
 
       const entitlement = customerInfo.entitlements.active[this.PREMIUM_ENTITLEMENT_ID];
-      const expirationDate = entitlement.expirationDate ? new Date(entitlement.expirationDate) : null;
-      const latestTransactionDate = entitlement.latestPurchaseDate 
-        ? new Date(entitlement.latestPurchaseDate) 
+      const expirationDate = entitlement.expirationDate
+        ? new Date(entitlement.expirationDate)
+        : null;
+      const latestTransactionDate = entitlement.latestPurchaseDate
+        ? new Date(entitlement.latestPurchaseDate)
         : new Date();
 
       // Update user's subscription status in Firestore
@@ -221,7 +227,8 @@ class SubscriptionService {
         subscriptionStatus: 'active',
         subscriptionProductId: this.PREMIUM_PRODUCT_ID,
         subscriptionStartDate: latestTransactionDate,
-        subscriptionEndDate: expirationDate || this.calculateSubscriptionEndDate(latestTransactionDate)
+        subscriptionEndDate:
+          expirationDate || this.calculateSubscriptionEndDate(latestTransactionDate)
       });
 
       // Update auth store immediately for instant UI update
@@ -233,7 +240,10 @@ class SubscriptionService {
 
       return {
         success: true,
-        transactionId: (customerInfo as any).originalTransactionIdentifier || customerInfo.firstSeen || `purchase-${Date.now()}`
+        transactionId:
+          (customerInfo as any).originalTransactionIdentifier ||
+          customerInfo.firstSeen ||
+          `purchase-${Date.now()}`
       };
     } catch (error: any) {
       console.error('Purchase failed:', error);
@@ -281,9 +291,11 @@ class SubscriptionService {
 
       if (isPremium) {
         const entitlement = customerInfo.entitlements.active[this.PREMIUM_ENTITLEMENT_ID];
-        const expirationDate = entitlement.expirationDate ? new Date(entitlement.expirationDate) : null;
-        const latestTransactionDate = entitlement.latestPurchaseDate 
-          ? new Date(entitlement.latestPurchaseDate) 
+        const expirationDate = entitlement.expirationDate
+          ? new Date(entitlement.expirationDate)
+          : null;
+        const latestTransactionDate = entitlement.latestPurchaseDate
+          ? new Date(entitlement.latestPurchaseDate)
           : new Date();
 
         // Update user's subscription status
@@ -292,7 +304,8 @@ class SubscriptionService {
           subscriptionStatus: 'active',
           subscriptionProductId: this.PREMIUM_PRODUCT_ID,
           subscriptionStartDate: latestTransactionDate,
-          subscriptionEndDate: expirationDate || this.calculateSubscriptionEndDate(latestTransactionDate)
+          subscriptionEndDate:
+            expirationDate || this.calculateSubscriptionEndDate(latestTransactionDate)
         });
 
         // Update auth store immediately for instant UI update
@@ -304,7 +317,10 @@ class SubscriptionService {
 
         return {
           success: true,
-          transactionId: (customerInfo as any).originalTransactionIdentifier || customerInfo.firstSeen || `restore-${Date.now()}`
+          transactionId:
+            (customerInfo as any).originalTransactionIdentifier ||
+            customerInfo.firstSeen ||
+            `restore-${Date.now()}`
         };
       }
 
@@ -335,7 +351,9 @@ class SubscriptionService {
 
       if (isPremium) {
         const entitlement = customerInfo.entitlements.active[this.PREMIUM_ENTITLEMENT_ID];
-        const expirationDate = entitlement.expirationDate ? new Date(entitlement.expirationDate) : null;
+        const expirationDate = entitlement.expirationDate
+          ? new Date(entitlement.expirationDate)
+          : null;
         const isTrial = entitlement.periodType === 'trial';
 
         return {
