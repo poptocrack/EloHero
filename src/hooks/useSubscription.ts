@@ -227,12 +227,58 @@ export function useSubscription(userId: string): {
     async (customerInfo: CustomerInfo, userId: string) => {
       try {
         console.log('Processing successful purchase:', customerInfo);
+        console.log(
+          'Customer Info - Active Entitlements:',
+          Object.keys(customerInfo.entitlements.active)
+        );
+        console.log(
+          'Customer Info - All Entitlements:',
+          Object.keys(customerInfo.entitlements.all)
+        );
+
+        // Log all entitlements for debugging
+        Object.keys(customerInfo.entitlements.all).forEach((entitlementId) => {
+          const entitlement = customerInfo.entitlements.all[entitlementId];
+          console.log(`Entitlement ${entitlementId}:`, {
+            isActive: entitlement.isActive,
+            willRenew: entitlement.willRenew,
+            expirationDate: entitlement.expirationDate,
+            productIdentifier: entitlement.productIdentifier
+          });
+        });
 
         // Check if user has premium entitlement
         const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
 
         if (!isPremium) {
-          throw new Error('Purchase completed but premium entitlement not found');
+          // Check if entitlement exists but is not active
+          const entitlementExists =
+            customerInfo.entitlements.all[PREMIUM_ENTITLEMENT_ID] !== undefined;
+
+          if (entitlementExists) {
+            const entitlement = customerInfo.entitlements.all[PREMIUM_ENTITLEMENT_ID];
+            console.warn(`⚠️ Entitlement "${PREMIUM_ENTITLEMENT_ID}" exists but is not active:`, {
+              isActive: entitlement.isActive,
+              willRenew: entitlement.willRenew,
+              expirationDate: entitlement.expirationDate
+            });
+            throw new Error(
+              `Purchase completed but premium entitlement "${PREMIUM_ENTITLEMENT_ID}" is not active. ` +
+                `Is active: ${entitlement.isActive}, Expiration: ${
+                  entitlement.expirationDate || 'N/A'
+                }`
+            );
+          } else {
+            console.error(`❌ Entitlement "${PREMIUM_ENTITLEMENT_ID}" not found in customer info.`);
+            console.error('Available entitlements:', Object.keys(customerInfo.entitlements.all));
+            throw new Error(
+              `Purchase completed but premium entitlement "${PREMIUM_ENTITLEMENT_ID}" not found. ` +
+                `Available entitlements: ${
+                  Object.keys(customerInfo.entitlements.all).join(', ') || 'none'
+                }. ` +
+                `Please check RevenueCat dashboard: Products must be linked to entitlement "${PREMIUM_ENTITLEMENT_ID}"`
+            );
+          }
         }
 
         const entitlement = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
@@ -309,8 +355,108 @@ export function useSubscription(userId: string): {
         };
       }
 
-      // Purchase the product directly (simpler than using packages)
-      const { customerInfo } = await Purchases.purchaseProduct(PREMIUM_PRODUCT_ID);
+      // Get offerings and find the package containing our product
+      // This is the recommended approach, especially for Android
+      const offeringsData = await Purchases.getOfferings();
+
+      if (!offeringsData.current) {
+        return {
+          success: false,
+          error: 'No subscription offering available. Please check your RevenueCat configuration.'
+        };
+      }
+
+      const offering = offeringsData.current;
+
+      // Find the package that contains our premium product
+      let premiumPackage: PurchasesPackage | null = null;
+
+      console.log(`Looking for product ${PREMIUM_PRODUCT_ID} in offering ${offering.identifier}`);
+      console.log(`Available packages: ${offering.availablePackages.length}`);
+
+      // Helper function to check if product identifier matches our premium product
+      // On Android, identifiers might be in format "storeId:revenueCatId" (e.g., "premium1:premium1")
+      const matchesPremiumProduct = (productId: string): boolean => {
+        // Exact match
+        if (productId === PREMIUM_PRODUCT_ID) {
+          return true;
+        }
+        // Check if it starts with PREMIUM_PRODUCT_ID followed by colon (Android format)
+        if (productId.startsWith(`${PREMIUM_PRODUCT_ID}:`)) {
+          return true;
+        }
+        // Check if it contains PREMIUM_PRODUCT_ID as the first part before colon
+        const parts = productId.split(':');
+        if (parts.length > 0 && parts[0] === PREMIUM_PRODUCT_ID) {
+          return true;
+        }
+        return false;
+      };
+
+      for (const pkg of offering.availablePackages) {
+        const product = (pkg as PurchasesPackage & { product?: PurchasesStoreProduct }).product;
+        console.log(
+          `Package ${pkg.identifier}: product=${product?.identifier || 'N/A'}, type=${
+            pkg.packageType
+          }`
+        );
+        if (product && product.identifier && matchesPremiumProduct(product.identifier)) {
+          premiumPackage = pkg;
+          console.log(
+            `✅ Found matching package: ${pkg.identifier} (type: ${pkg.packageType}) for product: ${product.identifier}`
+          );
+          break;
+        }
+      }
+
+      if (!premiumPackage) {
+        // Log available packages for debugging
+        console.warn(`❌ Package not found for product ${PREMIUM_PRODUCT_ID}`);
+        console.warn(
+          'Available packages:',
+          offering.availablePackages.map((pkg) => {
+            const product = (pkg as PurchasesPackage & { product?: PurchasesStoreProduct }).product;
+            return `${pkg.identifier} (${pkg.packageType}) -> ${
+              product?.identifier || 'no product'
+            }`;
+          })
+        );
+
+        // Fallback: Try purchasing the product directly (may work on iOS, but not recommended)
+        console.log(`⚠️ Fallback: Trying direct product purchase for ${PREMIUM_PRODUCT_ID}...`);
+        const { customerInfo } = await Purchases.purchaseProduct(PREMIUM_PRODUCT_ID);
+
+        // Handle successful purchase
+        await handleSuccessfulPurchase(customerInfo, userId);
+
+        return {
+          success: true,
+          transactionId:
+            (customerInfo as any).originalTransactionIdentifier ||
+            customerInfo.firstSeen ||
+            `purchase-${Date.now()}`
+        };
+      }
+
+      // Purchase using the package (recommended method, especially for Android)
+      console.log(
+        `🛒 Purchasing package: ${premiumPackage.identifier} (type: ${premiumPackage.packageType})`
+      );
+      const { customerInfo: initialCustomerInfo } = await Purchases.purchasePackage(premiumPackage);
+
+      // Sometimes there's a slight delay before entitlements are available
+      // Try to handle the purchase, but if entitlement is not found, refresh customer info once
+      let customerInfo = initialCustomerInfo;
+      let isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
+
+      if (!isPremium) {
+        console.log('⚠️ Entitlement not immediately available, refreshing customer info...');
+        // Wait a short moment and refresh customer info
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        customerInfo = await Purchases.getCustomerInfo();
+        isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] !== undefined;
+        console.log(`After refresh - Entitlement found: ${isPremium}`);
+      }
 
       // Handle successful purchase
       await handleSuccessfulPurchase(customerInfo, userId);

@@ -7,11 +7,13 @@ import {
   StyleSheet,
   Alert,
   RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableOpacity
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { useGroupStore } from '../../store/groupStore';
 import { Group } from '../../types';
@@ -121,6 +123,10 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
     navigation.navigate('Subscription');
   };
 
+  const handleDebugSubscription = () => {
+    navigation.navigate('SubscriptionDebug');
+  };
+
   const renderGroupItem = ({ item }: { item: Group }) => (
     <GroupItem group={item} onPress={handleGroupPress} />
   );
@@ -178,6 +184,15 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         onClose={() => setShowCreateModal(false)}
         onCreate={handleCreateWithName}
       />
+
+      {__DEV__ && (
+        <View style={styles.debugButtonContainer}>
+          <TouchableOpacity style={styles.debugButton} onPress={handleDebugSubscription}>
+            <Ionicons name="bug-outline" size={20} color="#667eea" />
+            <Text style={styles.debugButtonText}>{t('groups.debugSubscription')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </LinearGradient>
   );
 }
@@ -207,5 +222,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32
+  },
+  debugButtonContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 12
+  },
+  debugButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 8
+  },
+  debugButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#667eea'
   }
 });

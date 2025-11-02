@@ -16,7 +16,9 @@
     "retry": "Retry",
     "refresh": "Refresh",
     "ok": "OK",
-    "or": "or"
+    "or": "or",
+    "yes": "Yes",
+    "no": "No"
   },
   "auth": {
     "signIn": "Sign In",
@@ -73,7 +75,8 @@
     "upgradeToJoinMore": "Upgrade to join more groups",
     "upgradeBannerTitle": "Unlock Premium Features",
     "upgradeBannerSubtitle": "Create unlimited groups and access all premium features",
-    "upgradeNow": "Upgrade Now"
+    "upgradeNow": "Upgrade Now",
+    "debugSubscriptions": "Debug Subscriptions"
   },
   "groupDetails": {
     "title": "Group Details",
@@ -226,6 +229,42 @@
     "comingSoon": "Coming Soon",
     "availableSoon": "Available Soon",
     "upgradeAvailableSoon": "Upgrade to Premium - Available Soon"
+  },
+  "subscriptionDebug": {
+    "title": "Subscription Debug",
+    "connected": "RevenueCat Connected",
+    "notConnected": "RevenueCat Not Connected",
+    "offerings": "Offerings",
+    "products": "Products",
+    "noOfferings": "No offerings found",
+    "noProducts": "No products found",
+    "current": "Current",
+    "packages": "Packages",
+    "package": "Package",
+    "product": "Product",
+    "noProduct": "No product in package",
+    "price": "Price",
+    "currency": "Currency",
+    "period": "Period",
+    "introPrice": "Intro Price",
+    "userInfo": "User Information",
+    "userId": "User ID",
+    "plan": "Plan",
+    "storeProductId": "Store Product ID",
+    "entitlements": "Entitlements",
+    "expectedConfig": "Expected Configuration",
+    "entitlementId": "Entitlement ID",
+    "productId": "Product ID",
+    "configNote": "In RevenueCat Dashboard: Go to Products → Select your product → Link it to the 'premium' entitlement",
+    "isActive": "Is Active",
+    "expiration": "Expiration Date",
+    "willRenew": "Will Renew",
+    "expected": "Expected",
+    "inactive": "Inactive",
+    "allEntitlements": "All Entitlements",
+    "noActiveEntitlements": "No Active Entitlements",
+    "noActiveEntitlementsSubtext": "Your product needs to be linked to the 'premium' entitlement in RevenueCat Dashboard",
+    "noCustomerInfo": "Could not fetch customer information"
   },
   "navigation": {
     "groups": "Groups",

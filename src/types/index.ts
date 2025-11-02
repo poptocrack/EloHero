@@ -149,6 +149,7 @@ export type RootStackParamList = {
   MatchEntry: { groupId: string };
   PlayerProfile: { uid: string; groupId: string };
   Subscription: undefined;
+  SubscriptionDebug: undefined;
 };
 
 export type MainTabParamList = {

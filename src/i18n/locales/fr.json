@@ -16,7 +16,9 @@
     "retry": "Réessayer",
     "refresh": "Actualiser",
     "ok": "OK",
-    "or": "ou"
+    "or": "ou",
+    "yes": "Oui",
+    "no": "Non"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -73,7 +75,8 @@
     "upgradeToJoinMore": "Mettre à niveau pour rejoindre plus de groupes",
     "upgradeBannerTitle": "Débloquez les fonctionnalités Premium",
     "upgradeBannerSubtitle": "Créez des groupes illimités et accédez à toutes les fonctionnalités premium",
-    "upgradeNow": "Mettre à niveau maintenant"
+    "upgradeNow": "Mettre à niveau maintenant",
+    "debugSubscriptions": "Debug Abonnements"
   },
   "groupDetails": {
     "title": "Détails du groupe",
@@ -226,6 +229,42 @@
     "comingSoon": "Bientôt disponible",
     "availableSoon": "Bientôt disponible",
     "upgradeAvailableSoon": "Passer à Premium - Bientôt disponible"
+  },
+  "subscriptionDebug": {
+    "title": "Debug Abonnements",
+    "connected": "RevenueCat Connecté",
+    "notConnected": "RevenueCat Non Connecté",
+    "offerings": "Offres",
+    "products": "Produits",
+    "noOfferings": "Aucune offre trouvée",
+    "noProducts": "Aucun produit trouvé",
+    "current": "Actuel",
+    "packages": "Forfaits",
+    "package": "Forfait",
+    "product": "Produit",
+    "noProduct": "Aucun produit dans le forfait",
+    "price": "Prix",
+    "currency": "Devise",
+    "period": "Période",
+    "introPrice": "Prix d'introduction",
+    "userInfo": "Informations utilisateur",
+    "userId": "ID utilisateur",
+    "plan": "Plan",
+    "storeProductId": "ID produit store",
+    "entitlements": "Entitlements",
+    "expectedConfig": "Configuration attendue",
+    "entitlementId": "ID Entitlement",
+    "productId": "ID Produit",
+    "configNote": "Dans RevenueCat Dashboard : Allez dans Products → Sélectionnez votre produit → Liez-le à l'entitlement 'premium'",
+    "isActive": "Est actif",
+    "expiration": "Date d'expiration",
+    "willRenew": "Se renouvellera",
+    "expected": "Attendu",
+    "inactive": "Inactif",
+    "allEntitlements": "Tous les Entitlements",
+    "noActiveEntitlements": "Aucun Entitlement Actif",
+    "noActiveEntitlementsSubtext": "Votre produit doit être lié à l'entitlement 'premium' dans RevenueCat Dashboard",
+    "noCustomerInfo": "Impossible de récupérer les informations client"
   },
   "navigation": {
     "groups": "Groupes",
