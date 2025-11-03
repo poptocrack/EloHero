@@ -70,12 +70,18 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
         console.log('Player rating data:', playerRatingData);
         setPlayerRating(playerRatingData || null);
 
-        const history = await FirestoreService.getUserRatingHistory(uid, currentSeason.id);
+        // Get rating history by group (across all seasons) instead of just current season
+        // This ensures we show all games even if they were created in different seasons
+        const history = await FirestoreService.getUserRatingHistoryByGroup(uid, groupId);
         console.log('Found rating history:', history.length, 'items');
         console.log('Rating history data:', history);
         setRatingHistory(history);
       } else {
         console.log('No season found for group');
+        // Still try to get rating history even if no season is found
+        const history = await FirestoreService.getUserRatingHistoryByGroup(uid, groupId);
+        console.log('Found rating history (no season):', history.length, 'items');
+        setRatingHistory(history);
       }
     } catch (error) {
       console.error('Error loading player data:', error);

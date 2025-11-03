@@ -348,7 +348,7 @@ export class FirestoreService {
     }
   }
 
-  // Get user's rating history
+  // Get user's rating history for a specific season
   static async getUserRatingHistory(
     uid: string,
     seasonId: string,
@@ -397,6 +397,71 @@ export class FirestoreService {
       return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.log('Failed to get user rating history, returning empty array:', error);
+      return [];
+    }
+  }
+
+  // Get user's rating history for a group (across all seasons)
+  static async getUserRatingHistoryByGroup(
+    uid: string,
+    groupId: string,
+    limitCount: number = 50
+  ): Promise<RatingChange[]> {
+    try {
+      console.log('Getting rating history for uid:', uid, 'groupId:', groupId);
+
+      // Query by groupId and uid to get all rating changes across all seasons
+      let ratingChangesQuery;
+      try {
+        ratingChangesQuery = query(
+          collection(db, 'ratingChanges'),
+          where('uid', '==', uid),
+          where('groupId', '==', groupId),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        );
+        console.log('Using rating changes query with orderBy for group');
+        const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
+        console.log('Rating changes snapshot size:', ratingChangesSnapshot.size);
+
+        const ratingChanges = ratingChangesSnapshot.docs.map((doc) => {
+          const data = doc.data();
+          console.log('Rating change doc:', doc.id, 'seasonId:', data.seasonId, 'createdAt:', data.createdAt);
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date()
+          };
+        }) as RatingChange[];
+
+        console.log('Processed rating changes:', ratingChanges.length);
+        return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      } catch (indexError) {
+        console.log('Index not found for rating changes query by group, trying without orderBy');
+        ratingChangesQuery = query(
+          collection(db, 'ratingChanges'),
+          where('uid', '==', uid),
+          where('groupId', '==', groupId),
+          limit(limitCount)
+        );
+        const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
+        console.log('Rating changes snapshot size:', ratingChangesSnapshot.size);
+
+        const ratingChanges = ratingChangesSnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date()
+          };
+        }) as RatingChange[];
+
+        console.log('Processed rating changes:', ratingChanges.length);
+        // Sort manually if we couldn't use orderBy
+        return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      }
+    } catch (error) {
+      console.error('Failed to get user rating history by group:', error);
       return [];
     }
   }

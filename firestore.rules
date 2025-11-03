@@ -48,10 +48,14 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.groupId));
     }
     
-    // Rating changes are readable by the user
+    // Rating changes are readable by:
+    // - The user themselves
+    // - Members of the group the rating change belongs to
     match /ratingChanges/{ratingChangeId} {
-      allow read: if request.auth != null && 
-        resource.data.uid == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.uid == request.auth.uid ||
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId))
+      );
     }
     
     // Invites are readable by anyone with the code
