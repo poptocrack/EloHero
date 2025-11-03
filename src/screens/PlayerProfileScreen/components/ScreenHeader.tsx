@@ -6,16 +6,23 @@ import { useTranslation } from 'react-i18next';
 interface ScreenHeaderProps {
   title: string;
   onBackPress: () => void;
+  onMenuPress?: () => void;
 }
 
-export default function ScreenHeader({ title, onBackPress }: ScreenHeaderProps) {
+export default function ScreenHeader({ title, onBackPress, onMenuPress }: ScreenHeaderProps) {
   return (
     <View style={styles.headerBar}>
       <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
         <Ionicons name="arrow-back" size={24} color="#2D3748" />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{title}</Text>
-      <View style={styles.headerSpacer} />
+      {onMenuPress ? (
+        <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
+          <Ionicons name="ellipsis-vertical" size={24} color="#2D3748" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.headerSpacer} />
+      )}
     </View>
   );
 }
@@ -51,5 +58,18 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   }
 });

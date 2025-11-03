@@ -1,12 +1,6 @@
 // Player Profile Screen
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  Alert
-} from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { FirestoreService } from '../../services/firestore';
@@ -20,8 +14,8 @@ import {
   PlayerHeader,
   PlayerStats,
   WinRateCard,
-  RemoveMemberButton,
-  RatingHistoryTable
+  RatingHistoryTable,
+  HeaderMenuDropdown
 } from './components';
 
 interface PlayerProfileScreenProps {
@@ -49,6 +43,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
 
   useEffect(() => {
     loadPlayerData();
@@ -133,10 +128,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
-        <ScreenHeader
-          title={t('playerProfile.title')}
-          onBackPress={() => navigation.goBack()}
-        />
+        <ScreenHeader title={t('playerProfile.title')} onBackPress={() => navigation.goBack()} />
         <LoadingState />
       </View>
     );
@@ -145,10 +137,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   if (!playerRating) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
-        <ScreenHeader
-          title={t('playerProfile.title')}
-          onBackPress={() => navigation.goBack()}
-        />
+        <ScreenHeader title={t('playerProfile.title')} onBackPress={() => navigation.goBack()} />
         <ErrorState />
       </View>
     );
@@ -159,6 +148,7 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
       <ScreenHeader
         title={t('playerProfile.title')}
         onBackPress={() => navigation.goBack()}
+        onMenuPress={isAdmin ? () => setShowMenuDropdown(true) : undefined}
       />
 
       <ScrollView
@@ -166,32 +156,26 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#667eea']}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#667eea']} />
         }
       >
-        <PlayerHeader
-          displayName={displayName || ''}
-          uid={uid}
-          rating={playerRating}
-        />
-
-        {isAdmin && (
-          <RemoveMemberButton
-            onPress={handleRemoveMember}
-            isRemoving={isRemoving}
-          />
-        )}
-
-        <PlayerStats rating={playerRating} />
+        <PlayerHeader displayName={displayName || ''} uid={uid} rating={playerRating} />
 
         <WinRateCard rating={playerRating} />
 
+        <PlayerStats rating={playerRating} />
+
         <RatingHistoryTable ratingHistory={ratingHistory} />
       </ScrollView>
+
+      {isAdmin && (
+        <HeaderMenuDropdown
+          isVisible={showMenuDropdown}
+          onClose={() => setShowMenuDropdown(false)}
+          onRemoveMember={handleRemoveMember}
+          isRemoving={isRemoving}
+        />
+      )}
     </View>
   );
 }

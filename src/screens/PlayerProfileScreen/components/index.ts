@@ -6,3 +6,4 @@ export { default as PlayerStats } from './PlayerStats';
 export { default as WinRateCard } from './WinRateCard';
 export { default as RemoveMemberButton } from './RemoveMemberButton';
 export { default as RatingHistoryTable } from './RatingHistoryTable';
+export { default as HeaderMenuDropdown } from './HeaderMenuDropdown';
