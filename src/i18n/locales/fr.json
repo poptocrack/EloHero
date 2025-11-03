@@ -18,7 +18,9 @@
     "ok": "OK",
     "or": "ou",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -285,6 +287,11 @@
     "winRate": "Taux de victoire",
     "ratingHistory": "Historique des changements",
     "noHistory": "Aucun historique disponible",
+    "noHistorySubtext": "Vos changements de classement apparaîtront ici",
+    "date": "Date",
+    "eloChange": "Changement ELO",
+    "ratingBefore": "Avant",
+    "ratingAfter": "Après",
     "position": "Position",
     "tied": "(ex æquo)",
     "removeFromGroup": "Retirer du groupe",

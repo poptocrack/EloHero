@@ -18,7 +18,9 @@
     "ok": "OK",
     "or": "or",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "auth": {
     "signIn": "Sign In",
@@ -285,6 +287,11 @@
     "winRate": "Win Rate",
     "ratingHistory": "Rating History",
     "noHistory": "No history available",
+    "noHistorySubtext": "Your rating changes will appear here",
+    "date": "Date",
+    "eloChange": "Elo Change",
+    "ratingBefore": "Before",
+    "ratingAfter": "After",
     "position": "Position",
     "tied": "(tied)",
     "removeFromGroup": "Remove from Group",
