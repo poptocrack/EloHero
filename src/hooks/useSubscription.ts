@@ -37,8 +37,13 @@ export interface SubscriptionStatus {
 // Product ID - Use the STORE product ID (not RevenueCat's internal identifier)
 // Different product IDs for test vs production:
 // - Test/Development: subscription_monthly_1 (for test stores)
-// - Production (iOS/Android): premium1 (actual store product)
-const PREMIUM_PRODUCT_ID = __DEV__ ? 'subscription_monthly_1' : 'premium1';
+// - Production iOS: premium_monthly (actual store product)
+// - Production Android: premium1 (actual store product)
+const PREMIUM_PRODUCT_ID = __DEV__
+  ? 'subscription_monthly_1'
+  : Platform.OS === 'ios'
+  ? 'premium_monthly'
+  : 'premium1';
 const PREMIUM_ENTITLEMENT_ID = 'premium'; // RevenueCat entitlement ID
 
 // RevenueCat API Keys - These should be set from environment variables
