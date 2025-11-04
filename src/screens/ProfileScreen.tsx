@@ -102,7 +102,8 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     // Hide subscription menu item on iOS
 
     {
-      title: t('profile.subscription'),
+      title:
+        user?.plan === 'premium' ? t('profile.manageSubscription') : t('profile.unlockPremium'),
       subtitle: user?.plan === 'premium' ? t('profile.premiumActive') : t('profile.freePlan'),
       icon: 'diamond-outline',
       onPress: handleSubscription,

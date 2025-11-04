@@ -138,6 +138,8 @@
     "memberLimit": "Membres max",
     "premiumActive": "Premium actif",
     "freePlan": "Plan gratuit",
+    "unlockPremium": "Débloquer Premium",
+    "manageSubscription": "Gérer l'abonnement",
     "user": "Utilisateur",
     "aboutMessage": "Version 1.0.0\n\nEloHero est une application de classement ELO communautaire qui permet aux groupes de joueurs de suivre leurs performances et de créer des classements dynamiques basés sur leurs parties.",
     "supportMessage": "Pour toute question ou problème, rejoignez notre communauté Discord pour obtenir de l'aide et du support.",
