@@ -19,12 +19,13 @@ import { useAuthStore } from '../../store/authStore';
 import { Member } from '../../types';
 
 // Import components
-import GroupHeader from './components/GroupHeader';
+import GroupInfoCard from './components/GroupInfoCard';
 import InvitationCodeCard from './components/InvitationCodeCard';
 import TabNavigation from './components/TabNavigation';
 import RankingList from './components/RankingList';
 import GamesList from './components/GamesList';
 import AddMemberModal from './components/AddMemberModal';
+import HeaderWithMenu, { MenuItem } from '../../components/HeaderWithMenu';
 
 interface GroupDetailsScreenProps {
   navigation: any;
@@ -178,7 +179,9 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     });
   };
 
-  const handleLeaveGroup = () => {
+  const [isLeavingGroup, setIsLeavingGroup] = useState(false);
+
+  const handleLeaveGroup = (): void => {
     Alert.alert(t('groupDetails.leaveGroup'), t('groupDetails.confirmLeave'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
@@ -186,6 +189,7 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         style: 'destructive',
         onPress: async () => {
           try {
+            setIsLeavingGroup(true);
             // Leave group optimistically (removes from UI immediately)
             await useGroupStore.getState().leaveGroup(groupId);
             // Navigate back immediately - group is already removed from UI
@@ -194,11 +198,23 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
             const errorMessage =
               error instanceof Error ? error.message : t('groupDetails.cannotLeaveGroup');
             Alert.alert(t('common.error'), errorMessage);
+            setIsLeavingGroup(false);
           }
         }
       }
     ]);
   };
+
+  const menuItems: MenuItem[] = [
+    {
+      icon: 'exit-outline',
+      text: t('groupDetails.leaveGroup'),
+      onPress: handleLeaveGroup,
+      isDestructive: true,
+      disabled: isLeavingGroup,
+      loading: isLeavingGroup
+    }
+  ];
 
   const handleAddMemberPress = () => {
     if (memberLimitReached) {
@@ -222,9 +238,14 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   // Also wait for members to be loaded to avoid showing empty ranking
   if (isInitialLoading || (isLoading && !currentGroup) || !currentGroup || !membersLoaded) {
     return (
-      <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>{t('common.loading')}</Text>
+      <View
+        style={[styles.loadingContainer, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}
+      >
+        <HeaderWithMenu title={t('groupDetails.title')} onBackPress={() => navigation.goBack()} />
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="large" color="#667eea" />
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+        </View>
       </View>
     );
   }
@@ -232,19 +253,27 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   // Only show error if we're not loading and group doesn't exist
   if (!isInitialLoading && !isLoading && !currentGroup) {
     return (
-      <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
-        <Ionicons name="alert-circle-outline" size={64} color="#ff3b30" />
-        <Text style={styles.errorTitle}>{t('groups.groupNotFound')}</Text>
-        <Text style={styles.errorText}>{t('groupDetails.groupNotAccessible')}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryButtonText}>{t('common.back')}</Text>
-        </TouchableOpacity>
+      <View style={[styles.errorContainer, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
+        <HeaderWithMenu title={t('groupDetails.title')} onBackPress={() => navigation.goBack()} />
+        <View style={styles.errorContent}>
+          <Ionicons name="alert-circle-outline" size={64} color="#ff3b30" />
+          <Text style={styles.errorTitle}>{t('groups.groupNotFound')}</Text>
+          <Text style={styles.errorText}>{t('groupDetails.groupNotAccessible')}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.retryButtonText}>{t('common.back')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
+      <HeaderWithMenu
+        title={currentGroup?.name || t('groupDetails.title')}
+        onBackPress={() => navigation.goBack()}
+        menuItems={menuItems}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -252,9 +281,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         }
         contentContainerStyle={{ paddingBottom: height * 0.2 }}
       >
-        {/* Header with Back Button and Group Info */}
-        <GroupHeader group={currentGroup!} onBackPress={() => navigation.goBack()} />
-
         {/* Invitation Code Card for Admins */}
         <InvitationCodeCard group={currentGroup!} onCopyCode={handleCopyInviteCode} />
 
@@ -270,7 +296,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
             groupOwnerId={currentGroup?.ownerId}
             onPlayerPress={handlePlayerPress}
             onAddMember={handleAddMemberPress}
-            onLeaveGroup={handleLeaveGroup}
             canAddMember={canAddMember}
             memberLimitReached={memberLimitReached}
           />
@@ -312,9 +337,12 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F8F9FF'
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   loadingText: {
     marginTop: 16,
@@ -324,9 +352,12 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
+    backgroundColor: '#F8F9FF'
+  },
+  errorContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FF',
     padding: 32
   },
   errorTitle: {

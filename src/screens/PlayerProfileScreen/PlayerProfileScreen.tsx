@@ -8,15 +8,14 @@ import { RatingChange, Rating } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { useGroupStore } from '../../store/groupStore';
 import {
-  ScreenHeader,
   LoadingState,
   ErrorState,
   PlayerHeader,
   PlayerStats,
   WinRateCard,
-  RatingHistoryTable,
-  HeaderMenuDropdown
+  RatingHistoryTable
 } from './components';
+import HeaderWithMenu, { MenuItem } from '../../components/HeaderWithMenu';
 
 interface PlayerProfileScreenProps {
   navigation: {
@@ -43,7 +42,6 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
-  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
 
   useEffect(() => {
     loadPlayerData();
@@ -131,10 +129,27 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
     );
   };
 
+  const menuItems: MenuItem[] | undefined = isAdmin
+    ? [
+        {
+          icon: 'person-remove',
+          text: t('playerProfile.removeFromGroup'),
+          onPress: handleRemoveMember,
+          isDestructive: true,
+          disabled: isRemoving,
+          loading: isRemoving
+        }
+      ]
+    : undefined;
+
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
-        <ScreenHeader title={t('playerProfile.title')} onBackPress={() => navigation.goBack()} />
+        <HeaderWithMenu
+          title={t('playerProfile.title')}
+          onBackPress={() => navigation.goBack()}
+          menuItems={menuItems}
+        />
         <LoadingState />
       </View>
     );
@@ -143,7 +158,11 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   if (!playerRating) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
-        <ScreenHeader title={t('playerProfile.title')} onBackPress={() => navigation.goBack()} />
+        <HeaderWithMenu
+          title={t('playerProfile.title')}
+          onBackPress={() => navigation.goBack()}
+          menuItems={menuItems}
+        />
         <ErrorState />
       </View>
     );
@@ -151,10 +170,10 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
-      <ScreenHeader
+      <HeaderWithMenu
         title={t('playerProfile.title')}
         onBackPress={() => navigation.goBack()}
-        onMenuPress={isAdmin ? () => setShowMenuDropdown(true) : undefined}
+        menuItems={menuItems}
       />
 
       <ScrollView
@@ -173,15 +192,6 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
 
         <RatingHistoryTable ratingHistory={ratingHistory} />
       </ScrollView>
-
-      {isAdmin && (
-        <HeaderMenuDropdown
-          isVisible={showMenuDropdown}
-          onClose={() => setShowMenuDropdown(false)}
-          onRemoveMember={handleRemoveMember}
-          isRemoving={isRemoving}
-        />
-      )}
     </View>
   );
 }

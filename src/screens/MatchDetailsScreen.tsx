@@ -24,10 +24,7 @@ interface MatchDetailsScreenProps {
   };
 }
 
-export default function MatchDetailsScreen({
-  navigation,
-  route
-}: MatchDetailsScreenProps) {
+export default function MatchDetailsScreen({ navigation, route }: MatchDetailsScreenProps) {
   const { gameId, groupId } = route.params;
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -140,9 +137,7 @@ export default function MatchDetailsScreen({
               ]}
             >
               <Ionicons
-                name={
-                  isPositive ? 'trending-up' : isNegative ? 'trending-down' : 'remove'
-                }
+                name={isPositive ? 'trending-up' : isNegative ? 'trending-down' : 'remove'}
                 size={16}
                 color="#fff"
               />
@@ -159,9 +154,7 @@ export default function MatchDetailsScreen({
 
   if (isLoading) {
     return (
-      <View
-        style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}
-      >
+      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
         <View style={styles.headerBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#2D3748" />
@@ -179,9 +172,7 @@ export default function MatchDetailsScreen({
 
   if (error) {
     return (
-      <View
-        style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}
-      >
+      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
         <View style={styles.headerBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#2D3748" />
@@ -198,9 +189,7 @@ export default function MatchDetailsScreen({
   }
 
   return (
-    <View
-      style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}
-    >
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

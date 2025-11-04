@@ -11,7 +11,6 @@ interface RankingListProps {
   groupOwnerId?: string;
   onPlayerPress: (member: Member) => void;
   onAddMember: () => void;
-  onLeaveGroup: () => void;
   canAddMember: boolean;
   memberLimitReached: boolean;
 }
@@ -23,7 +22,6 @@ export default function RankingList({
   groupOwnerId,
   onPlayerPress,
   onAddMember,
-  onLeaveGroup,
   canAddMember,
   memberLimitReached
 }: RankingListProps) {
@@ -168,8 +166,8 @@ export default function RankingList({
     </View>
   );
 
-  const renderLeaveGroupFooter = () => (
-    <View style={styles.leaveGroupContainer}>
+  const renderFooter = () => (
+    <View style={styles.footerContainer}>
       {/* Add Member Button - Only show for admins */}
       {canAddMember && (
         <TouchableOpacity
@@ -203,13 +201,6 @@ export default function RankingList({
           </View>
         </TouchableOpacity>
       )}
-
-      <TouchableOpacity style={styles.leaveGroupButton} onPress={onLeaveGroup}>
-        <View style={styles.leaveGroupButtonContent}>
-          <Ionicons name="exit-outline" size={20} color="#c62828" />
-          <Text style={styles.leaveGroupButtonText}>{t('groupDetails.leaveGroup')}</Text>
-        </View>
-      </TouchableOpacity>
     </View>
   );
 
@@ -230,7 +221,7 @@ export default function RankingList({
         sortedMembers.length === 0 ? styles.emptyContainer : styles.listContainer
       }
       ListEmptyComponent={renderEmptyRanking}
-      ListFooterComponent={renderLeaveGroupFooter}
+      ListFooterComponent={renderFooter}
       scrollEnabled={false}
     />
   );
@@ -353,33 +344,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20
   },
-  // Leave Group Footer
-  leaveGroupContainer: {
+  // Footer
+  footerContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20
-  },
-  leaveGroupButton: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 2,
-    borderColor: '#c62828'
-  },
-  leaveGroupButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  leaveGroupButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#c62828',
-    marginLeft: 8
   },
   // Add Member Button Styles
   addMemberButton: {
