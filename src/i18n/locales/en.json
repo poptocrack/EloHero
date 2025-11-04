@@ -103,7 +103,14 @@
     "invitationCode": "Invitation Code",
     "admin": "Admin",
     "newMatch": "New Match",
-    "noGamesYet": "No games yet"
+    "noGamesYet": "No games yet",
+    "deleteGroup": "Delete Group",
+    "confirmDelete": "Are you sure you want to delete this group?",
+    "deleteGroupConfirm": "Delete Group",
+    "deleteGroupWarning": "This action cannot be undone. The group will be marked as deleted but can be recovered if needed.",
+    "cannotDeleteGroup": "Unable to delete group",
+    "groupDeleted": "Group deleted successfully",
+    "deletingGroup": "Deleting group..."
   },
   "profile": {
     "title": "Profile",

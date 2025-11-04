@@ -4,28 +4,26 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   RefreshControl,
   ActivityIndicator,
   ScrollView,
-  Clipboard,
-  Dimensions
+  Dimensions,
+  Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
-import { Member } from '../../types';
 
 // Import components
-import GroupInfoCard from './components/GroupInfoCard';
 import InvitationCodeCard from './components/InvitationCodeCard';
 import TabNavigation from './components/TabNavigation';
 import RankingList from './components/RankingList';
 import GamesList from './components/GamesList';
 import AddMemberModal from './components/AddMemberModal';
-import HeaderWithMenu, { MenuItem } from '../../components/HeaderWithMenu';
+import HeaderWithMenu from '../../components/HeaderWithMenu';
+import { useGroupDetailsHandlers } from './hooks/useGroupDetailsHandlers';
 
 interface GroupDetailsScreenProps {
   navigation: any;
@@ -57,7 +55,8 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     loadGroupGames,
     clearError,
     clearGroupData,
-    addMember
+    addMember,
+    deleteGroup
   } = useGroupStore();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -67,6 +66,36 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [membersLoaded, setMembersLoaded] = useState(false);
   const [membersLoadingStarted, setMembersLoadingStarted] = useState(false);
+
+  // Extract handlers and computed values
+  const {
+    isAdmin,
+    memberLimitReached,
+    canAddMember,
+    handleRefresh,
+    handleNewMatch,
+    handleCopyInviteCode,
+    handleAddMember,
+    handleCancelAddMember,
+    handlePlayerPress,
+    handleAddMemberPress,
+    menuItems,
+    isDeletingGroup
+  } = useGroupDetailsHandlers({
+    groupId,
+    currentGroup,
+    currentGroupMembers,
+    user,
+    navigation,
+    setRefreshing,
+    setMembersLoaded,
+    setMembersLoadingStarted,
+    setShowAddMemberModal,
+    setIsAddingMember,
+    loadGroup,
+    addMember,
+    deleteGroup
+  });
 
   useEffect(() => {
     // Clear old group data immediately when navigating to a new group
@@ -102,137 +131,6 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
       setMembersLoaded(true);
     }
   }, [membersLoadingStarted, currentGroupMembers]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setMembersLoaded(false);
-    setMembersLoadingStarted(false);
-    await loadGroup(groupId);
-    setRefreshing(false);
-  };
-
-  const handleNewMatch = () => {
-    if (currentGroupMembers.length < 2) {
-      Alert.alert(t('common.error'), t('groupDetails.needAtLeastTwoPlayers'));
-      return;
-    }
-    navigation.navigate('MatchEntry', { groupId });
-  };
-
-  const handleCopyInviteCode = () => {
-    if (currentGroup?.invitationCode) {
-      Clipboard.setString(currentGroup.invitationCode);
-      Alert.alert(t('groupDetails.codeCopied'));
-    }
-  };
-
-  const handleAddMember = async (memberName: string) => {
-    if (!memberName.trim()) {
-      Alert.alert(t('common.error'), t('matchEntry.addMemberModal.memberNameRequired'));
-      return;
-    }
-
-    // Check member limit before adding
-    if (memberLimitReached) {
-      Alert.alert(
-        t('matchEntry.addMemberModal.memberLimitReached'),
-        t('matchEntry.addMemberModal.memberLimitReachedMessage'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('matchEntry.addMemberModal.upgradeToPremium'),
-            onPress: () => navigation.navigate('Subscription')
-          }
-        ]
-      );
-      return;
-    }
-
-    setIsAddingMember(true);
-    try {
-      await addMember(groupId, memberName.trim());
-      setShowAddMemberModal(false);
-      // No need for success alert - member is already visible optimistically
-    } catch (error) {
-      Alert.alert(t('common.error'), t('matchEntry.addMemberModal.addMemberError'));
-    } finally {
-      setIsAddingMember(false);
-    }
-  };
-
-  const handleCancelAddMember = () => {
-    setShowAddMemberModal(false);
-  };
-
-  const isAdmin = !!(currentGroup && user && currentGroup.ownerId === user.uid);
-
-  // Check if admin is premium and member limit
-  const isAdminPremium = user?.plan === 'premium';
-  const memberLimitReached = !isAdminPremium && currentGroupMembers.length >= 5;
-  const canAddMember = isAdmin && !memberLimitReached;
-
-  const handlePlayerPress = (member: Member) => {
-    navigation.navigate('PlayerProfile', {
-      uid: member.uid,
-      groupId,
-      displayName: member.displayName
-    });
-  };
-
-  const [isLeavingGroup, setIsLeavingGroup] = useState(false);
-
-  const handleLeaveGroup = (): void => {
-    Alert.alert(t('groupDetails.leaveGroup'), t('groupDetails.confirmLeave'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('groupDetails.leaveGroupConfirm'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsLeavingGroup(true);
-            // Leave group optimistically (removes from UI immediately)
-            await useGroupStore.getState().leaveGroup(groupId);
-            // Navigate back immediately - group is already removed from UI
-            navigation.goBack();
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : t('groupDetails.cannotLeaveGroup');
-            Alert.alert(t('common.error'), errorMessage);
-            setIsLeavingGroup(false);
-          }
-        }
-      }
-    ]);
-  };
-
-  const menuItems: MenuItem[] = [
-    {
-      icon: 'exit-outline',
-      text: t('groupDetails.leaveGroup'),
-      onPress: handleLeaveGroup,
-      isDestructive: true,
-      disabled: isLeavingGroup,
-      loading: isLeavingGroup
-    }
-  ];
-
-  const handleAddMemberPress = () => {
-    if (memberLimitReached) {
-      Alert.alert(
-        t('matchEntry.addMemberModal.memberLimitReached'),
-        t('matchEntry.addMemberModal.memberLimitReachedMessage'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('matchEntry.addMemberModal.upgradeToPremium'),
-            onPress: () => navigation.navigate('Subscription')
-          }
-        ]
-      );
-    } else {
-      setShowAddMemberModal(true);
-    }
-  };
 
   // Show loading state while group is being loaded (fixes the brief error flash)
   // Also wait for members to be loaded to avoid showing empty ranking
@@ -326,6 +224,18 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         onAddMember={handleAddMember}
         onCancel={handleCancelAddMember}
       />
+
+      {/* Delete Group Loading Overlay */}
+      {isDeletingGroup && (
+        <Modal transparent visible={isDeletingGroup} animationType="fade">
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingOverlayContent}>
+              <ActivityIndicator size="large" color="#667eea" />
+              <Text style={styles.loadingOverlayText}>{t('groupDetails.deletingGroup')}</Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -410,5 +320,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingOverlayContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12
+  },
+  loadingOverlayText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2D3748',
+    textAlign: 'center'
   }
 });

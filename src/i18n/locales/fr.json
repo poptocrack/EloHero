@@ -103,7 +103,14 @@
     "invitationCode": "Code d'invitation",
     "admin": "Admin",
     "newMatch": "Nouvelle Partie",
-    "noGamesYet": "Aucune partie encore"
+    "noGamesYet": "Aucune partie encore",
+    "deleteGroup": "Supprimer le groupe",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce groupe ?",
+    "deleteGroupConfirm": "Supprimer le groupe",
+    "deleteGroupWarning": "Cette action ne peut pas être annulée. Le groupe sera marqué comme supprimé mais pourra être récupéré si nécessaire.",
+    "cannotDeleteGroup": "Impossible de supprimer le groupe",
+    "groupDeleted": "Groupe supprimé avec succès",
+    "deletingGroup": "Suppression du groupe..."
   },
   "profile": {
     "title": "Profil",
