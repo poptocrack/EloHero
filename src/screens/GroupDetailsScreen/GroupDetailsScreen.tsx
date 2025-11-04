@@ -277,7 +277,9 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         ) : (
           <GamesList
             games={groupGames}
-            onGamePress={(game) => navigation.navigate('MatchDetails', { gameId: game.id, groupId })}
+            onGamePress={(game) =>
+              navigation.navigate('MatchDetails', { gameId: game.id, groupId })
+            }
           />
         )}
       </ScrollView>

@@ -69,4 +69,3 @@ export function calculateEloChanges(participants: PlayerWithRating[]): EloResult
 
   return results;
 }
-
