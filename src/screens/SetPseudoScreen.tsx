@@ -49,7 +49,6 @@ export default function SetPseudoScreen() {
             placeholderTextColor="#718096"
             value={pseudo}
             onChangeText={setPseudo}
-            autoCapitalize="none"
             autoCorrect={false}
             maxLength={24}
           />
