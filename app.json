@@ -18,7 +18,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.elohero.app",
-      "buildNumber": "1.0.0",
       "infoPlist": {
         "CFBundleDisplayName": "EloHero",
         "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized content and improve your experience.",
