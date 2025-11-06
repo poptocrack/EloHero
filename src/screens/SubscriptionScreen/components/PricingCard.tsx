@@ -15,7 +15,7 @@ export default function PricingCard({ premiumProduct, areProductsAvailable }: Pr
 
   return (
     <View style={styles.card}>
-      {/* <Text style={styles.sectionTitle}>{t('subscription.pricing')}</Text> */}
+      <Text style={styles.sectionTitle}>{t('subscription.pricing')}</Text>
 
       <LinearGradient
         colors={['#FF6B9D', '#C44569']}
