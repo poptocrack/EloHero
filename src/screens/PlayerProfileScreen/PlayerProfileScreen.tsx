@@ -50,39 +50,30 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
   const loadPlayerData = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      console.log('Loading player data for uid:', uid, 'groupId:', groupId);
 
       // For now, we'll load the first season's data
       // In a real app, you'd want to get the current season
       const seasons = await FirestoreService.getGroupSeasons(groupId);
-      console.log('Found seasons:', seasons.length);
 
       const currentSeason = seasons.find((s) => s.isActive) || seasons[0];
-      console.log('Using season:', currentSeason?.id, 'isActive:', currentSeason?.isActive);
 
       if (currentSeason) {
         const ratings = await FirestoreService.getSeasonRatings(currentSeason.id);
-        console.log('Found ratings:', ratings.length);
 
         const playerRatingData = ratings.find((r) => r.uid === uid);
-        console.log('Player rating data:', playerRatingData);
         setPlayerRating(playerRatingData || null);
 
         // Get rating history by group (across all seasons) instead of just current season
         // This ensures we show all games even if they were created in different seasons
         const history = await FirestoreService.getUserRatingHistoryByGroup(uid, groupId);
-        console.log('Found rating history:', history.length, 'items');
-        console.log('Rating history data:', history);
         setRatingHistory(history);
       } else {
-        console.log('No season found for group');
         // Still try to get rating history even if no season is found
         const history = await FirestoreService.getUserRatingHistoryByGroup(uid, groupId);
-        console.log('Found rating history (no season):', history.length, 'items');
         setRatingHistory(history);
       }
     } catch (error) {
-      console.error('Error loading player data:', error);
+      // Error loading player data
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +109,6 @@ export default function PlayerProfileScreen({ navigation, route }: PlayerProfile
               Alert.alert(t('common.success'), t('playerProfile.removeSuccess'));
               navigation.goBack();
             } catch (error) {
-              console.error('Error removing member:', error);
               Alert.alert(t('common.error'), t('playerProfile.removeError'));
             } finally {
               setIsRemoving(false);

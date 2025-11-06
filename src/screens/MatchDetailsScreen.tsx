@@ -61,7 +61,6 @@ export default function MatchDetailsScreen({ navigation, route }: MatchDetailsSc
       setGame(gameData);
       setParticipants(participantsData);
     } catch (err) {
-      console.error('Error loading match details:', err);
       setError(t('errors.unknownError'));
     } finally {
       setIsLoading(false);

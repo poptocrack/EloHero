@@ -37,7 +37,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       await AsyncStorage.setItem('user-language', language);
       setCurrentLanguage(language);
     } catch (error) {
-      console.error('Error changing language:', error);
+      // Error changing language
     }
   };
 

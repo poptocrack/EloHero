@@ -103,7 +103,6 @@ class SubscriptionService {
       // Load products
       await this.loadProducts();
     } catch (error) {
-      console.error('Failed to initialize subscription service:', error);
       throw new Error(
         `Failed to initialize subscription service: ${
           error instanceof Error ? error.message : 'Unknown error'
@@ -124,11 +123,7 @@ class SubscriptionService {
 
       if (productsData && productsData.length > 0) {
         this.products = productsData;
-        console.log('Successfully loaded products:', this.products.length);
       } else {
-        console.log(
-          'No products available - this is normal in development if products are not configured in App Store Connect'
-        );
         this.products = [];
         // In development, don't throw error - this is expected behavior
         if (!__DEV__) {
@@ -144,20 +139,13 @@ class SubscriptionService {
         }
       } catch (error) {
         // Offerings may not be available in dev, that's okay
-        if (__DEV__) {
-          console.log('Offerings not available (normal in development)');
-        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.warn('Failed to load products (this is normal in development):', errorMessage);
 
       // In development mode, don't throw error when products aren't configured
       // This is expected when testing without App Store Connect configuration
       if (__DEV__) {
-        console.log(
-          'Development mode: Products not available. This is expected if products are not configured in App Store Connect.'
-        );
         this.products = [];
       } else {
         throw new Error(`Failed to load subscription products: ${errorMessage}`);
@@ -306,8 +294,6 @@ class SubscriptionService {
           `purchase-${Date.now()}`
       };
     } catch (error: any) {
-      console.error('Purchase failed:', error);
-
       let errorMessage = 'Purchase failed';
 
       if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
@@ -446,7 +432,6 @@ class SubscriptionService {
 
       return { success: false, error: 'No active premium subscription found' };
     } catch (error: any) {
-      console.error('Restore purchases failed:', error);
       return {
         success: false,
         error: error.userInfo?.readableErrorCode || error.message || 'Restore failed'
@@ -488,7 +473,6 @@ class SubscriptionService {
 
       return { isActive: false };
     } catch (error) {
-      console.error('Failed to get subscription status:', error);
       return { isActive: false };
     }
   }
@@ -517,7 +501,6 @@ class SubscriptionService {
         updatedAt: new Date()
       });
     } catch (error) {
-      console.error('Failed to update user subscription:', error);
       throw new Error('Failed to update subscription status');
     }
   }
@@ -544,7 +527,6 @@ class SubscriptionService {
         await Linking.openURL('https://play.google.com/store/account/subscriptions');
       }
     } catch (error) {
-      console.error('Failed to open subscription management:', error);
       throw new Error('Failed to open subscription management');
     }
   }

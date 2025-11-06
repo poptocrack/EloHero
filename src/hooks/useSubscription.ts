@@ -42,9 +42,6 @@ export function useSubscription(userId: string): {
         await subscriptionService.initialize(userId);
         setConnected(true);
       } catch (err) {
-        if (__DEV__) {
-          console.error('Failed to initialize RevenueCat:', err);
-        }
         setError('Failed to initialize RevenueCat');
         setConnected(false);
       } finally {
@@ -233,9 +230,6 @@ export function useSubscription(userId: string): {
 
       return await subscriptionService.getSubscriptionStatus(userId);
     } catch (error) {
-      if (__DEV__) {
-        console.error('Failed to get subscription status:', error);
-      }
       return { isActive: false };
     }
   };
@@ -244,9 +238,6 @@ export function useSubscription(userId: string): {
     try {
       await subscriptionService.openSubscriptionManagement();
     } catch (error) {
-      if (__DEV__) {
-        console.error('Failed to open subscription management:', error);
-      }
       throw error;
     }
   };

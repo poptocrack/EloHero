@@ -8,22 +8,10 @@ export class CloudFunctionsService {
   // Create a new group
   static async createGroup(name: string, description?: string): Promise<ApiResponse<Group>> {
     try {
-      console.log(
-        'CloudFunctionsService: Creating group with name:',
-        name,
-        'description:',
-        description
-      );
       const createGroup = httpsCallable(functions, 'createGroup');
-      console.log('CloudFunctionsService: Calling createGroup function...');
       const result = await createGroup({ name, description });
-      console.log('CloudFunctionsService: Function call successful, result:', result.data);
       return result.data as ApiResponse<Group>;
     } catch (error: any) {
-      console.error('CloudFunctionsService: Create group error:', error);
-      console.error('CloudFunctionsService: Error code:', error?.code);
-      console.error('CloudFunctionsService: Error message:', error?.message);
-      console.error('CloudFunctionsService: Error details:', error?.details);
       // Extract more detailed error information
       const errorMessage = error?.message || error?.code || 'Unknown error';
       const errorDetails = error?.details || '';
@@ -34,17 +22,10 @@ export class CloudFunctionsService {
   // Join a group with invitation code
   static async joinGroupWithCode(code: string): Promise<ApiResponse<Group>> {
     try {
-      console.log('CloudFunctionsService: Joining group with code:', code);
       const joinGroup = httpsCallable(functions, 'joinGroupWithCode');
       const result = await joinGroup({ code });
-      console.log('CloudFunctionsService: Join group result:', result.data);
       return result.data as ApiResponse<Group>;
     } catch (error: any) {
-      console.error('CloudFunctionsService: Join group error:', error);
-      console.error('CloudFunctionsService: Error code:', error?.code);
-      console.error('CloudFunctionsService: Error message:', error?.message);
-      console.error('CloudFunctionsService: Error details:', error?.details);
-
       // Extract more detailed error information
       const errorMessage = error?.message || error?.code || 'Unknown error';
       const errorDetails = error?.details || '';
@@ -124,17 +105,10 @@ export class CloudFunctionsService {
   // Leave a group
   static async leaveGroup(groupId: string): Promise<ApiResponse<void>> {
     try {
-      console.log('CloudFunctionsService: Attempting to leave group:', groupId);
       const leaveGroup = httpsCallable(functions, 'leaveGroup');
       const result = await leaveGroup({ groupId });
-      console.log('CloudFunctionsService: Leave group result:', result.data);
       return result.data as ApiResponse<void>;
     } catch (error: any) {
-      console.error('CloudFunctionsService: Leave group error:', error);
-      console.error('CloudFunctionsService: Error code:', error?.code);
-      console.error('CloudFunctionsService: Error message:', error?.message);
-      console.error('CloudFunctionsService: Error details:', error?.details);
-
       // Extract more detailed error information
       const errorMessage = error?.message || error?.code || 'Unknown error';
       const errorDetails = error?.details || '';
@@ -209,6 +183,23 @@ export class CloudFunctionsService {
       return result.data as ApiResponse<void>;
     } catch (error) {
       throw new Error(`Failed to remove member: ${error}`);
+    }
+  }
+
+  // Merge a virtual member with a real user (Admin only)
+  static async mergeMember(
+    groupId: string,
+    realUserId: string,
+    virtualUserId: string
+  ): Promise<ApiResponse<{ realUserId: string; virtualUserId: string; groupId: string }>> {
+    try {
+      const mergeMember = httpsCallable(functions, 'mergeMember');
+      const result = await mergeMember({ groupId, realUserId, virtualUserId });
+      return result.data as ApiResponse<{ realUserId: string; virtualUserId: string; groupId: string }>;
+    } catch (error: any) {
+      // Preserve the original error message from the cloud function
+      const errorMessage = error?.details || error?.message || error?.code || 'Unknown error';
+      throw new Error(errorMessage);
     }
   }
 }

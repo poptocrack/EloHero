@@ -188,10 +188,22 @@ export function useGroupDetailsHandlers({
     }
   };
 
+  const handleManageMembers = (): void => {
+    navigation.navigate('MemberManagement', { groupId });
+  };
+
   // Build menu items
   const menuItems: MenuItem[] = [
     ...(isAdmin
       ? [
+          {
+            icon: 'people-outline' as keyof typeof Ionicons.glyphMap,
+            text: t('groupDetails.manageMembers'),
+            onPress: handleManageMembers,
+            isDestructive: false,
+            disabled: false,
+            loading: false
+          },
           {
             icon: 'trash-outline' as keyof typeof Ionicons.glyphMap,
             text: t('groupDetails.deleteGroup'),

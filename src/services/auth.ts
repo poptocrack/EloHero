@@ -175,7 +175,6 @@ export class AuthService {
           const user = await this.getUserData(firebaseUser.uid);
           callback(user);
         } catch (error) {
-          console.error('Error getting user data:', error);
           callback(null);
         }
       } else {

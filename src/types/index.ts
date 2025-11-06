@@ -151,6 +151,7 @@ export type RootStackParamList = {
   PlayerProfile: { uid: string; groupId: string };
   Subscription: undefined;
   SubscriptionDebug: undefined;
+  MemberManagement: { groupId: string };
 };
 
 export type MainTabParamList = {

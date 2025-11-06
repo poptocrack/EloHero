@@ -212,7 +212,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const status = await subscriptionService.getSubscriptionStatus(user.uid);
       set({ subscriptionStatus: status });
     } catch (error) {
-      console.error('Failed to check subscription status:', error);
+      // Failed to check subscription status
     }
   },
 

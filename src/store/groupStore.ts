@@ -155,7 +155,6 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         set({ currentSeason: null, currentSeasonRatings: [] });
       }
     } catch (error) {
-      console.log('Error loading group seasons (non-critical):', error);
       // Don't set this as an error since seasons are optional
       set({ currentSeason: null, currentSeasonRatings: [] });
     }
@@ -180,46 +179,34 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   },
 
   createGroup: async (name: string, description?: string) => {
-    console.log('GroupStore: Starting createGroup with name:', name, 'description:', description);
     set({ isLoading: true, error: null });
     try {
       // Ensure user document exists before creating group
       // Import AuthService dynamically to avoid circular dependency
-      console.log('GroupStore: Ensuring user document exists...');
       const { AuthService } = await import('../services/auth');
       const { useAuthStore } = await import('../store/authStore');
       const user = useAuthStore.getState().user;
-      console.log('GroupStore: Current user:', user);
       if (user) {
-        console.log('GroupStore: Ensuring user document for user:', user.uid);
         await AuthService.ensureUserDocument({
           uid: user.uid,
           displayName: user.displayName,
           photoURL: user.photoURL
         } as any);
-        console.log('GroupStore: User document ensured');
-      } else {
-        console.log('GroupStore: No user found, skipping user document creation');
       }
 
-      console.log('GroupStore: Calling CloudFunctionsService.createGroup...');
       const response = await CloudFunctionsService.createGroup(name, description);
-      console.log('GroupStore: CloudFunctionsService response:', response);
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to create group');
       }
 
       const newGroup = response.data;
-      console.log('GroupStore: Adding new group to state:', newGroup);
       set((state) => ({
         groups: [...state.groups, newGroup],
         isLoading: false
       }));
 
-      console.log('GroupStore: Group created successfully');
       return newGroup;
     } catch (error) {
-      console.error('GroupStore: Error in createGroup:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to create group',
         isLoading: false

@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateAndroidPurchase = exports.validateIOSReceipt = exports.scheduledCleanups = exports.addMember = exports.resetSeasonRatings = exports.endSeason = exports.updateGroup = exports.deleteGroup = exports.leaveGroup = exports.generateInviteCode = exports.reportMatch = exports.createSeason = exports.joinGroupWithCode = exports.createGroup = void 0;
+exports.validateAndroidPurchase = exports.validateIOSReceipt = exports.scheduledCleanups = exports.mergeMember = exports.addMember = exports.resetSeasonRatings = exports.endSeason = exports.updateGroup = exports.deleteGroup = exports.leaveGroup = exports.generateInviteCode = exports.reportMatch = exports.createSeason = exports.joinGroupWithCode = exports.createGroup = void 0;
 // Cloud Functions for EloHero
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
@@ -59,17 +59,13 @@ const PLAN_LIMITS = {
 async function getUserPlan(uid) {
     var _a;
     try {
-        console.log('getUserPlan: Getting user record for uid:', uid);
         const userRecord = await admin.auth().getUser(uid);
-        console.log('getUserPlan: User record retrieved, custom claims:', userRecord.customClaims);
         // First check custom claims (fastest, but may be stale)
         const claimsPlan = (_a = userRecord.customClaims) === null || _a === void 0 ? void 0 : _a.plan;
         if (claimsPlan === 'premium') {
-            console.log('getUserPlan: Premium status found in custom claims');
             return 'premium';
         }
         // Fallback: Check Firestore user document (more reliable, checks actual subscription status)
-        console.log('getUserPlan: Checking Firestore user document for plan status...');
         const userDoc = await db.collection('users').doc(uid).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
@@ -80,44 +76,36 @@ async function getUserPlan(uid) {
                 // Check if subscription hasn't expired
                 const subscriptionEndDate = userData === null || userData === void 0 ? void 0 : userData.subscriptionEndDate;
                 if (subscriptionEndDate) {
-                    const endDate = subscriptionEndDate.toDate ? subscriptionEndDate.toDate() : new Date(subscriptionEndDate);
+                    const endDate = subscriptionEndDate.toDate
+                        ? subscriptionEndDate.toDate()
+                        : new Date(subscriptionEndDate);
                     const now = new Date();
                     if (endDate > now) {
-                        console.log('getUserPlan: Active premium subscription found in Firestore');
                         // Sync custom claims if they're out of date
                         if (!claimsPlan || claimsPlan === 'free') {
-                            console.log('getUserPlan: Syncing custom claims with Firestore...');
                             try {
                                 await admin.auth().setCustomUserClaims(uid, {
                                     plan: 'premium',
                                     subscriptionStatus: 'active'
                                 });
-                                console.log('getUserPlan: Custom claims updated successfully');
                             }
                             catch (claimsError) {
-                                console.error('getUserPlan: Failed to update custom claims:', claimsError);
                                 // Continue anyway, we still return premium based on Firestore
                             }
                         }
                         return 'premium';
                     }
-                    else {
-                        console.log('getUserPlan: Premium subscription expired');
-                    }
                 }
                 else {
                     // No expiration date, assume active
-                    console.log('getUserPlan: Premium plan found in Firestore (no expiration date)');
                     return 'premium';
                 }
             }
         }
         const plan = claimsPlan || 'free';
-        console.log('getUserPlan: Returning plan:', plan);
         return plan;
     }
     catch (error) {
-        console.error('getUserPlan: Error getting user plan:', error);
         return 'free';
     }
 }
@@ -186,16 +174,10 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'Group name is required');
     }
     try {
-        console.log('createGroup: Starting for user:', uid, 'name:', name);
         // Check user plan and current group count
-        console.log('createGroup: Getting user plan...');
         const plan = await getUserPlan(uid);
-        console.log('createGroup: User plan:', plan);
-        console.log('createGroup: Getting user document...');
         const userDoc = await db.collection('users').doc(uid).get();
-        console.log('createGroup: User document exists:', userDoc.exists);
         if (!userDoc.exists) {
-            console.log('createGroup: User document does not exist, creating it...');
             // Create user document if it doesn't exist
             await db
                 .collection('users')
@@ -207,18 +189,15 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
                 createdAt: firestore_1.FieldValue.serverTimestamp(),
                 updatedAt: firestore_1.FieldValue.serverTimestamp()
             });
-            console.log('createGroup: User document created');
             // Refresh userDoc after creating it
             const refreshedUserDoc = await db.collection('users').doc(uid).get();
             const currentGroupsCount = ((_a = refreshedUserDoc.data()) === null || _a === void 0 ? void 0 : _a.groupsCount) || 0;
-            console.log('createGroup: Current groups count:', currentGroupsCount);
             if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
                 throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.');
             }
         }
         else {
             const currentGroupsCount = ((_b = userDoc.data()) === null || _b === void 0 ? void 0 : _b.groupsCount) || 0;
-            console.log('createGroup: Current groups count:', currentGroupsCount);
             if (checkPlanLimit(plan, 'groups', currentGroupsCount)) {
                 throw new functions.https.HttpsError('resource-exhausted', 'Group limit reached for your plan. Free users can create up to 2 groups. Upgrade to premium for unlimited groups.');
             }
@@ -226,7 +205,6 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
         // Always resolve displayName from Firestore to reflect user-updated pseudo
         const userDisplayName = ((_c = (await db.collection('users').doc(uid).get()).data()) === null || _c === void 0 ? void 0 : _c.displayName) || 'Anonymous';
         // Generate unique invitation code
-        console.log('createGroup: Generating unique invitation code...');
         let invitationCode;
         let attempts = 0;
         do {
@@ -236,9 +214,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
                 throw new functions.https.HttpsError('internal', 'Failed to generate unique invitation code');
             }
         } while ((await db.collection('groups').where('invitationCode', '==', invitationCode).get()).size > 0);
-        console.log('createGroup: Generated invitation code:', invitationCode);
         // Create group
-        console.log('createGroup: Creating group document...');
         const groupRef = db.collection('groups').doc();
         const groupData = {
             name: name.trim(),
@@ -252,9 +228,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             updatedAt: firestore_1.FieldValue.serverTimestamp()
         };
         await groupRef.set(groupData);
-        console.log('createGroup: Group document created with ID:', groupRef.id);
         // Add owner as member (composite membership id to support multi-group)
-        console.log('createGroup: Adding owner as member...');
         await db
             .collection('members')
             .doc(`${uid}_${groupRef.id}`)
@@ -266,9 +240,7 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             joinedAt: firestore_1.FieldValue.serverTimestamp(),
             isActive: true
         });
-        console.log('createGroup: Owner added as member');
         // Update user's group count
-        console.log('createGroup: Updating user group count...');
         try {
             await db
                 .collection('users')
@@ -277,12 +249,9 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
                 groupsCount: firestore_1.FieldValue.increment(1),
                 updatedAt: firestore_1.FieldValue.serverTimestamp()
             });
-            console.log('createGroup: User group count updated');
         }
         catch (updateError) {
             // If update fails (e.g., document doesn't exist), use set with merge
-            const errorMessage = updateError instanceof Error ? updateError.message : String(updateError);
-            console.log('createGroup: Update failed, trying set with merge:', errorMessage);
             const userDoc = await db.collection('users').doc(uid).get();
             const currentCount = ((_d = userDoc.data()) === null || _d === void 0 ? void 0 : _d.groupsCount) || 0;
             await db
@@ -292,10 +261,8 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
                 groupsCount: currentCount + 1,
                 updatedAt: firestore_1.FieldValue.serverTimestamp()
             }, { merge: true });
-            console.log('createGroup: User group count updated via set');
         }
         // Create default season
-        console.log('createGroup: Creating default season...');
         const seasonRef = db.collection('seasons').doc();
         await seasonRef.set({
             id: seasonRef.id,
@@ -306,15 +273,11 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             gameCount: 0,
             createdAt: firestore_1.FieldValue.serverTimestamp()
         });
-        console.log('createGroup: Default season created with ID:', seasonRef.id);
         // Update group with current season
-        console.log('createGroup: Updating group with current season...');
         await groupRef.update({
             currentSeasonId: seasonRef.id
         });
-        console.log('createGroup: Group updated with current season');
         // Create initial rating for the group owner
-        console.log('createGroup: Creating initial rating for owner...');
         await db
             .collection('ratings')
             .doc(`${seasonRef.id}_${uid}`)
@@ -330,23 +293,18 @@ exports.createGroup = functions.https.onCall(async (data, context) => {
             draws: 0,
             lastUpdated: firestore_1.FieldValue.serverTimestamp()
         });
-        console.log('createGroup: Initial rating created for owner');
-        console.log('createGroup: Function completed successfully');
         return {
             success: true,
             data: Object.assign(Object.assign({ id: groupRef.id }, groupData), { currentSeasonId: seasonRef.id })
         };
     }
     catch (error) {
-        console.error('createGroup: Error creating group:', error);
-        console.error('createGroup: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         // If it's already an HttpsError, re-throw it with original details
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
         // Otherwise, wrap it but include the original error message for debugging
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('createGroup: Original error message:', errorMessage);
         throw new functions.https.HttpsError('internal', `Failed to create group: ${errorMessage}`);
     }
 });
@@ -363,14 +321,12 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
     }
     try {
         const upperCode = code.toUpperCase();
-        console.log('joinGroupWithCode: Searching for code:', upperCode);
         // Find group by invitation code
         const groupsQuery = await db
             .collection('groups')
             .where('invitationCode', '==', upperCode)
             .where('isActive', '==', true)
             .get();
-        console.log('joinGroupWithCode: Query returned', groupsQuery.size, 'results');
         if (groupsQuery.empty) {
             // Let's also check if the code exists but group is inactive
             const inactiveQuery = await db
@@ -378,11 +334,9 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
                 .where('invitationCode', '==', upperCode)
                 .get();
             if (inactiveQuery.empty) {
-                console.log('joinGroupWithCode: Code does not exist in database');
                 throw new functions.https.HttpsError('not-found', 'Invalid invite code');
             }
             else {
-                console.log('joinGroupWithCode: Code exists but group is inactive');
                 throw new functions.https.HttpsError('not-found', 'Group is no longer active');
             }
         }
@@ -467,7 +421,6 @@ exports.joinGroupWithCode = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error joining group:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -553,7 +506,6 @@ exports.createSeason = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error creating season:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -680,7 +632,6 @@ exports.reportMatch = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error reporting match:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -737,7 +688,6 @@ exports.generateInviteCode = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error generating invite code:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -793,7 +743,6 @@ exports.leaveGroup = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error leaving group:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -838,7 +787,6 @@ exports.deleteGroup = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error deleting group:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -886,7 +834,6 @@ exports.updateGroup = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error updating group:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -970,7 +917,6 @@ exports.endSeason = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error ending season:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -1021,7 +967,6 @@ exports.resetSeasonRatings = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error resetting season ratings:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -1103,16 +1048,159 @@ exports.addMember = functions.https.onCall(async (data, context) => {
         };
     }
     catch (error) {
-        console.error('Error adding member:', error);
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
         throw new functions.https.HttpsError('internal', 'Failed to add member');
     }
 });
-// 12. Scheduled Cleanup Function
+// 12. Merge Member Function (Admin only)
+exports.mergeMember = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    const { groupId, realUserId, virtualUserId } = data;
+    const uid = context.auth.uid;
+    if (!groupId || !realUserId || !virtualUserId) {
+        throw new functions.https.HttpsError('invalid-argument', 'Group ID, real user ID, and virtual user ID are required');
+    }
+    // Verify virtual user is actually virtual
+    if (!virtualUserId.startsWith('virtual_')) {
+        throw new functions.https.HttpsError('invalid-argument', 'Second user must be a virtual member');
+    }
+    // Verify real user is not virtual
+    if (realUserId.startsWith('virtual_')) {
+        throw new functions.https.HttpsError('invalid-argument', 'First user must be a real user');
+    }
+    try {
+        // Check if user is group owner (admin)
+        const groupDoc = await db.collection('groups').doc(groupId).get();
+        if (!groupDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Group not found');
+        }
+        const groupData = groupDoc.data();
+        if (groupData.ownerId !== uid) {
+            throw new functions.https.HttpsError('permission-denied', 'Only group owner can merge members');
+        }
+        // Verify both members exist in the group
+        const realMemberDocId = `${realUserId}_${groupId}`;
+        const virtualMemberDocId = `${virtualUserId}_${groupId}`;
+        console.log('Looking for real member:', realMemberDocId);
+        console.log('Looking for virtual member:', virtualMemberDocId);
+        const realMemberDoc = await db.collection('members').doc(realMemberDocId).get();
+        const virtualMemberDoc = await db.collection('members').doc(virtualMemberDocId).get();
+        if (!realMemberDoc.exists) {
+            console.error('Real member not found:', realMemberDocId);
+            throw new functions.https.HttpsError('not-found', `Real user (${realUserId}) is not a member of this group (${groupId})`);
+        }
+        if (!virtualMemberDoc.exists) {
+            console.error('Virtual member not found:', virtualMemberDocId);
+            throw new functions.https.HttpsError('not-found', `Virtual user (${virtualUserId}) is not a member of this group (${groupId})`);
+        }
+        console.log('Both members found, proceeding with merge');
+        const realMemberData = realMemberDoc.data();
+        // Get all seasons for this group
+        const seasonsSnapshot = await db
+            .collection('seasons')
+            .where('groupId', '==', groupId)
+            .get();
+        const batch = db.batch();
+        // 1. Transfer all ratings from virtual to real user (for all seasons)
+        for (const seasonDoc of seasonsSnapshot.docs) {
+            const seasonId = seasonDoc.id;
+            const virtualRatingRef = db.collection('ratings').doc(`${seasonId}_${virtualUserId}`);
+            const realRatingRef = db.collection('ratings').doc(`${seasonId}_${realUserId}`);
+            const virtualRatingDoc = await virtualRatingRef.get();
+            if (virtualRatingDoc.exists) {
+                const virtualRatingData = virtualRatingDoc.data();
+                // Set rating for real user (this will replace any existing rating)
+                batch.set(realRatingRef, {
+                    id: `${seasonId}_${realUserId}`,
+                    seasonId,
+                    uid: realUserId,
+                    groupId,
+                    currentRating: virtualRatingData.currentRating,
+                    gamesPlayed: virtualRatingData.gamesPlayed,
+                    wins: virtualRatingData.wins,
+                    losses: virtualRatingData.losses,
+                    draws: virtualRatingData.draws,
+                    lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: false } // Replace completely
+                );
+                // Delete virtual rating
+                batch.delete(virtualRatingRef);
+            }
+        }
+        // 2. Transfer all participants from virtual to real user
+        const participantsSnapshot = await db
+            .collection('participants')
+            .where('uid', '==', virtualUserId)
+            .get();
+        for (const participantDoc of participantsSnapshot.docs) {
+            const participantData = participantDoc.data();
+            const gameId = participantData.gameId;
+            // Check if this game belongs to the group
+            const gameDoc = await db.collection('games').doc(gameId).get();
+            if (gameDoc.exists && gameDoc.data().groupId === groupId) {
+                // Create new participant with real user UID
+                const newParticipantRef = db.collection('participants').doc(`${gameId}_${realUserId}`);
+                batch.set(newParticipantRef, Object.assign(Object.assign({}, participantData), { uid: realUserId, displayName: realMemberData.displayName, photoURL: realMemberData.photoURL || null }));
+                // Delete old virtual participant
+                batch.delete(participantDoc.ref);
+            }
+        }
+        // 3. Transfer all ratingChanges from virtual to real user
+        const ratingChangesSnapshot = await db
+            .collection('ratingChanges')
+            .where('uid', '==', virtualUserId)
+            .get();
+        for (const ratingChangeDoc of ratingChangesSnapshot.docs) {
+            const ratingChangeData = ratingChangeDoc.data();
+            const gameId = ratingChangeData.gameId;
+            // Check if this game belongs to the group
+            const gameDoc = await db.collection('games').doc(gameId).get();
+            if (gameDoc.exists && gameDoc.data().groupId === groupId) {
+                // Create new ratingChange with real user UID
+                const newRatingChangeRef = db.collection('ratingChanges').doc(`${gameId}_${realUserId}`);
+                batch.set(newRatingChangeRef, Object.assign(Object.assign({}, ratingChangeData), { uid: realUserId }));
+                // Delete old virtual ratingChange
+                batch.delete(ratingChangeDoc.ref);
+            }
+        }
+        // 4. Update member document (keep real user's displayName and photoURL)
+        // The member document already exists with real user's data, so we just need to ensure it's active
+        batch.update(realMemberDoc.ref, {
+            isActive: true,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        // 5. Delete virtual member document
+        batch.delete(virtualMemberDoc.ref);
+        // 6. Update group member count (decrease by 1 since we're removing virtual member)
+        batch.update(db.collection('groups').doc(groupId), {
+            memberCount: admin.firestore.FieldValue.increment(-1),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        // Commit all changes atomically
+        await batch.commit();
+        return {
+            success: true,
+            data: {
+                realUserId,
+                virtualUserId,
+                groupId
+            }
+        };
+    }
+    catch (error) {
+        console.error('Error merging members:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError('internal', 'Failed to merge members');
+    }
+});
+// 13. Scheduled Cleanup Function
 exports.scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(async (context) => {
-    console.log('Running scheduled cleanups...');
     try {
         // Clean up expired invites
         const expiredInvites = await db
@@ -1125,7 +1213,6 @@ exports.scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(async (
         });
         if (expiredInvites.docs.length > 0) {
             await batch.commit();
-            console.log(`Cleaned up ${expiredInvites.docs.length} expired invites`);
         }
         // Clean up inactive groups older than 30 days
         const thirtyDaysAgo = new Date();
@@ -1141,12 +1228,10 @@ exports.scheduledCleanups = functions.pubsub.schedule('0 2 * * *').onRun(async (
         });
         if (inactiveGroups.docs.length > 0) {
             await groupBatch.commit();
-            console.log(`Cleaned up ${inactiveGroups.docs.length} inactive groups`);
         }
-        console.log('Scheduled cleanups completed successfully');
     }
     catch (error) {
-        console.error('Error during scheduled cleanups:', error);
+        // Silent failure for scheduled tasks
     }
 });
 // 13. Validate iOS Receipt Function
@@ -1160,7 +1245,6 @@ exports.validateIOSReceipt = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'Receipt data and product ID are required');
     }
     try {
-        console.log('validateIOSReceipt: Validating receipt for user:', uid, 'product:', productId);
         // Validate with Apple's servers
         const validationResult = await validateWithApple(receiptData, productId);
         if (validationResult.valid) {
@@ -1173,7 +1257,6 @@ exports.validateIOSReceipt = functions.https.onCall(async (data, context) => {
                 isTrial: validationResult.isTrial || false,
                 platform: 'ios'
             });
-            console.log('validateIOSReceipt: Receipt validated successfully for user:', uid);
             return {
                 success: true,
                 data: {
@@ -1184,7 +1267,6 @@ exports.validateIOSReceipt = functions.https.onCall(async (data, context) => {
             };
         }
         else {
-            console.log('validateIOSReceipt: Receipt validation failed for user:', uid);
             return {
                 success: false,
                 error: 'Invalid receipt'
@@ -1192,7 +1274,6 @@ exports.validateIOSReceipt = functions.https.onCall(async (data, context) => {
         }
     }
     catch (error) {
-        console.error('validateIOSReceipt: Error validating receipt:', error);
         throw new functions.https.HttpsError('internal', 'Failed to validate receipt');
     }
 });
@@ -1207,7 +1288,6 @@ exports.validateAndroidPurchase = functions.https.onCall(async (data, context) =
         throw new functions.https.HttpsError('invalid-argument', 'Purchase token, product ID, and package name are required');
     }
     try {
-        console.log('validateAndroidPurchase: Validating purchase for user:', uid, 'product:', productId);
         // Validate with Google Play
         const validationResult = await validateWithGooglePlay(purchaseToken, productId, packageName);
         if (validationResult.valid) {
@@ -1220,7 +1300,6 @@ exports.validateAndroidPurchase = functions.https.onCall(async (data, context) =
                 isTrial: validationResult.isTrial || false,
                 platform: 'android'
             });
-            console.log('validateAndroidPurchase: Purchase validated successfully for user:', uid);
             return {
                 success: true,
                 data: {
@@ -1231,7 +1310,6 @@ exports.validateAndroidPurchase = functions.https.onCall(async (data, context) =
             };
         }
         else {
-            console.log('validateAndroidPurchase: Purchase validation failed for user:', uid);
             return {
                 success: false,
                 error: 'Invalid purchase'
@@ -1239,7 +1317,6 @@ exports.validateAndroidPurchase = functions.https.onCall(async (data, context) =
         }
     }
     catch (error) {
-        console.error('validateAndroidPurchase: Error validating purchase:', error);
         throw new functions.https.HttpsError('internal', 'Failed to validate purchase');
     }
 });
@@ -1275,7 +1352,6 @@ async function validateWithApple(receiptData, productId) {
         return { valid: false };
     }
     catch (error) {
-        console.error('Error validating with Apple:', error);
         return { valid: false };
     }
 }
@@ -1308,7 +1384,6 @@ async function validateWithGooglePlay(purchaseToken, productId, packageName) {
         return { valid: false };
     }
     catch (error) {
-        console.error('Error validating with Google Play:', error);
         return { valid: false };
     }
 }
@@ -1335,10 +1410,8 @@ async function updateUserSubscriptionFromReceipt(uid, subscriptionData) {
             plan: 'premium',
             subscriptionStatus: 'active'
         });
-        console.log('User subscription updated successfully for:', uid);
     }
     catch (error) {
-        console.error('Failed to update user subscription:', error);
         throw new Error('Failed to update subscription status');
     }
 }

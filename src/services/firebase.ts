@@ -72,25 +72,15 @@ if (__DEV__) {
 
     try {
       connectFirestoreEmulator(db, EMULATOR_HOST, 8080);
-      console.log('Connected to Firestore emulator at', EMULATOR_HOST);
     } catch (error) {
-      console.log(
-        'Firestore emulator not available or already connected:',
-        (error as Error).message
-      );
+      // Firestore emulator not available or already connected
     }
 
     try {
       connectFunctionsEmulator(functions, EMULATOR_HOST, 5001);
-      console.log('Connected to Functions emulator at', EMULATOR_HOST);
     } catch (error) {
-      console.log(
-        'Functions emulator not available or already connected:',
-        (error as Error).message
-      );
+      // Functions emulator not available or already connected
     }
-  } else {
-    console.log('Running on physical device - using production Firebase');
   }
 }
 

@@ -20,6 +20,7 @@ import MatchDetailsScreen from '../screens/MatchDetailsScreen';
 import PlayerProfileScreen from '../screens/PlayerProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import SubscriptionDebugScreen from '../screens/SubscriptionDebugScreen';
+import MemberManagementScreen from '../screens/MemberManagementScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -99,6 +100,7 @@ function RootStackNavigator() {
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
       <Stack.Screen name="SubscriptionDebug" component={SubscriptionDebugScreen} />
+      <Stack.Screen name="MemberManagement" component={MemberManagementScreen} />
     </Stack.Navigator>
   );
 }

@@ -120,7 +120,6 @@ export class FirestoreService {
           orderBy('joinedAt', 'asc')
         );
       } catch (indexError) {
-        console.log('Index not found for members query, trying without orderBy');
         membersQuery = query(
           collection(db, 'members'),
           where('groupId', '==', groupId),
@@ -141,7 +140,6 @@ export class FirestoreService {
       // Sort manually if we couldn't use orderBy
       return members.sort((a, b) => a.joinedAt.getTime() - b.joinedAt.getTime());
     } catch (error) {
-      console.log('Failed to get group members, returning empty array:', error);
       return [];
     }
   }
@@ -181,7 +179,6 @@ export class FirestoreService {
           orderBy('createdAt', 'desc')
         );
       } catch (indexError) {
-        console.log('Index not found for seasons query, trying without orderBy');
         seasonsQuery = query(collection(db, 'seasons'), where('groupId', '==', groupId));
       }
 
@@ -197,7 +194,6 @@ export class FirestoreService {
       // Sort manually if we couldn't use orderBy
       return seasons.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
-      console.log('Failed to get group seasons, returning empty array:', error);
       // Return empty array instead of throwing error - groups can exist without seasons
       return [];
     }
@@ -215,7 +211,6 @@ export class FirestoreService {
           orderBy('currentRating', 'desc')
         );
       } catch (indexError) {
-        console.log('Index not found for ratings query, trying without orderBy');
         ratingsQuery = query(collection(db, 'ratings'), where('seasonId', '==', seasonId));
       }
 
@@ -229,7 +224,6 @@ export class FirestoreService {
       // Sort manually if we couldn't use orderBy
       return ratings.sort((a, b) => b.currentRating - a.currentRating);
     } catch (error) {
-      console.log('Failed to get season ratings, returning empty array:', error);
       return [];
     }
   }
@@ -269,7 +263,6 @@ export class FirestoreService {
           limit(limitCount)
         );
       } catch (indexError) {
-        console.log('Index not found for games query, trying without orderBy');
         gamesQuery = query(
           collection(db, 'games'),
           where('groupId', '==', groupId),
@@ -287,7 +280,6 @@ export class FirestoreService {
       // Sort manually if we couldn't use orderBy
       return games.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
-      console.log('Failed to get group games, returning empty array:', error);
       return [];
     }
   }
@@ -306,7 +298,6 @@ export class FirestoreService {
         createdAt: gameData.createdAt?.toDate() || new Date()
       } as Game;
     } catch (error) {
-      console.log('Failed to get game by ID:', error);
       return null;
     }
   }
@@ -323,7 +314,6 @@ export class FirestoreService {
           orderBy('placement', 'asc')
         );
       } catch (indexError) {
-        console.log('Index not found for participants query, trying without orderBy');
         participantsQuery = query(collection(db, 'participants'), where('gameId', '==', gameId));
       }
 
@@ -343,7 +333,6 @@ export class FirestoreService {
       // Sort manually if we couldn't use orderBy
       return participants.sort((a, b) => a.placement - b.placement);
     } catch (error) {
-      console.log('Failed to get game participants, returning empty array:', error);
       return [];
     }
   }
@@ -355,8 +344,6 @@ export class FirestoreService {
     limitCount: number = 50
   ): Promise<RatingChange[]> {
     try {
-      console.log('Getting rating history for uid:', uid, 'seasonId:', seasonId);
-
       // First try with orderBy, if it fails due to missing index, try without
       let ratingChangesQuery;
       try {
@@ -367,9 +354,7 @@ export class FirestoreService {
           orderBy('createdAt', 'desc'),
           limit(limitCount)
         );
-        console.log('Using rating changes query with orderBy');
       } catch (indexError) {
-        console.log('Index not found for rating changes query, trying without orderBy');
         ratingChangesQuery = query(
           collection(db, 'ratingChanges'),
           where('uid', '==', uid),
@@ -379,11 +364,9 @@ export class FirestoreService {
       }
 
       const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
-      console.log('Rating changes snapshot size:', ratingChangesSnapshot.size);
 
       const ratingChanges = ratingChangesSnapshot.docs.map((doc) => {
         const data = doc.data();
-        console.log('Rating change doc:', doc.id, data);
         return {
           id: doc.id,
           ...data,
@@ -391,12 +374,9 @@ export class FirestoreService {
         };
       }) as RatingChange[];
 
-      console.log('Processed rating changes:', ratingChanges.length);
-
       // Sort manually if we couldn't use orderBy
       return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
-      console.log('Failed to get user rating history, returning empty array:', error);
       return [];
     }
   }
@@ -408,8 +388,6 @@ export class FirestoreService {
     limitCount: number = 50
   ): Promise<RatingChange[]> {
     try {
-      console.log('Getting rating history for uid:', uid, 'groupId:', groupId);
-
       // Query by groupId and uid to get all rating changes across all seasons
       let ratingChangesQuery;
       try {
@@ -420,13 +398,10 @@ export class FirestoreService {
           orderBy('createdAt', 'desc'),
           limit(limitCount)
         );
-        console.log('Using rating changes query with orderBy for group');
         const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
-        console.log('Rating changes snapshot size:', ratingChangesSnapshot.size);
 
         const ratingChanges = ratingChangesSnapshot.docs.map((doc) => {
           const data = doc.data();
-          console.log('Rating change doc:', doc.id, 'seasonId:', data.seasonId, 'createdAt:', data.createdAt);
           return {
             id: doc.id,
             ...data,
@@ -434,10 +409,8 @@ export class FirestoreService {
           };
         }) as RatingChange[];
 
-        console.log('Processed rating changes:', ratingChanges.length);
         return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       } catch (indexError) {
-        console.log('Index not found for rating changes query by group, trying without orderBy');
         ratingChangesQuery = query(
           collection(db, 'ratingChanges'),
           where('uid', '==', uid),
@@ -445,7 +418,6 @@ export class FirestoreService {
           limit(limitCount)
         );
         const ratingChangesSnapshot = await getDocs(ratingChangesQuery);
-        console.log('Rating changes snapshot size:', ratingChangesSnapshot.size);
 
         const ratingChanges = ratingChangesSnapshot.docs.map((doc) => {
           const data = doc.data();
@@ -456,12 +428,10 @@ export class FirestoreService {
           };
         }) as RatingChange[];
 
-        console.log('Processed rating changes:', ratingChanges.length);
         // Sort manually if we couldn't use orderBy
         return ratingChanges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       }
     } catch (error) {
-      console.error('Failed to get user rating history by group:', error);
       return [];
     }
   }
