@@ -88,7 +88,8 @@ class SubscriptionService {
         );
       }
 
-      await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
+      // Disable RevenueCat logging
+      await Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
 
       // Configure RevenueCat
       await Purchases.configure({ apiKey });
