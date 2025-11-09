@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Platform
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
@@ -25,25 +32,41 @@ export default function ActionButton({
   areProductsAvailable
 }: ActionButtonProps) {
   const { t } = useTranslation();
+  const isIOS = Platform.OS === 'ios';
+  // On iOS, always show restore button for App Store compliance
+  // On Android, only show when products are available and user is not premium
+  const shouldShowRestoreButton = isIOS || (!isPremium && areProductsAvailable());
 
   return (
     <View style={styles.actionContainer}>
       {isPremium ? (
-        <TouchableOpacity
-          style={styles.manageButton}
-          onPress={onManageSubscription}
-          disabled={isLoading}
-        >
-          <LinearGradient
-            colors={['#4ECDC4', '#44A08D']}
-            style={styles.buttonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        <View>
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={onManageSubscription}
+            disabled={isLoading}
           >
-            <Ionicons name="settings" size={20} color="#fff" />
-            <Text style={styles.buttonText}>{t('subscription.manageSubscription')}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={['#4ECDC4', '#44A08D']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="settings" size={20} color="#fff" />
+              <Text style={styles.buttonText}>{t('subscription.manageSubscription')}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {shouldShowRestoreButton && (
+            <TouchableOpacity
+              style={styles.restoreButton}
+              onPress={onRestorePurchases}
+              disabled={isLoading}
+            >
+              <Text style={styles.restoreButtonText}>{t('subscription.restorePurchases')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       ) : (
         <View>
           <TouchableOpacity
@@ -78,7 +101,7 @@ export default function ActionButton({
             </LinearGradient>
           </TouchableOpacity>
 
-          {areProductsAvailable() && (
+          {shouldShowRestoreButton && (
             <TouchableOpacity
               style={styles.restoreButton}
               onPress={onRestorePurchases}

@@ -89,15 +89,9 @@ class SubscriptionService {
       }
 
       // Disable RevenueCat logging
-      await Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
-
+      await Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
       // Configure RevenueCat
-      await Purchases.configure({ apiKey });
-
-      // Set user ID for RevenueCat if provided
-      if (userId) {
-        await Purchases.logIn(userId);
-      }
+      await Purchases.configure({ apiKey, appUserID: userId });
 
       this.isInitialized = true;
 
@@ -135,6 +129,7 @@ class SubscriptionService {
       // Also load offerings for package-based purchases
       try {
         const offeringsData = await Purchases.getOfferings();
+
         if (offeringsData.current !== null) {
           this.offerings = [offeringsData.current];
         }

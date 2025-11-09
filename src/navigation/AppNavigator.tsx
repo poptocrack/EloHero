@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/auth';
+import { subscriptionService } from '../services/subscription';
 import { RootStackParamList, MainTabParamList } from '../types';
 import SetPseudoScreen from '../screens/SetPseudoScreen';
 
@@ -125,6 +126,25 @@ export default function AppNavigator() {
       signInAnonymously().catch(() => {});
     }
   }, [isLoading, user, signInAnonymously]);
+
+  // Initialize subscription service in background when user is authenticated
+  useEffect(() => {
+    const initializeSubscriptionService = async (): Promise<void> => {
+      if (user?.uid) {
+        try {
+          // Initialize in background - don't await, let it run silently
+          await subscriptionService.initialize(user.uid);
+        } catch (error) {
+          // Silently fail - initialization will be retried when needed
+          // This is just a background optimization
+        }
+      }
+    };
+
+    if (!isLoading && user?.uid) {
+      initializeSubscriptionService();
+    }
+  }, [isLoading, user]);
 
   if (isLoading) {
     // You can add a loading screen here
