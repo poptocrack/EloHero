@@ -1,0 +1,17 @@
+{
+  "name": "@elohero/backoffice",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Backoffice not yet implemented'",
+    "build": "echo 'Backoffice not yet implemented'",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elohero/shared-config": "*",
+    "@elohero/shared-types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}
