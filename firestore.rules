@@ -1,31 +1,45 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+    
     // Users can read/write their own user document
+    // Admins can read all user documents
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Groups are readable by members, writable by owners
+    // Admins can read all groups
     match /groups/{groupId} {
-      allow read: if request.auth != null &&
-        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + groupId));
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + groupId))
+      );
       allow write: if request.auth != null && 
         resource.data.ownerId == request.auth.uid;
     }
     
     // Members can read their own membership and group members can read each other
+    // Admins can read all members
     match /members/{memberId} {
       // Allow reading:
+      // - Admins
       // - Own membership docs members/{uid}_{groupId}
       // - Any membership in a group the requester belongs to
       allow read: if request.auth != null && (
+        isAdmin() ||
         resource.data.uid == request.auth.uid ||
         exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId))
       );
     }
     
     // Seasons are readable by authenticated users (simplified for now)
+    // Admins can read all seasons
     match /seasons/{seasonId} {
       allow read: if request.auth != null;
     }
@@ -36,9 +50,12 @@ service cloud.firestore {
     }
     
     // Games are readable by group members
+    // Admins can read all games
     match /games/{gameId} {
-      allow read: if request.auth != null &&
-        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId));
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/members/$(request.auth.uid + '_' + resource.data.groupId))
+      );
     }
     
     // Participants are readable by group members
@@ -64,8 +81,10 @@ service cloud.firestore {
     }
     
     // Subscriptions are readable by the user
+    // Admins can read all subscriptions
     match /subscriptions/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

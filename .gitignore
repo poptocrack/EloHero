@@ -42,3 +42,9 @@ yarn-error.*
 
 .env
 *.log
+
+# Firebase service account keys (security)
+*-service-account.json
+*service-account*.json
+firebase-service-account.json
+elohero-service-account.json
