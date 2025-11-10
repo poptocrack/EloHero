@@ -9,7 +9,8 @@ import {
   where,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/lib/firebase';
 import type {
   User,
   Group,
@@ -191,6 +192,53 @@ export class AdminService {
       totalMembers: members.size,
       activeSubscriptions,
     };
+  }
+
+  // User Management
+  static async upgradeUserToPremium(uid: string): Promise<void> {
+    try {
+      const adminUpgradeUserToPremium = httpsCallable<
+        { targetUserId: string },
+        { success: boolean; message: string }
+      >(functions, 'adminUpgradeUserToPremium');
+
+      const result = await adminUpgradeUserToPremium({ targetUserId: uid });
+      
+      if (!result.data.success) {
+        throw new Error(result.data.message || 'Failed to upgrade user to premium');
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : 'Unknown error occurred';
+      throw new Error(`Failed to upgrade user to premium: ${errorMessage}`);
+    }
+  }
+
+  static async downgradeUserToFree(uid: string): Promise<void> {
+    try {
+      const adminDowngradeUserToFree = httpsCallable<
+        { targetUserId: string },
+        { success: boolean; message: string }
+      >(functions, 'adminDowngradeUserToFree');
+
+      const result = await adminDowngradeUserToFree({ targetUserId: uid });
+      
+      if (!result.data.success) {
+        throw new Error(result.data.message || 'Failed to downgrade user to free');
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : 'Unknown error occurred';
+      throw new Error(`Failed to downgrade user to free: ${errorMessage}`);
+    }
   }
 }
 

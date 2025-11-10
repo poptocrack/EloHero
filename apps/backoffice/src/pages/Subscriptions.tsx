@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminService } from '@/services/admin';
 import type { Subscription } from '@elohero/shared-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,10 +16,11 @@ import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 
 export default function Subscriptions() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [filteredSubscriptions, setFilteredSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
   useEffect(() => {
     const loadSubscriptions = async () => {
@@ -39,6 +41,13 @@ export default function Subscriptions() {
   useEffect(() => {
     if (!searchTerm) {
       setFilteredSubscriptions(subscriptions);
+      // Remove search param if empty
+      if (searchParams.get('search')) {
+        setSearchParams((prev) => {
+          prev.delete('search');
+          return prev;
+        });
+      }
       return;
     }
 
@@ -49,7 +58,19 @@ export default function Subscriptions() {
         subscription.status.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredSubscriptions(filtered);
-  }, [searchTerm, subscriptions]);
+  }, [searchTerm, subscriptions, searchParams, setSearchParams]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setSearchParams((prev) => {
+      if (value) {
+        prev.set('search', value);
+      } else {
+        prev.delete('search');
+      }
+      return prev;
+    });
+  };
 
   if (loading) {
     return <div className="text-lg">Loading subscriptions...</div>;
@@ -72,7 +93,7 @@ export default function Subscriptions() {
             <Input
               placeholder="Search by user ID, plan, or status..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="max-w-sm"
             />
           </div>

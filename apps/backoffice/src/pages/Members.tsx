@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminService } from '@/services/admin';
 import type { Member } from '@elohero/shared-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,10 +16,11 @@ import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 
 export default function Members() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -39,6 +41,13 @@ export default function Members() {
   useEffect(() => {
     if (!searchTerm) {
       setFilteredMembers(members);
+      // Remove search param if empty
+      if (searchParams.get('search')) {
+        setSearchParams((prev) => {
+          prev.delete('search');
+          return prev;
+        });
+      }
       return;
     }
 
@@ -49,7 +58,19 @@ export default function Members() {
         member.groupId.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredMembers(filtered);
-  }, [searchTerm, members]);
+  }, [searchTerm, members, searchParams, setSearchParams]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setSearchParams((prev) => {
+      if (value) {
+        prev.set('search', value);
+      } else {
+        prev.delete('search');
+      }
+      return prev;
+    });
+  };
 
   if (loading) {
     return <div className="text-lg">Loading members...</div>;
@@ -72,7 +93,7 @@ export default function Members() {
             <Input
               placeholder="Search by name, user ID, or group ID..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="max-w-sm"
             />
           </div>
