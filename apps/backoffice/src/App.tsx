@@ -5,9 +5,10 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import UserDetails from './pages/UserDetails';
 import Groups from './pages/Groups';
+import GroupDetails from './pages/GroupDetails';
 import Games from './pages/Games';
-import Members from './pages/Members';
 import Seasons from './pages/Seasons';
 import Subscriptions from './pages/Subscriptions';
 
@@ -32,9 +33,10 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/users/:userId" element={<UserDetails />} />
         <Route path="/groups" element={<Groups />} />
+        <Route path="/groups/:groupId" element={<GroupDetails />} />
         <Route path="/games" element={<Games />} />
-        <Route path="/members" element={<Members />} />
         <Route path="/seasons" element={<Seasons />} />
         <Route path="/subscriptions" element={<Subscriptions />} />
       </Routes>

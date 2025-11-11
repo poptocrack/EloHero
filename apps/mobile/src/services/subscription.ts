@@ -111,6 +111,12 @@ class SubscriptionService {
    */
   async loadProducts(): Promise<void> {
     try {
+      // Also load offerings for package-based purchases
+      const offeringsData = await Purchases.getOfferings();
+
+      if (offeringsData.current !== null) {
+        this.offerings = [offeringsData.current];
+      }
       const premiumProductId = this.getPremiumProductId();
 
       // Fetch the premium product directly - we only have one subscription
@@ -120,21 +126,6 @@ class SubscriptionService {
         this.products = productsData;
       } else {
         this.products = [];
-        // In development, don't throw error - this is expected behavior
-        if (!__DEV__) {
-          throw new Error('No subscription products available');
-        }
-      }
-
-      // Also load offerings for package-based purchases
-      try {
-        const offeringsData = await Purchases.getOfferings();
-
-        if (offeringsData.current !== null) {
-          this.offerings = [offeringsData.current];
-        }
-      } catch (error) {
-        // Offerings may not be available in dev, that's okay
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -24,7 +24,6 @@ const navigation = [
   { name: 'Users', href: '/users', icon: UsersIcon },
   { name: 'Groups', href: '/groups', icon: UsersRound },
   { name: 'Games', href: '/games', icon: Gamepad2 },
-  { name: 'Members', href: '/members', icon: UsersRound },
   { name: 'Seasons', href: '/seasons', icon: Calendar },
   { name: 'Subscriptions', href: '/subscriptions', icon: CreditCard },
 ];

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AdminService } from '@/services/admin';
 import type { Group } from '@elohero/shared-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 
 export default function Groups() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +73,10 @@ export default function Groups() {
     });
   };
 
+  const handleGroupClick = (groupId: string) => {
+    navigate(`/groups/${groupId}`);
+  };
+
   if (loading) {
     return <div className="text-lg">Loading groups...</div>;
   }
@@ -119,7 +124,11 @@ export default function Groups() {
                 </TableRow>
               ) : (
                 filteredGroups.map((group) => (
-                  <TableRow key={group.id}>
+                  <TableRow
+                    key={group.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleGroupClick(group.id)}
+                  >
                     <TableCell className="font-medium">{group.name}</TableCell>
                     <TableCell className="font-mono text-xs">{group.id}</TableCell>
                     <TableCell className="font-mono text-xs">{group.ownerId}</TableCell>

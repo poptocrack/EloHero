@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AdminService } from '@/services/admin';
 import type { User } from '@elohero/shared-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import { Crown, Loader2 } from 'lucide-react';
 
 export default function Users() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,6 +125,10 @@ export default function Users() {
     }
   };
 
+  const handleUserClick = (uid: string) => {
+    navigate(`/users/${uid}`);
+  };
+
   if (loading) {
     return <div className="text-lg">Loading users...</div>;
   }
@@ -174,7 +179,11 @@ export default function Users() {
                   const isPremium = user.plan === 'premium';
 
                   return (
-                    <TableRow key={user.uid}>
+                    <TableRow
+                      key={user.uid}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleUserClick(user.uid)}
+                    >
                       <TableCell className="font-medium">{user.displayName}</TableCell>
                       <TableCell className="font-mono text-xs">{user.uid}</TableCell>
                       <TableCell>
@@ -199,7 +208,7 @@ export default function Users() {
                       <TableCell>
                         {format(user.createdAt, 'MMM d, yyyy')}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {isPremium ? (
                           <Button
                             variant="outline"

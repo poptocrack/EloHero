@@ -5,31 +5,22 @@ import {
   doc,
   query,
   orderBy,
-  limit,
   where,
-  Timestamp,
+  Timestamp
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/lib/firebase';
-import type {
-  User,
-  Group,
-  Member,
-  Season,
-  Game,
-  Subscription,
-  Rating,
-} from '@elohero/shared-types';
+import type { User, Group, Member, Season, Game, Subscription, Rating } from '@elohero/shared-types';
 
 // Helper to convert Firestore timestamps to Date
-function convertTimestamps<T extends Record<string, unknown>>(data: T): T {
-  const converted = { ...data };
+function convertTimestamps<T extends object>(data: T): T {
+  const converted = { ...data } as Record<string, unknown>;
   for (const key in converted) {
     if (converted[key] instanceof Timestamp) {
-      converted[key] = (converted[key] as Timestamp).toDate() as T[Extract<keyof T, string>];
+      converted[key] = (converted[key] as Timestamp).toDate();
     }
   }
-  return converted;
+  return converted as T;
 }
 
 export class AdminService {
@@ -40,7 +31,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         uid: doc.id,
-        ...data,
+        ...data
       } as User);
     });
   }
@@ -59,7 +50,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         id: doc.id,
-        ...data,
+        ...data
       } as Group);
     });
   }
@@ -79,7 +70,7 @@ export class AdminService {
       return convertTimestamps({
         uid: doc.id.split('_')[0],
         groupId: doc.id.split('_')[1],
-        ...data,
+        ...data
       } as Member);
     });
   }
@@ -92,7 +83,7 @@ export class AdminService {
       return convertTimestamps({
         uid: data.uid,
         groupId: data.groupId,
-        ...data,
+        ...data
       } as Member);
     });
   }
@@ -104,7 +95,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         id: doc.id,
-        ...data,
+        ...data
       } as Season);
     });
   }
@@ -120,7 +111,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         id: doc.id,
-        ...data,
+        ...data
       } as Season);
     });
   }
@@ -132,7 +123,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         id: doc.id,
-        ...data,
+        ...data
       } as Game);
     });
   }
@@ -148,7 +139,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         id: doc.id,
-        ...data,
+        ...data
       } as Game);
     });
   }
@@ -160,7 +151,7 @@ export class AdminService {
       const data = doc.data();
       return convertTimestamps({
         uid: doc.id,
-        ...data,
+        ...data
       } as Subscription);
     });
   }
@@ -178,7 +169,7 @@ export class AdminService {
       getDocs(collection(db, 'groups')),
       getDocs(collection(db, 'games')),
       getDocs(collection(db, 'members')),
-      getDocs(collection(db, 'subscriptions')),
+      getDocs(collection(db, 'subscriptions'))
     ]);
 
     const activeSubscriptions = subscriptions.docs.filter(
@@ -190,7 +181,7 @@ export class AdminService {
       totalGroups: groups.size,
       totalGames: games.size,
       totalMembers: members.size,
-      activeSubscriptions,
+      activeSubscriptions
     };
   }
 
@@ -203,7 +194,7 @@ export class AdminService {
       >(functions, 'adminUpgradeUserToPremium');
 
       const result = await adminUpgradeUserToPremium({ targetUserId: uid });
-      
+
       if (!result.data.success) {
         throw new Error(result.data.message || 'Failed to upgrade user to premium');
       }
@@ -226,7 +217,7 @@ export class AdminService {
       >(functions, 'adminDowngradeUserToFree');
 
       const result = await adminDowngradeUserToFree({ targetUserId: uid });
-      
+
       if (!result.data.success) {
         throw new Error(result.data.message || 'Failed to downgrade user to free');
       }
@@ -240,5 +231,63 @@ export class AdminService {
       throw new Error(`Failed to downgrade user to free: ${errorMessage}`);
     }
   }
-}
 
+  // Get user's groups
+  static async getUserGroups(uid: string): Promise<Group[]> {
+    const q = query(collection(db, 'members'), where('uid', '==', uid), where('isActive', '==', true));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return [];
+    }
+
+    const groups: Group[] = [];
+    for (const membershipDoc of snapshot.docs) {
+      const memberData = membershipDoc.data();
+      const groupId = memberData.groupId;
+      if (!groupId) continue;
+
+      const groupDoc = await getDoc(doc(db, 'groups', groupId));
+      if (!groupDoc.exists()) continue;
+      const groupData = groupDoc.data();
+      if (!groupData.isActive) continue;
+
+      groups.push(
+        convertTimestamps({
+          id: groupDoc.id,
+          ...groupData
+        } as Group)
+      );
+    }
+
+    return groups;
+  }
+
+  // Get user's ratings (across all groups/seasons)
+  static async getUserRatings(uid: string): Promise<Rating[]> {
+    const q = query(collection(db, 'ratings'), where('uid', '==', uid));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return convertTimestamps({
+        id: doc.id,
+        ...data
+      } as Rating);
+    });
+  }
+
+  // Get season ratings
+  static async getSeasonRatings(seasonId: string): Promise<Rating[]> {
+    const q = query(collection(db, 'ratings'), where('seasonId', '==', seasonId));
+    const snapshot = await getDocs(q);
+    const ratings = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return convertTimestamps({
+        id: doc.id,
+        ...data
+      } as Rating);
+    });
+    // Sort by rating descending
+    return ratings.sort((a, b) => b.currentRating - a.currentRating);
+  }
+}
