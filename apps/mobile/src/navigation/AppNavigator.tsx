@@ -34,8 +34,24 @@ function MainTabNavigator() {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+      screenOptions={({
+        route
+      }: {
+        route: {
+          name: keyof MainTabParamList;
+          key: string;
+          params?: MainTabParamList[keyof MainTabParamList];
+        };
+      }) => ({
+        tabBarIcon: ({
+          focused,
+          color,
+          size
+        }: {
+          focused: boolean;
+          color: string;
+          size: number;
+        }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === 'Groups') {
