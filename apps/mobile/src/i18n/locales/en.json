@@ -181,7 +181,19 @@
     "termsOfUseSubtitle": "View our terms and conditions",
     "privacyPolicy": "Privacy Policy",
     "privacyPolicySubtitle": "View our privacy policy",
-    "cannotOpenLink": "Cannot open link"
+    "cannotOpenLink": "Cannot open link",
+    "appInfos": "App Informations",
+    "appVersion": "App Version",
+    "buildNumber": "Build Number",
+    "platform": "Platform",
+    "updateId": "Update ID",
+    "runtimeVersion": "Runtime Version",
+    "updateCreatedAt": "Update Created At",
+    "userId": "User ID",
+    "environment": "Environment",
+    "development": "Development",
+    "production": "Production",
+    "easProjectId": "EAS Project ID"
   },
   "matchEntry": {
     "title": "New Match",

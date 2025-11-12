@@ -12,14 +12,17 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
+import { DebugInfoCard } from './components/DebugInfoCard';
 
 interface ProfileScreenProps {
-  navigation: any;
+  navigation: {
+    navigate: (screen: string) => void;
+  };
 }
 
-export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { user, signOut } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -252,6 +255,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Debug Information Section */}
+        <DebugInfoCard user={user} />
       </ScrollView>
     </View>
   );
@@ -375,8 +381,7 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   menuContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20
+    paddingHorizontal: 20
   },
   menuCard: {
     backgroundColor: '#fff',

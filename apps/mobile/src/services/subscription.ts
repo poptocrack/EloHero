@@ -41,12 +41,14 @@ const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY 
 // Product ID - Use the STORE product ID (not RevenueCat's internal identifier)
 // Different product IDs for test vs production:
 // - Test/Development: subscription_monthly_1 (for test stores)
-// - Production iOS: premium_monthly (actual store product)
-// - Production Android: premium1 (actual store product)
+// - Production iOS: premium_monthly (actual store product - must match App Store Connect)
+// - Production Android: premium1 (actual store product - must match Google Play Console)
+// Note: The product ID must exactly match what's configured in App Store Connect/Google Play Console
 const getPremiumProductId = (): string => {
   if (__DEV__) {
     return 'subscription_monthly_1';
   }
+  // Use platform-specific product IDs that match App Store Connect/Google Play Console
   return Platform.OS === 'ios' ? 'premium_monthly' : 'premium1';
 };
 
@@ -88,8 +90,8 @@ class SubscriptionService {
         );
       }
 
-      // Disable RevenueCat logging
-      await Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+      // Set appropriate log level based on environment
+      await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.ERROR);
       // Configure RevenueCat
       await Purchases.configure({ apiKey, appUserID: userId });
 
@@ -116,16 +118,38 @@ class SubscriptionService {
 
       if (offeringsData.current !== null) {
         this.offerings = [offeringsData.current];
-      }
-      const premiumProductId = this.getPremiumProductId();
 
-      // Fetch the premium product directly - we only have one subscription
+        // Try to get products from the current offering first (recommended approach)
+        const offering = offeringsData.current;
+        const offeringProducts: PurchasesStoreProduct[] = [];
+
+        for (const pkg of offering.availablePackages) {
+          const product = (pkg as PurchasesPackage & { product?: PurchasesStoreProduct }).product;
+          if (product && !offeringProducts.find((p) => p.identifier === product.identifier)) {
+            offeringProducts.push(product);
+          }
+        }
+
+        if (offeringProducts.length > 0) {
+          this.products = offeringProducts;
+          return; // Successfully loaded from offerings
+        }
+      }
+
+      // Fallback: Fetch the premium product directly by product ID
+      const premiumProductId = this.getPremiumProductId();
       const productsData = await Purchases.getProducts([premiumProductId]);
 
       if (productsData && productsData.length > 0) {
         this.products = productsData;
       } else {
         this.products = [];
+        // In production, log a warning but don't throw - products might not be available yet
+        if (!__DEV__) {
+          console.warn(
+            `No subscription products found for product ID "${premiumProductId}". Ensure products are configured in App Store Connect and RevenueCat.`
+          );
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -135,7 +159,10 @@ class SubscriptionService {
       if (__DEV__) {
         this.products = [];
       } else {
-        throw new Error(`Failed to load subscription products: ${errorMessage}`);
+        // In production, log error but don't throw - allow app to continue
+        // Products will be available once properly configured
+        console.error(`Failed to load subscription products: ${errorMessage}`);
+        this.products = [];
       }
     }
   }

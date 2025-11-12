@@ -181,7 +181,19 @@
     "termsOfUseSubtitle": "Voir nos conditions d'utilisation",
     "privacyPolicy": "Politique de confidentialité",
     "privacyPolicySubtitle": "Voir notre politique de confidentialité",
-    "cannotOpenLink": "Impossible d'ouvrir le lien"
+    "cannotOpenLink": "Impossible d'ouvrir le lien",
+    "appInfos": "Informations de l'app",
+    "appVersion": "Version de l'application",
+    "buildNumber": "Numéro de build",
+    "platform": "Plateforme",
+    "updateId": "ID de mise à jour",
+    "runtimeVersion": "Version d'exécution",
+    "updateCreatedAt": "Mise à jour créée le",
+    "userId": "ID utilisateur",
+    "environment": "Environnement",
+    "development": "Développement",
+    "production": "Production",
+    "easProjectId": "ID du projet EAS"
   },
   "matchEntry": {
     "title": "Nouvelle Partie",

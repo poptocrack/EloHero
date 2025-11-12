@@ -42,7 +42,13 @@ export function useSubscription(userId: string): {
         await subscriptionService.initialize(userId);
         setConnected(true);
       } catch (err) {
-        setError('Failed to initialize RevenueCat');
+        // In production, don't expose technical error messages
+        if (__DEV__) {
+          setError('Failed to initialize RevenueCat');
+        } else {
+          setError(null);
+          console.error('Failed to initialize RevenueCat:', err);
+        }
         setConnected(false);
       } finally {
         setIsLoading(false);
@@ -81,7 +87,10 @@ export function useSubscription(userId: string): {
       if (__DEV__) {
         setError(null); // Clear any previous errors
       } else {
-        setError(errorMessage);
+        // In production, don't show technical error messages to users
+        // Products might not be available yet, but we should still allow the app to function
+        setError(null);
+        console.error('Subscription products not available:', errorMessage);
       }
 
       setProducts([]);
