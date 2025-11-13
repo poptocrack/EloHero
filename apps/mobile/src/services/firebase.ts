@@ -1,6 +1,5 @@
 // Firebase Configuration and Services
 import { initializeApp, getApps } from 'firebase/app';
-// @ts-expect-error
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
@@ -36,23 +35,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (only if not already initialized)
-let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
-}
+const app = initializeApp(firebaseConfig);
 
-// Initialize Auth
-let auth;
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
-} catch (error) {
-  // Auth already initialized
-  auth = getAuth(app);
-}
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
 
 // Initialize Firestore
 const db = getFirestore(app);
@@ -84,5 +71,5 @@ if (__DEV__) {
   }
 }
 
-export { auth, db, functions };
+export { db, functions };
 export default app;

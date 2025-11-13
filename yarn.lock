@@ -1216,7 +1216,7 @@ __metadata:
     expo-system-ui: "npm:~6.0.7"
     expo-updates: "npm:~29.0.12"
     expo-web-browser: "npm:~15.0.8"
-    firebase: "npm:^12.4.0"
+    firebase: "npm:^12.5.0"
     i18next: "npm:^25.6.0"
     react: "npm:19.1.0"
     react-i18next: "npm:^16.1.0"
@@ -8077,7 +8077,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"firebase@npm:^12.4.0":
+"firebase@npm:^12.5.0":
   version: 12.5.0
   resolution: "firebase@npm:12.5.0"
   dependencies:

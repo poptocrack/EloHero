@@ -21,13 +21,9 @@ import MatchDetailsScreen from '../screens/MatchDetailsScreen';
 import PlayerProfileScreen from '../screens/PlayerProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import MemberManagementScreen from '../screens/MemberManagementScreen';
+import SubscriptionDebugScreen from '../screens/SubscriptionDebugScreen';
 
-// Only import debug screen in development
-let SubscriptionDebugScreen: React.ComponentType<any> | null = null;
-if (__DEV__) {
-  SubscriptionDebugScreen = require('../screens/SubscriptionDebugScreen').default;
-}
-
+// Create navigators with explicit type constraints to prevent runtime errors
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const OnboardingStack = createStackNavigator<{ SetPseudo: undefined }>();
@@ -121,9 +117,7 @@ function RootStackNavigator() {
       <Stack.Screen name="MatchDetails" component={MatchDetailsScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
-      {__DEV__ && SubscriptionDebugScreen && (
-        <Stack.Screen name="SubscriptionDebug" component={SubscriptionDebugScreen} />
-      )}
+      <Stack.Screen name="SubscriptionDebug" component={SubscriptionDebugScreen} />
       <Stack.Screen name="MemberManagement" component={MemberManagementScreen} />
     </Stack.Navigator>
   );

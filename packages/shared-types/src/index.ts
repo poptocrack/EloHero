@@ -142,9 +142,7 @@ export interface MatchEntryState {
 
 // Navigation Types
 export type RootStackParamList = {
-  Auth: undefined;
   Main: undefined;
-  SetPseudo: undefined;
   GroupDetails: { groupId: string };
   MatchEntry: { groupId: string };
   MatchDetails: { gameId: string; groupId: string };
@@ -182,4 +180,3 @@ export interface EloCalculation {
   actualScore: number;
   kFactor: number;
 }
-
