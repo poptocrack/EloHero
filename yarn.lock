@@ -1194,6 +1194,7 @@ __metadata:
     "@babel/core": "npm:^7.25.0"
     "@elohero/shared-config": "npm:*"
     "@elohero/shared-types": "npm:*"
+    "@expo/metro-config": "npm:^54.0.9"
     "@expo/vector-icons": "npm:^15.0.2"
     "@react-native-async-storage/async-storage": "npm:^2.2.0"
     "@react-navigation/bottom-tabs": "npm:^7.2.0"
@@ -1705,7 +1706,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/metro-config@npm:54.0.9, @expo/metro-config@npm:~54.0.9":
+"@expo/metro-config@npm:54.0.9, @expo/metro-config@npm:^54.0.9, @expo/metro-config@npm:~54.0.9":
   version: 54.0.9
   resolution: "@expo/metro-config@npm:54.0.9"
   dependencies:
