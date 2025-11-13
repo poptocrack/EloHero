@@ -8,8 +8,13 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build": "expo build",
-    "build:android": "eas build -p android --profile production --auto-submit",
-    "build:ios": "eas build -p ios --profile production --auto-submit"
+    "build:android": "eas build -p android --profile production --clear-cache --auto-submit",
+    "build:ios": "eas build -p ios --profile production --clear-cache --auto-submit",
+    "build:android:remote": "eas build -p android --profile production --clear-cache --auto-submit && npm run update:production",
+    "build:ios:remote": "eas build -p ios --profile production --clear-cache --auto-submit && npm run update:production",
+    "update:production": "eas update --branch production --message \"Production update\"",
+    "update:preview": "eas update --branch preview --message \"Preview update\"",
+    "update:development": "eas update --branch development --message \"Development update\""
   },
   "dependencies": {
     "@babel/core": "^7.25.0",
