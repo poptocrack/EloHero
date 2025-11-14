@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppNavigator from './src/navigation/AppNavigator';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Sentry from '@sentry/react-native';
 // Import i18n - initialization happens in the module
 import './src/i18n';
 
@@ -28,5 +29,4 @@ function App() {
     </GestureHandlerRootView>
   );
 }
-
-export default App;
+export default Sentry.wrap(App);
