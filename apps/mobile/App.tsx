@@ -1,8 +1,9 @@
-import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppNavigator from './src/navigation/AppNavigator';
 import { LanguageProvider } from './src/contexts/LanguageContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+// Import i18n - initialization happens in the module
 import './src/i18n';
 
 // Create a client
@@ -15,13 +16,17 @@ const queryClient = new QueryClient({
   }
 });
 
-export default function App() {
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AppNavigator />
-        <StatusBar style="auto" />
-      </LanguageProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <AppNavigator />
+          <StatusBar style="auto" />
+        </LanguageProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
+
+export default App;

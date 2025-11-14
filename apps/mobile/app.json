@@ -39,9 +39,12 @@
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static"
+            "useFrameworks": "static",
+            "newArchEnabled": true
           },
-          "android": {}
+          "android": {
+            "newArchEnabled": true
+          }
         }
       ],
       [
@@ -51,6 +54,14 @@
             "ios": ["en", "fr"],
             "android": ["en", "fr"]
           }
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "elohero"
         }
       ]
     ],
