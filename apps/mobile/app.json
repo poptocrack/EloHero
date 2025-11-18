@@ -2,7 +2,7 @@
   "expo": {
     "name": "EloHero",
     "slug": "elohero",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,7 +21,8 @@
         "CFBundleDisplayName": "EloHero",
         "CFBundleLocalizations": ["en", "fr"],
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
