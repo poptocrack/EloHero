@@ -303,13 +303,34 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   },
 
   updateGroup: async (groupId: string, updates: Partial<Pick<Group, 'name' | 'description'>>) => {
-    set({ isLoading: true, error: null });
+    // Store previous state for rollback
+    const previousState = get();
+    const previousGroup = previousState.currentGroup;
+    const previousGroups = previousState.groups;
+
+    // Optimistic update - update UI immediately
+    set((state) => {
+      const optimisticGroup: Group | null =
+        state.currentGroup?.id === groupId
+          ? { ...state.currentGroup, ...updates }
+          : state.currentGroup;
+
+      return {
+        groups: state.groups.map((g) => (g.id === groupId ? { ...g, ...updates } : g)),
+        currentGroup: optimisticGroup,
+        isLoading: false,
+        error: null
+      };
+    });
+
     try {
+      // Make API call in background
       const response = await CloudFunctionsService.updateGroup(groupId, updates);
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to update group');
       }
 
+      // Success - update with server response (already updated optimistically)
       const updatedGroup = response.data;
       set((state) => ({
         groups: state.groups.map((g) => (g.id === groupId ? updatedGroup : g)),
@@ -317,7 +338,10 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         isLoading: false
       }));
     } catch (error) {
+      // Rollback on error
       set({
+        groups: previousGroups,
+        currentGroup: previousGroup,
         error: error instanceof Error ? error.message : 'Failed to update group',
         isLoading: false
       });

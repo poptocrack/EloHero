@@ -6,13 +6,19 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { FirestoreService } from '../services/firestore';
-import { Participant, Game } from '@elohero/shared-types';
+import { CloudFunctionsService } from '../services/cloudFunctions';
+import { useAuthStore } from '../store/authStore';
+import { useGroupStore } from '../store/groupStore';
+import { queryKeys } from '../utils/queryKeys';
+import { Participant, Game, Group } from '@elohero/shared-types';
 
 interface MatchDetailsScreenProps {
   navigation: any;
@@ -24,13 +30,21 @@ interface MatchDetailsScreenProps {
   };
 }
 
-export default function MatchDetailsScreen({ navigation, route }: MatchDetailsScreenProps) {
+export default function MatchDetailsScreen({
+  navigation,
+  route
+}: Readonly<MatchDetailsScreenProps>) {
   const { gameId, groupId } = route.params;
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { loadGroup, loadGroupGames, loadSeasonRatings } = useGroupStore();
   const [game, setGame] = useState<Game | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [group, setGroup] = useState<Group | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,10 +56,11 @@ export default function MatchDetailsScreen({ navigation, route }: MatchDetailsSc
       setIsLoading(true);
       setError(null);
 
-      // Load game and participants in parallel
-      const [gameData, participantsData] = await Promise.all([
+      // Load game, participants, and group in parallel
+      const [gameData, participantsData, groupData] = await Promise.all([
         FirestoreService.getGameById(gameId),
-        FirestoreService.getGameParticipants(gameId)
+        FirestoreService.getGameParticipants(gameId),
+        FirestoreService.getGroup(groupId)
       ]);
 
       if (!gameData) {
@@ -60,11 +75,75 @@ export default function MatchDetailsScreen({ navigation, route }: MatchDetailsSc
 
       setGame(gameData);
       setParticipants(participantsData);
+      setGroup(groupData);
     } catch (err) {
       setError(t('errors.unknownError'));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const canDeleteMatch = (): boolean => {
+    if (!user || !game || !group) return false;
+    const isOwner = group.ownerId === user.uid;
+    const isCreator = game.createdBy === user.uid;
+    return isOwner || isCreator;
+  };
+
+  const handleDeleteMatch = (): void => {
+    if (!game) return;
+
+    Alert.alert(
+      t('matchDetails.confirmDelete'),
+      `${t('matchDetails.confirmDeleteMessage')}\n\n${t('matchDetails.deleteWarning')}`,
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel'
+        },
+        {
+          text: t('matchDetails.confirmDelete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsDeleting(true);
+
+              // Delete match
+              await CloudFunctionsService.deleteMatch(gameId);
+
+              // Invalidate React Query queries
+              await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
+                game.seasonId
+                  ? queryClient.invalidateQueries({
+                      queryKey: queryKeys.seasonRatings(game.seasonId)
+                    })
+                  : Promise.resolve()
+              ]);
+
+              // Also refresh Zustand store (for immediate UI update)
+              await Promise.all([
+                loadGroup(groupId),
+                loadGroupGames(groupId),
+                game.seasonId ? loadSeasonRatings(game.seasonId) : Promise.resolve()
+              ]);
+
+              // Navigate back after successful deletion and refresh
+              navigation.goBack();
+            } catch (err) {
+              setIsDeleting(false);
+              // Show error alert
+              Alert.alert(
+                t('matchDetails.deleteError'),
+                err instanceof Error ? err.message : t('matchDetails.cannotDeleteMatch'),
+                [{ text: t('common.ok') }]
+              );
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderParticipant = (participant: Participant, index: number) => {
@@ -187,6 +266,8 @@ export default function MatchDetailsScreen({ navigation, route }: MatchDetailsSc
     );
   }
 
+  const canDelete = canDeleteMatch();
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
@@ -195,7 +276,21 @@ export default function MatchDetailsScreen({ navigation, route }: MatchDetailsSc
           <Ionicons name="arrow-back" size={24} color="#2D3748" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('matchDetails.title')}</Text>
-        <View style={styles.headerSpacer} />
+        {canDelete ? (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteMatch}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <ActivityIndicator size="small" color="#FF6B9D" />
+            ) : (
+              <Ionicons name="trash-outline" size={24} color="#FF6B9D" />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
       </View>
 
       <ScrollView
@@ -285,6 +380,12 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-end'
   },
   scrollView: {
     flex: 1

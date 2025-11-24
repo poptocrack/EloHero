@@ -22,6 +22,7 @@ import TabNavigation from './components/TabNavigation';
 import RankingList from './components/RankingList';
 import GamesList from './components/GamesList';
 import AddMemberModal from './components/AddMemberModal';
+import EditGroupNameModal from './components/EditGroupNameModal';
 import HeaderWithMenu from '../../components/HeaderWithMenu';
 import { useGroupDetailsHandlers } from './hooks/useGroupDetailsHandlers';
 
@@ -34,7 +35,10 @@ interface GroupDetailsScreenProps {
   };
 }
 
-export default function GroupDetailsScreen({ navigation, route }: GroupDetailsScreenProps) {
+export default function GroupDetailsScreen({
+  navigation,
+  route
+}: Readonly<GroupDetailsScreenProps>) {
   const { groupId } = route.params;
   const { user } = useAuthStore();
   const { t } = useTranslation();
@@ -47,29 +51,25 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     currentSeasonRatings,
     groupGames,
     isLoading,
-    error,
     loadGroup,
-    loadGroupMembers,
-    loadGroupSeasons,
     loadSeasonRatings,
-    loadGroupGames,
-    clearError,
     clearGroupData,
     addMember,
-    deleteGroup
+    deleteGroup,
+    updateGroup
   } = useGroupStore();
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'ranking' | 'games'>('ranking');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
+  const [showEditGroupNameModal, setShowEditGroupNameModal] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [membersLoaded, setMembersLoaded] = useState(false);
   const [membersLoadingStarted, setMembersLoadingStarted] = useState(false);
 
   // Extract handlers and computed values
   const {
-    isAdmin,
     memberLimitReached,
     canAddMember,
     handleRefresh,
@@ -79,8 +79,10 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     handleCancelAddMember,
     handlePlayerPress,
     handleAddMemberPress,
+    handleEditGroupName,
     menuItems,
-    isDeletingGroup
+    isDeletingGroup,
+    isUpdatingGroupName
   } = useGroupDetailsHandlers({
     groupId,
     currentGroup,
@@ -92,9 +94,11 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
     setMembersLoadingStarted,
     setShowAddMemberModal,
     setIsAddingMember,
+    setShowEditGroupNameModal,
     loadGroup,
     addMember,
-    deleteGroup
+    deleteGroup,
+    updateGroup
   });
 
   useEffect(() => {
@@ -180,10 +184,10 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         contentContainerStyle={{ paddingBottom: height * 0.2 }}
       >
         {/* Invitation Code Card for Admins */}
-        <InvitationCodeCard group={currentGroup!} onCopyCode={handleCopyInviteCode} />
+        <InvitationCodeCard group={currentGroup} onCopyCode={handleCopyInviteCode} />
 
         {/* Tab Navigation Card */}
-        <TabNavigation group={currentGroup!} activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabNavigation group={currentGroup} activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Content Cards */}
         {activeTab === 'ranking' ? (
@@ -223,6 +227,15 @@ export default function GroupDetailsScreen({ navigation, route }: GroupDetailsSc
         isAddingMember={isAddingMember}
         onAddMember={handleAddMember}
         onCancel={handleCancelAddMember}
+      />
+
+      {/* Edit Group Name Modal */}
+      <EditGroupNameModal
+        visible={showEditGroupNameModal}
+        isUpdating={isUpdatingGroupName}
+        currentName={currentGroup?.name || ''}
+        onUpdate={handleEditGroupName}
+        onCancel={() => setShowEditGroupNameModal(false)}
       />
 
       {/* Delete Group Loading Overlay */}

@@ -271,11 +271,14 @@ export class FirestoreService {
       }
 
       const gamesSnapshot = await getDocs(gamesQuery);
-      const games = gamesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      })) as Game[];
+      const games = gamesSnapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          deletedAt: doc.data().deletedAt?.toDate() || undefined
+        }))
+        .filter((game) => !game.deletedAt) as Game[]; // Filter out deleted games
 
       // Sort manually if we couldn't use orderBy
       return games.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -292,10 +295,15 @@ export class FirestoreService {
         return null;
       }
       const gameData = gameDoc.data();
+      // Return null if game is deleted (soft delete)
+      if (gameData.deletedAt) {
+        return null;
+      }
       return {
         id: gameDoc.id,
         ...gameData,
-        createdAt: gameData.createdAt?.toDate() || new Date()
+        createdAt: gameData.createdAt?.toDate() || new Date(),
+        deletedAt: gameData.deletedAt?.toDate() || undefined
       } as Game;
     } catch (error) {
       return null;

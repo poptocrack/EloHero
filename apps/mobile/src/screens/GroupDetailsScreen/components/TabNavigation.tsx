@@ -13,7 +13,11 @@ interface TabNavigationProps {
   onTabChange: (tab: 'ranking' | 'games') => void;
 }
 
-export default function TabNavigation({ group, activeTab, onTabChange }: TabNavigationProps) {
+export default function TabNavigation({
+  group,
+  activeTab,
+  onTabChange
+}: Readonly<TabNavigationProps>) {
   const { t } = useTranslation();
 
   return (

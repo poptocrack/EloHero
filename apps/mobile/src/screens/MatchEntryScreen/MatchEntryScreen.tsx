@@ -2,8 +2,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
+import { queryKeys } from '../../utils/queryKeys';
 import { Member } from '@elohero/shared-types';
 import { calculateEloChanges } from '../../utils/eloCalculation';
 import { APP_CONSTANTS } from '../../utils/constants';
@@ -26,6 +28,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const {
     currentGroupMembers,
     matchEntry,
@@ -172,6 +175,13 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
               }
 
               await reportMatch(groupId, currentSeason.id, participants);
+
+              // Invalidate React Query queries
+              await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.seasonRatings(currentSeason.id) })
+              ]);
 
               Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
                 { text: t('common.done'), onPress: () => navigation.goBack() }

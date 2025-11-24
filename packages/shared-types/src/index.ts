@@ -72,6 +72,7 @@ export interface Game {
   createdAt: Date;
   gameType: 'multiplayer';
   status: 'completed';
+  deletedAt?: Date; // Soft delete timestamp
 }
 
 export interface Participant {

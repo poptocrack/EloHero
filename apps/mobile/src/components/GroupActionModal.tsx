@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-export type GroupActionType = 'create' | 'join' | 'addMember';
+export type GroupActionType = 'create' | 'join' | 'addMember' | 'editGroupName';
 
 interface GroupActionModalProps {
   isVisible: boolean;
@@ -89,6 +89,16 @@ export default function GroupActionModal({
           title: t('matchEntry.addMemberModal.title'),
           subtitle: t('matchEntry.addMemberModal.memberName'),
           placeholder: t('matchEntry.addMemberModal.enterMemberName'),
+          buttonText: t('common.save'),
+          autoCapitalize: 'words' as const,
+          autoCorrect: false,
+          autoFocus: true
+        };
+      case 'editGroupName':
+        return {
+          title: t('groupDetails.editGroupName'),
+          subtitle: t('groupDetails.enterNewGroupName'),
+          placeholder: t('groups.groupName'),
           buttonText: t('common.save'),
           autoCapitalize: 'words' as const,
           autoCorrect: false,

@@ -202,4 +202,16 @@ export class CloudFunctionsService {
       throw new Error(errorMessage);
     }
   }
+
+  // Delete a match (soft delete) - reverses rating changes
+  static async deleteMatch(gameId: string): Promise<ApiResponse<void>> {
+    try {
+      const deleteMatch = httpsCallable(functions, 'deleteMatch');
+      const result = await deleteMatch({ gameId });
+      return result.data as ApiResponse<void>;
+    } catch (error: any) {
+      const errorMessage = error?.details || error?.message || error?.code || 'Unknown error';
+      throw new Error(`Failed to delete match: ${errorMessage}`);
+    }
+  }
 }

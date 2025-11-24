@@ -111,7 +111,12 @@
     "cannotDeleteGroup": "Impossible de supprimer le groupe",
     "groupDeleted": "Groupe supprimé avec succès",
     "deletingGroup": "Suppression du groupe...",
-    "manageMembers": "Gérer les membres"
+    "manageMembers": "Gérer les membres",
+    "editGroupName": "Modifier le nom du groupe",
+    "enterNewGroupName": "Entrez le nouveau nom du groupe",
+    "groupNameRequired": "Le nom du groupe est requis",
+    "cannotUpdateGroupName": "Impossible de mettre à jour le nom du groupe",
+    "groupNameUpdated": "Nom du groupe mis à jour avec succès"
   },
   "memberManagement": {
     "title": "Gérer les membres",
@@ -360,7 +365,15 @@
     "ratingAfter": "Classement après",
     "eloPoints": "points ELO",
     "viewDetails": "Voir les détails",
-    "noParticipants": "Aucun participant trouvé pour cette partie"
+    "noParticipants": "Aucun participant trouvé pour cette partie",
+    "deleteMatch": "Supprimer la partie",
+    "confirmDelete": "Supprimer la partie",
+    "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cette partie ?",
+    "deleteWarning": "Cela inversera tous les changements de classement pour chaque joueur et retirera la partie du groupe. Cette action ne peut pas être annulée.",
+    "deleteSuccess": "Partie supprimée avec succès",
+    "deleteError": "Impossible de supprimer la partie",
+    "deletingMatch": "Suppression de la partie...",
+    "cannotDeleteMatch": "Impossible de supprimer la partie"
   },
   "errors": {
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",

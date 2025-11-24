@@ -18,9 +18,11 @@ interface UseGroupDetailsHandlersProps {
   setMembersLoadingStarted: (value: boolean) => void;
   setShowAddMemberModal: (value: boolean) => void;
   setIsAddingMember: (value: boolean) => void;
+  setShowEditGroupNameModal: (value: boolean) => void;
   loadGroup: (groupId: string) => Promise<void>;
   addMember: (groupId: string, memberName: string) => Promise<Member>;
   deleteGroup: (groupId: string) => Promise<void>;
+  updateGroup: (groupId: string, updates: Partial<Pick<Group, 'name' | 'description'>>) => Promise<void>;
 }
 
 export function useGroupDetailsHandlers({
@@ -34,13 +36,16 @@ export function useGroupDetailsHandlers({
   setMembersLoadingStarted,
   setShowAddMemberModal,
   setIsAddingMember,
+  setShowEditGroupNameModal,
   loadGroup,
   addMember,
-  deleteGroup
+  deleteGroup,
+  updateGroup
 }: UseGroupDetailsHandlersProps) {
   const { t } = useTranslation();
   const [isLeavingGroup, setIsLeavingGroup] = useState(false);
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
+  const [isUpdatingGroupName, setIsUpdatingGroupName] = useState(false);
 
   // Computed values
   const isAdmin = !!(currentGroup && user && currentGroup.ownerId === user.uid);
@@ -192,10 +197,49 @@ export function useGroupDetailsHandlers({
     navigation.navigate('MemberManagement', { groupId });
   };
 
+  const handleEditGroupName = async (newName: string): Promise<void> => {
+    if (!newName.trim()) {
+      Alert.alert(t('common.error'), t('groupDetails.groupNameRequired'));
+      return;
+    }
+
+    if (newName.trim() === currentGroup?.name) {
+      // No change, just close the modal
+      setShowEditGroupNameModal(false);
+      return;
+    }
+
+    setIsUpdatingGroupName(true);
+    try {
+      // Update group optimistically (UI updates immediately)
+      await updateGroup(groupId, { name: newName.trim() });
+      setShowEditGroupNameModal(false);
+      // No need for success alert - name is already visible optimistically
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : t('groupDetails.cannotUpdateGroupName');
+      Alert.alert(t('common.error'), errorMessage);
+    } finally {
+      setIsUpdatingGroupName(false);
+    }
+  };
+
+  const handleEditGroupNamePress = (): void => {
+    setShowEditGroupNameModal(true);
+  };
+
   // Build menu items
   const menuItems: MenuItem[] = [
     ...(isAdmin
       ? [
+          {
+            icon: 'create-outline' as keyof typeof Ionicons.glyphMap,
+            text: t('groupDetails.editGroupName'),
+            onPress: handleEditGroupNamePress,
+            isDestructive: false,
+            disabled: isUpdatingGroupName,
+            loading: isUpdatingGroupName
+          },
           {
             icon: 'people-outline' as keyof typeof Ionicons.glyphMap,
             text: t('groupDetails.manageMembers'),
@@ -240,10 +284,13 @@ export function useGroupDetailsHandlers({
     handleLeaveGroup,
     handleDeleteGroup,
     handleAddMemberPress,
+    handleEditGroupName,
+    handleEditGroupNamePress,
     // Menu items
     menuItems,
     // Loading states
     isLeavingGroup,
-    isDeletingGroup
+    isDeletingGroup,
+    isUpdatingGroupName
   };
 }
