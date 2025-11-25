@@ -17,7 +17,7 @@ import GroupsScreen from '../screens/GroupsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen/ProfileScreen';
 import GroupDetailsScreen from '../screens/GroupDetailsScreen';
 import MatchEntryScreen from '../screens/MatchEntryScreen';
-import MatchDetailsScreen from '../screens/MatchDetailsScreen';
+import MatchDetailsScreen from '../screens/MatchDetailsScreen/MatchDetailsScreen';
 import PlayerProfileScreen from '../screens/PlayerProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import MemberManagementScreen from '../screens/MemberManagementScreen';
