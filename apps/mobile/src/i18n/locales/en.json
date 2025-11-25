@@ -245,6 +245,14 @@
       "memberLimitReached": "Member limit reached",
       "memberLimitReachedMessage": "Free users can add up to 5 members. Upgrade to Premium for unlimited members.",
       "upgradeToPremium": "Upgrade to Premium"
+    },
+    "teamModePremium": {
+      "title": "Unlock Team Mode",
+      "subtitle": "Create squad-based matches, compare team rankings instantly, and keep your rankings fair for every lineup.",
+      "bullet1": "Build unlimited teams with custom lineups",
+      "bullet2": "Track team ranking changes and predictions",
+      "cta": "Go to Premium",
+      "cancel": "Maybe later"
     }
   },
   "subscription": {
@@ -262,7 +270,7 @@
     "unlimitedGroups": "Unlimited Groups",
     "unlimitedMembers": "Unlimited Members",
     "seasons": "Seasons",
-    "resetElo": "Reset ELO",
+    "teamMatches": "Team Match Mode",
     "advancedStats": "Advanced Statistics",
     "dataExport": "Data Export",
     "prioritySupport": "Priority Support",
@@ -281,8 +289,8 @@
     "premiumDescription": "Access to all premium features",
     "unlimitedGroupsDesc": "Create and join as many groups as you want",
     "unlimitedMembersDesc": "Add as many players as needed",
-    "seasonsDesc": "Create seasons and reset ELO",
-    "resetEloDesc": "Reset scores for a new season",
+    "seasonsDesc": "Create seasons and reset scores",
+    "teamMatchesDesc": "Create squad-based matches with live ranking projections",
     "advancedStatsDesc": "Detailed charts and analytics",
     "dataExportDesc": "Export your data to CSV",
     "upgradeAlert": "Upgrade to Premium",

@@ -53,9 +53,11 @@ export default function PricingCard({ premiumProduct, areProductsAvailable }: Pr
           </View>
           <View style={styles.pricingFeature}>
             <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.pricingFeatureText}>
-              {t('subscription.seasons')} & {t('subscription.resetElo')}
-            </Text>
+            <Text style={styles.pricingFeatureText}>{t('subscription.seasons')}</Text>
+          </View>
+          <View style={styles.pricingFeature}>
+            <Ionicons name="checkmark-circle" size={20} color="#fff" />
+            <Text style={styles.pricingFeatureText}>{t('subscription.teamMatches')}</Text>
           </View>
           <View style={styles.pricingFeature}>
             <Ionicons name="checkmark-circle" size={20} color="#fff" />

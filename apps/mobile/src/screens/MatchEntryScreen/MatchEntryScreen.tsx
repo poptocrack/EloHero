@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Text, TouchableOpacity, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
 import { queryKeys } from '../../utils/queryKeys';
-import { Member, Team } from '@elohero/shared-types';
+import { Member } from '@elohero/shared-types';
 import { calculateEloChanges, calculateTeamEloChanges } from '../../utils/eloCalculation';
 import { APP_CONSTANTS } from '../../utils/constants';
 import MatchEntryHeader from './components/MatchEntryHeader';
@@ -55,6 +56,8 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   } = useGroupStore();
 
   const [availablePlayers, setAvailablePlayers] = useState<Member[]>([]);
+  const [isPremiumModalVisible, setPremiumModalVisible] = useState(false);
+  const isPremiumUser = user?.plan === 'premium';
 
   // Calculate ELO changes for selected players or teams based on mode
   const eloPredictions = useMemo(() => {
@@ -180,6 +183,25 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
       setAvailablePlayers(available);
     }
   }, [currentGroupMembers, matchEntry.selectedPlayers, matchEntry.teams, matchEntry.isTeamMode]);
+
+  useEffect(() => {
+    if (!isPremiumUser && matchEntry.isTeamMode) {
+      toggleTeamMode();
+    }
+  }, [isPremiumUser, matchEntry.isTeamMode, toggleTeamMode]);
+
+  const handleOpenPremiumModal = () => {
+    setPremiumModalVisible(true);
+  };
+
+  const handleClosePremiumModal = () => {
+    setPremiumModalVisible(false);
+  };
+
+  const handleNavigateToSubscription = () => {
+    setPremiumModalVisible(false);
+    navigation.navigate('Subscription');
+  };
 
   const handleAddPlayer = (player: Member) => {
     addPlayerToMatch(player);
@@ -351,7 +373,12 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
       <MatchEntryHeader onBackPress={() => navigation.goBack()} />
 
       {/* Team Mode Toggle */}
-      <TeamModeToggle isTeamMode={matchEntry.isTeamMode} onToggle={toggleTeamMode} />
+      <TeamModeToggle
+        isTeamMode={matchEntry.isTeamMode}
+        onToggle={toggleTeamMode}
+        isPremiumUser={isPremiumUser}
+        onPremiumPress={handleOpenPremiumModal}
+      />
 
       {/* Scrollable Content */}
       <ScrollView
@@ -407,6 +434,58 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
         }
         isLoading={matchEntry.isSubmitting}
       />
+
+      {!isPremiumUser && (
+        <Modal
+          visible={isPremiumModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={handleClosePremiumModal}
+        >
+          <View style={styles.premiumModalOverlay}>
+            <View style={styles.premiumModalContent}>
+              <View style={styles.premiumModalIcon}>
+                <Ionicons name="star-outline" size={32} color="#FF6B9D" />
+              </View>
+              <Text style={styles.premiumModalTitle}>{t('matchEntry.teamModePremium.title')}</Text>
+              <Text style={styles.premiumModalSubtitle}>
+                {t('matchEntry.teamModePremium.subtitle')}
+              </Text>
+
+              <View style={styles.premiumBulletRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#4ECDC4" />
+                <Text style={styles.premiumBulletText}>
+                  {t('matchEntry.teamModePremium.bullet1')}
+                </Text>
+              </View>
+              <View style={styles.premiumBulletRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#4ECDC4" />
+                <Text style={styles.premiumBulletText}>
+                  {t('matchEntry.teamModePremium.bullet2')}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.premiumModalPrimaryButton}
+                onPress={handleNavigateToSubscription}
+              >
+                <Text style={styles.premiumModalPrimaryButtonText}>
+                  {t('matchEntry.teamModePremium.cta')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.premiumModalSecondaryButton}
+                onPress={handleClosePremiumModal}
+              >
+                <Text style={styles.premiumModalSecondaryButtonText}>
+                  {t('matchEntry.teamModePremium.cancel')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -421,5 +500,91 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20
+  },
+  premiumModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  premiumModalContent: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12
+  },
+  premiumModalIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 107, 157, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 16
+  },
+  premiumModalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D3748',
+    textAlign: 'center',
+    marginBottom: 8
+  },
+  premiumModalSubtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#4A5568',
+    textAlign: 'center',
+    marginBottom: 20
+  },
+  premiumBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8
+  },
+  premiumBulletText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#2D3748'
+  },
+  premiumModalPrimaryButton: {
+    backgroundColor: '#FF6B9D',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 12,
+    shadowColor: '#FF6B9D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8
+  },
+  premiumModalPrimaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  premiumModalSecondaryButton: {
+    marginTop: 12,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: '#F7FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0'
+  },
+  premiumModalSecondaryButtonText: {
+    color: '#4A5568',
+    fontSize: 16,
+    fontWeight: '600'
   }
 });

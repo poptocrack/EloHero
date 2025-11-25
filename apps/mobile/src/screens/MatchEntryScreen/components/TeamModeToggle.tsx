@@ -6,16 +6,37 @@ import { useTranslation } from 'react-i18next';
 interface TeamModeToggleProps {
   isTeamMode: boolean;
   onToggle: () => void;
+  isPremiumUser: boolean;
+  onPremiumPress: () => void;
 }
 
-export default function TeamModeToggle({ isTeamMode, onToggle }: TeamModeToggleProps) {
+export default function TeamModeToggle({
+  isTeamMode,
+  onToggle,
+  isPremiumUser,
+  onPremiumPress
+}: TeamModeToggleProps) {
   const { t } = useTranslation();
+
+  const handleSelectIndividual = () => {
+    if (isTeamMode) {
+      onToggle();
+    }
+  };
+
+  const handleSelectTeam = () => {
+    if (isPremiumUser) {
+      onToggle();
+    } else {
+      onPremiumPress();
+    }
+  };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={[styles.toggleButton, !isTeamMode && styles.toggleButtonActive]}
-        onPress={onToggle}
+        onPress={handleSelectIndividual}
         disabled={!isTeamMode}
       >
         <Ionicons
@@ -23,24 +44,36 @@ export default function TeamModeToggle({ isTeamMode, onToggle }: TeamModeToggleP
           size={20}
           color={!isTeamMode ? '#fff' : '#667eea'}
         />
-        <Text style={[styles.toggleText, !isTeamMode && styles.toggleTextActive]}>
-          {t('matchEntry.individualMode')}
-        </Text>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.toggleText, !isTeamMode && styles.toggleTextActive]}>
+            {t('matchEntry.individualMode')}
+          </Text>
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.toggleButton, isTeamMode && styles.toggleButtonActive]}
-        onPress={onToggle}
-        disabled={isTeamMode}
+        onPress={handleSelectTeam}
+        disabled={isTeamMode && isPremiumUser}
       >
         <Ionicons
           name="people-outline"
           size={20}
           color={isTeamMode ? '#fff' : '#667eea'}
         />
-        <Text style={[styles.toggleText, isTeamMode && styles.toggleTextActive]}>
-          {t('matchEntry.teamMode')}
-        </Text>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.toggleText, isTeamMode && styles.toggleTextActive]}>
+            {t('matchEntry.teamMode')}
+          </Text>
+          {!isPremiumUser && (
+            <Ionicons
+              name="lock-closed-outline"
+              size={14}
+              color={isTeamMode ? '#fff' : '#FF6B9D'}
+              style={styles.premiumIcon}
+            />
+          )}
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -80,6 +113,14 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: '#fff'
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4
+  },
+  premiumIcon: {
+    marginLeft: 2
   }
 });
 

@@ -1,5 +1,5 @@
 // Subscription Screen
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,8 +21,6 @@ export default function SubscriptionScreen({ navigation }: any) {
   const {
     connected,
     isLoading,
-    error,
-    subscriptions,
     getPremiumProduct,
     areProductsAvailable,
     purchasePremium,
@@ -111,18 +109,18 @@ export default function SubscriptionScreen({ navigation }: any) {
       free: `5 ${t('subscription.members')} ${t('subscription.max')}`,
       premium: t('subscription.unlimited')
     },
+
+    {
+      icon: 'people-circle',
+      title: t('subscription.teamMatches'),
+      description: t('subscription.teamMatchesDesc'),
+      free: t('subscription.notAvailable'),
+      premium: t('subscription.available')
+    },
     {
       icon: 'calendar',
       title: t('subscription.seasons'),
       description: t('subscription.seasonsDesc'),
-      free: t('subscription.notAvailable'),
-      premium: t('subscription.available'),
-      comingSoon: true
-    },
-    {
-      icon: 'refresh',
-      title: t('subscription.resetElo'),
-      description: t('subscription.resetEloDesc'),
       free: t('subscription.notAvailable'),
       premium: t('subscription.available'),
       comingSoon: true

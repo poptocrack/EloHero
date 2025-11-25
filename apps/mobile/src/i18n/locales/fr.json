@@ -245,6 +245,14 @@
       "memberLimitReached": "Limite de membres atteinte",
       "memberLimitReachedMessage": "Les utilisateurs gratuits peuvent ajouter jusqu'à 5 membres. Passez à Premium pour des membres illimités.",
       "upgradeToPremium": "Passer à Premium"
+    },
+    "teamModePremium": {
+      "title": "Débloquez le mode équipe",
+      "subtitle": "Créez des matchs par équipe, comparez les classements collectifs et gardez des classements équitables pour chaque composition.",
+      "bullet1": "Composez des équipes illimitées avec vos joueurs",
+      "bullet2": "Suivez les variations de classement d'équipe et les prédictions",
+      "cta": "Aller vers Premium",
+      "cancel": "Plus tard"
     }
   },
   "subscription": {
@@ -262,7 +270,7 @@
     "unlimitedGroups": "Groupes illimités",
     "unlimitedMembers": "Membres illimités",
     "seasons": "Saisons",
-    "resetElo": "Reset ELO",
+    "teamMatches": "Mode Match en équipe",
     "advancedStats": "Statistiques avancées",
     "dataExport": "Export de données",
     "prioritySupport": "Support prioritaire",
@@ -281,8 +289,8 @@
     "premiumDescription": "Accès à toutes les fonctionnalités premium",
     "unlimitedGroupsDesc": "Créez et rejoignez autant de groupes que vous voulez",
     "unlimitedMembersDesc": "Ajoutez autant de joueurs que nécessaire",
-    "seasonsDesc": "Créez des saisons et réinitialisez les ELO",
-    "resetEloDesc": "Réinitialisez les scores pour une nouvelle saison",
+    "seasonsDesc": "Créez des saisons et réinitialisez les scores",
+    "teamMatchesDesc": "Créez des matchs par équipe avec projections de classement en direct",
     "advancedStatsDesc": "Graphiques et analyses détaillées",
     "dataExportDesc": "Exportez vos données en CSV",
     "upgradeAlert": "Passer à Premium",
