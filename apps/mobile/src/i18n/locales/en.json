@@ -235,6 +235,9 @@
     "needAtLeastTwoTeams": "You need at least 2 teams to create a match",
     "teamMustHaveAtLeastOneMember": "Each team must have at least one member",
     "confirmMatchMessageTeams": "Are you sure you want to record this match with {{count}} teams?",
+    "tied": "(Tied)",
+    "markAsTied": "Mark as tied",
+    "unmarkTie": "Unmark tie",
     "addMemberModal": {
       "title": "Add New Member",
       "memberName": "Member Name",

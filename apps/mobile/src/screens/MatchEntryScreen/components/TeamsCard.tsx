@@ -15,6 +15,7 @@ interface TeamsCardProps {
   onMoveTeamDown: (teamId: string) => void;
   onAddPlayerToTeam: (teamId: string, player: Member) => void;
   onRemovePlayerFromTeam: (teamId: string, playerUid: string) => void;
+  onToggleTie?: (teamId: string) => void;
   eloPredictions: Map<string, { currentElo: number; eloChange: number }>;
   isSubmitting: boolean;
 }
@@ -29,6 +30,7 @@ export default function TeamsCard({
   onMoveTeamDown,
   onAddPlayerToTeam,
   onRemovePlayerFromTeam,
+  onToggleTie,
   eloPredictions,
   isSubmitting
 }: TeamsCardProps) {
@@ -85,6 +87,7 @@ export default function TeamsCard({
                 onMoveDown={onMoveTeamDown}
                 onAddPlayer={onAddPlayerToTeam}
                 onRemovePlayer={onRemovePlayerFromTeam}
+                onToggleTie={onToggleTie}
                 eloPredictions={eloPredictions}
                 isSubmitting={isSubmitting}
               />

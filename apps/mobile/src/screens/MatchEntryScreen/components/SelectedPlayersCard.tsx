@@ -12,6 +12,8 @@ interface SelectedPlayersCardProps {
   onRemovePlayer: (uid: string) => void;
   onMovePlayerUp: (uid: string) => void;
   onMovePlayerDown: (uid: string) => void;
+  onToggleTie?: (uid: string) => void;
+  playerTies?: Map<string, number>;
   eloPredictions: Map<string, { currentElo: number; eloChange: number }>;
 }
 
@@ -21,13 +23,58 @@ export default function SelectedPlayersCard({
   onRemovePlayer,
   onMovePlayerUp,
   onMovePlayerDown,
+  onToggleTie,
+  playerTies,
   eloPredictions
 }: SelectedPlayersCardProps) {
   const { t } = useTranslation();
 
+  const calculatePlacement = (index: number): number => {
+    const playerUid = selectedPlayers[index].uid;
+    const tieGroup = playerTies?.get(playerUid);
+    
+    if (tieGroup !== undefined) {
+      // Find the minimum index in the tie group (the first player in the tie)
+      let minIndex = index;
+      for (let i = 0; i < selectedPlayers.length; i++) {
+        if (playerTies?.get(selectedPlayers[i].uid) === tieGroup) {
+          minIndex = Math.min(minIndex, i);
+        }
+      }
+      return minIndex + 1;
+    }
+    
+    // For non-tied players, count unique placements before this position
+    // Each tied group counts as one placement
+    const seenPlacements = new Set<number>();
+    for (let i = 0; i < index; i++) {
+      const prevPlayerUid = selectedPlayers[i].uid;
+      const prevTieGroup = playerTies?.get(prevPlayerUid);
+      
+      if (prevTieGroup !== undefined) {
+        // Find the first player in this tie group
+        let firstIndex = i;
+        for (let j = 0; j < i; j++) {
+          if (playerTies?.get(selectedPlayers[j].uid) === prevTieGroup) {
+            firstIndex = j;
+            break;
+          }
+        }
+        seenPlacements.add(firstIndex + 1);
+      } else {
+        seenPlacements.add(i + 1);
+      }
+    }
+    
+    // Placement is the number of unique placements before + 1
+    return seenPlacements.size + 1;
+  };
+
   const renderSelectedPlayer = ({ item, drag, isActive, getIndex }: RenderItemParams<Member>) => {
     const playerIndex = selectedPlayers.findIndex((p) => p.uid === item.uid);
     const eloData = eloPredictions.get(item.uid);
+    const isTied = playerTies?.has(item.uid) || false;
+    const placement = calculatePlacement(playerIndex);
 
     return (
       <SelectedPlayerItem
@@ -37,11 +84,14 @@ export default function SelectedPlayersCard({
         getIndex={getIndex}
         onRemove={onRemovePlayer}
         playerIndex={playerIndex}
+        placement={placement}
         onMoveUp={onMovePlayerUp}
         onMoveDown={onMovePlayerDown}
+        onToggleTie={onToggleTie}
         totalPlayers={selectedPlayers.length}
         currentElo={eloData?.currentElo}
         eloChange={eloData?.eloChange}
+        isTied={isTied}
       />
     );
   };

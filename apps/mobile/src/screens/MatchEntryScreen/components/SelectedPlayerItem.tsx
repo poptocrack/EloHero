@@ -8,11 +8,14 @@ import { Member } from '@elohero/shared-types';
 interface SelectedPlayerItemProps extends RenderItemParams<Member> {
   onRemove: (uid: string) => void;
   playerIndex: number;
+  placement: number;
   onMoveUp?: (uid: string) => void;
   onMoveDown?: (uid: string) => void;
+  onToggleTie?: (uid: string) => void;
   totalPlayers: number;
   currentElo?: number;
   eloChange?: number;
+  isTied?: boolean;
 }
 
 export default function SelectedPlayerItem({
@@ -21,14 +24,17 @@ export default function SelectedPlayerItem({
   isActive,
   onRemove,
   playerIndex,
+  placement,
   onMoveUp,
   onMoveDown,
+  onToggleTie,
   totalPlayers,
   currentElo,
-  eloChange
+  eloChange,
+  isTied = false
 }: SelectedPlayerItemProps) {
   const { t } = useTranslation();
-  const isWinner = playerIndex === 0;
+  const isWinner = placement === 1;
   const hasEloData = currentElo !== undefined && eloChange !== undefined;
   const isEloGain = eloChange !== undefined && eloChange > 0;
   const isEloLoss = eloChange !== undefined && eloChange < 0;
@@ -105,9 +111,24 @@ export default function SelectedPlayerItem({
               </View>
             )}
           </View>
-          <Text style={[styles.placementText, isWinner && styles.winnerPlacement]}>
-            {isWinner ? t('matchEntry.winner') : `${t('matchEntry.position')}: ${playerIndex + 1}`}
-          </Text>
+          <View style={styles.placementRow}>
+            <Text style={[styles.placementText, isWinner && styles.winnerPlacement, isTied && styles.tiedPlacement]}>
+              {isWinner ? t('matchEntry.winner') : `${t('matchEntry.position')}: ${placement}`}
+              {isTied && ` ${t('matchEntry.tied')}`}
+            </Text>
+            {onToggleTie && (
+              <TouchableOpacity
+                style={[styles.tieButton, isTied && styles.tieButtonActive]}
+                onPress={() => onToggleTie(item.uid)}
+              >
+                <Ionicons
+                  name={isTied ? 'link' : 'link-outline'}
+                  size={18}
+                  color={isTied ? '#fff' : '#667eea'}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(item.uid)}>
@@ -234,10 +255,34 @@ const styles = StyleSheet.create({
   eloChangeNegative: {
     color: '#FF6B9D'
   },
+  placementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4
+  },
   placementText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#718096'
+  },
+  tiedPlacement: {
+    color: '#667eea',
+    fontWeight: '600'
+  },
+  tieButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#667eea'
+  },
+  tieButtonActive: {
+    backgroundColor: '#667eea',
+    borderColor: '#667eea'
   },
   removeButton: {
     padding: 4

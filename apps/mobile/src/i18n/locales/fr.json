@@ -233,6 +233,9 @@
     "removePlayerFromTeam": "Retirer un joueur de l'équipe",
     "removeTeam": "Retirer l'équipe",
     "needAtLeastTwoTeams": "Il faut au moins 2 équipes pour créer une partie",
+    "tied": "(Ex æquo)",
+    "markAsTied": "Marquer comme ex æquo",
+    "unmarkTie": "Retirer l'ex æquo",
     "teamMustHaveAtLeastOneMember": "Chaque équipe doit avoir au moins un membre",
     "confirmMatchMessageTeams": "Êtes-vous sûr de vouloir enregistrer cette partie avec {{count}} équipes ?",
     "addMemberModal": {

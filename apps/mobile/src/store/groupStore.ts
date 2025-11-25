@@ -80,6 +80,8 @@ interface GroupState {
   setPlayerOrder: (players: Member[]) => void;
   addPlayerToMatch: (player: Member) => void;
   removePlayerFromMatch: (uid: string) => void;
+  togglePlayerTie: (uid: string) => void;
+  toggleTeamTie: (teamId: string) => void;
   clearMatchEntry: () => void;
 
   setLoading: (loading: boolean) => void;
@@ -100,6 +102,7 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   matchEntry: {
     selectedPlayers: [],
     playerOrder: [],
+    playerTies: new Map<string, number>(),
     isSubmitting: false,
     isTeamMode: false,
     teams: []
@@ -589,11 +592,108 @@ export const useGroupStore = create<GroupState>((set, get) => ({
     }));
   },
 
+  togglePlayerTie: (uid: string) => {
+    set((state) => {
+      const playerIndex = state.matchEntry.playerOrder.findIndex((p) => p.uid === uid);
+      if (playerIndex === -1) return state;
+
+      const newTies = new Map(state.matchEntry.playerTies);
+      const currentTieGroup = newTies.get(uid);
+
+      if (currentTieGroup !== undefined) {
+        // Remove tie - find all players in the same tie group and remove them
+        const tiedPlayers = Array.from(newTies.entries())
+          .filter(([_, group]) => group === currentTieGroup)
+          .map(([uid]) => uid);
+        tiedPlayers.forEach((playerUid) => newTies.delete(playerUid));
+      } else {
+        // Create or join tie group - tie with the player above (if exists)
+        if (playerIndex > 0) {
+          const abovePlayerUid = state.matchEntry.playerOrder[playerIndex - 1].uid;
+          const aboveTieGroup = newTies.get(abovePlayerUid);
+
+          if (aboveTieGroup !== undefined) {
+            // Join existing tie group
+            newTies.set(uid, aboveTieGroup);
+          } else {
+            // Create new tie group with player above
+            const newTieGroup = playerIndex; // Use index as tie group ID
+            newTies.set(abovePlayerUid, newTieGroup);
+            newTies.set(uid, newTieGroup);
+          }
+        } else if (playerIndex < state.matchEntry.playerOrder.length - 1) {
+          // Tie with player below (if at top)
+          const belowPlayerUid = state.matchEntry.playerOrder[playerIndex + 1].uid;
+          const belowTieGroup = newTies.get(belowPlayerUid);
+
+          if (belowTieGroup !== undefined) {
+            // Join existing tie group
+            newTies.set(uid, belowTieGroup);
+          } else {
+            // Create new tie group with player below
+            const newTieGroup = playerIndex + 1;
+            newTies.set(belowPlayerUid, newTieGroup);
+            newTies.set(uid, newTieGroup);
+          }
+        }
+      }
+
+      return {
+        matchEntry: {
+          ...state.matchEntry,
+          playerTies: newTies
+        }
+      };
+    });
+  },
+
+  toggleTeamTie: (teamId: string) => {
+    set((state) => {
+      const teamIndex = state.matchEntry.teams.findIndex((t) => t.id === teamId);
+      if (teamIndex === -1) return state;
+
+      const currentTeam = state.matchEntry.teams[teamIndex];
+      const isCurrentlyTied = currentTeam.isTied || false;
+
+      const updatedTeams = state.matchEntry.teams.map((team, index) => {
+        if (team.id === teamId) {
+          // Toggle this team's tie status
+          return { ...team, isTied: !isCurrentlyTied };
+        }
+        // If tying with team above, also mark the team above as tied
+        if (!isCurrentlyTied && index === teamIndex - 1) {
+          return { ...team, isTied: true };
+        }
+        // If untying, also unmark the team above
+        if (isCurrentlyTied && index === teamIndex - 1) {
+          return { ...team, isTied: false };
+        }
+        // If at top and tying with team below
+        if (!isCurrentlyTied && teamIndex === 0 && index === 1) {
+          return { ...team, isTied: true };
+        }
+        // If at top and untying from team below
+        if (isCurrentlyTied && teamIndex === 0 && index === 1) {
+          return { ...team, isTied: false };
+        }
+        return team;
+      });
+
+      return {
+        matchEntry: {
+          ...state.matchEntry,
+          teams: updatedTeams
+        }
+      };
+    });
+  },
+
   clearMatchEntry: () => {
     set({
       matchEntry: {
         selectedPlayers: [],
         playerOrder: [],
+        playerTies: new Map<string, number>(),
         isSubmitting: false,
         isTeamMode: false,
         teams: []

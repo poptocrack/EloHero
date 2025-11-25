@@ -142,6 +142,7 @@ export interface Team {
   name: string;
   members: Member[];
   placement: number; // Team placement in the match (can change when reordering)
+  isTied?: boolean; // Whether this team is tied with another team at the same placement
   teamNumber: number; // Permanent team number assigned at creation (Team 1, Team 2, etc.)
   gradientIndex: number; // Permanent gradient index (0-5) assigned at creation
 }
@@ -149,6 +150,7 @@ export interface Team {
 export interface MatchEntryState {
   selectedPlayers: Member[];
   playerOrder: Member[];
+  playerTies: Map<string, number>; // Maps player UID to their tied placement group
   isSubmitting: boolean;
   isTeamMode: boolean;
   teams: Team[];

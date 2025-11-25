@@ -17,9 +17,16 @@
     "emulators": "firebase emulators:start --only firestore,functions",
     "emulators:all": "firebase emulators:start",
     "emulators:export": "firebase emulators:export ./emulator-data",
-    "emulators:import": "firebase emulators:start --import ./emulator-data"
+    "emulators:import": "firebase emulators:start --import ./emulator-data",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "expo": "~54.0.23",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   }
 }

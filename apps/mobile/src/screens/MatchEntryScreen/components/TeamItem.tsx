@@ -18,6 +18,7 @@ interface TeamItemProps {
   onMoveDown: (teamId: string) => void;
   onAddPlayer: (teamId: string, player: Member) => void;
   onRemovePlayer: (teamId: string, playerUid: string) => void;
+  onToggleTie?: (teamId: string) => void;
   eloPredictions: Map<string, { currentElo: number; eloChange: number }>;
   isSubmitting: boolean;
 }
@@ -34,6 +35,7 @@ export default function TeamItem({
   onMoveDown,
   onAddPlayer,
   onRemovePlayer,
+  onToggleTie,
   eloPredictions,
   isSubmitting
 }: Readonly<TeamItemProps>) {
@@ -99,11 +101,14 @@ export default function TeamItem({
         style={styles.teamCardGradient}
       >
         <View style={styles.teamHeader}>
-          <View style={styles.teamHeaderLeft}>
-            <View style={styles.placementBadge}>
+            <View style={styles.teamHeaderLeft}>
+            <View style={[styles.placementBadge, team.isTied && styles.placementBadgeTied]}>
               <Text style={styles.placementText}>{team.placement}</Text>
             </View>
-            <Text style={styles.teamName}>{teamDisplayName}</Text>
+            <Text style={styles.teamName}>
+              {teamDisplayName}
+              {team.isTied && ` ${t('matchEntry.tied')}`}
+            </Text>
           </View>
           <View style={styles.teamHeaderRight}>
             {avgElo > 0 && (
@@ -155,6 +160,29 @@ export default function TeamItem({
                   }
                 />
               </TouchableOpacity>
+              {onToggleTie && (
+                <TouchableOpacity
+                  style={[
+                    styles.tieButton,
+                    team.isTied && styles.tieButtonActive,
+                    isSubmitting && styles.moveButtonDisabled
+                  ]}
+                  onPress={() => onToggleTie(team.id)}
+                  disabled={isSubmitting}
+                >
+                  <Ionicons
+                    name={team.isTied ? 'link' : 'link-outline'}
+                    size={20}
+                    color={
+                      isSubmitting
+                        ? 'rgba(255, 255, 255, 0.4)'
+                        : team.isTied
+                          ? '#fff'
+                          : 'rgba(255, 255, 255, 0.9)'
+                    }
+                  />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.removeButton, isSubmitting && styles.moveButtonDisabled]}
                 onPress={() => onRemove(team.id)}
@@ -302,6 +330,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)'
   },
+  placementBadgeTied: {
+    backgroundColor: 'rgba(102, 126, 234, 0.5)',
+    borderColor: 'rgba(255, 255, 255, 0.8)'
+  },
   placementText: {
     fontSize: 14,
     fontWeight: '700',
@@ -355,6 +387,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     opacity: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.2)'
+  },
+  tieButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    marginRight: 4
+  },
+  tieButtonActive: {
+    backgroundColor: 'rgba(102, 126, 234, 0.6)',
+    borderColor: 'rgba(255, 255, 255, 0.8)'
   },
   removeButton: {
     padding: 4,

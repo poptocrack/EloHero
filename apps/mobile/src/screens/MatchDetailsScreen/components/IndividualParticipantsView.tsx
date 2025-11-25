@@ -56,9 +56,9 @@ const IndividualParticipantsView: React.FC<IndividualParticipantsViewProps> = ({
                   <Text style={styles.participantName}>{participant.displayName}</Text>
                   <View style={styles.placementContainer}>
                     <Ionicons name={placementMeta.icon} size={16} color={placementMeta.color} />
-                    <Text style={styles.placementText}>
+                    <Text style={[styles.placementText, participant.isTied && styles.tiedPlacement]}>
                       {t('matchDetails.placement')} {participant.placement}
-                      {participant.isTied && ` ${t('playerProfile.tied')}`}
+                      {participant.isTied && ` ${t('matchEntry.tied')}`}
                     </Text>
                   </View>
                 </View>
@@ -173,6 +173,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#718096',
     marginLeft: 6
+  },
+  tiedPlacement: {
+    color: '#667eea',
+    fontWeight: '600'
   },
   ratingSection: {
     borderTopWidth: 1,

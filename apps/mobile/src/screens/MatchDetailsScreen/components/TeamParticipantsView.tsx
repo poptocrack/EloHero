@@ -27,6 +27,7 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
       {
         teamId: string;
         placement: number;
+        isTied: boolean;
         members: Participant[];
       }
     >();
@@ -38,10 +39,13 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
       const existing = map.get(participant.teamId);
       if (existing) {
         existing.members.push(participant);
+        // Team is tied if all members are tied and have the same placement
+        existing.isTied = existing.isTied && participant.isTied && participant.placement === existing.placement;
       } else {
         map.set(participant.teamId, {
           teamId: participant.teamId,
           placement: participant.placement,
+          isTied: participant.isTied,
           members: [participant]
         });
       }
@@ -96,8 +100,9 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
                   <Text style={styles.teamName}>{teamName}</Text>
                   <View style={styles.teamPlacementContainer}>
                     <Ionicons name="trophy" size={16} color="#FFD700" />
-                    <Text style={styles.teamPlacementText}>
+                    <Text style={[styles.teamPlacementText, team.isTied && styles.tiedTeamPlacement]}>
                       {t('matchDetails.placement')} {team.placement}
+                      {team.isTied && ` ${t('matchEntry.tied')}`}
                     </Text>
                   </View>
                 </View>
@@ -136,9 +141,9 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
                         </View>
                         <View>
                           <Text style={styles.teamMemberName}>{member.displayName}</Text>
-                          <Text style={styles.teamMemberPlacement}>
+                          <Text style={[styles.teamMemberPlacement, member.isTied && styles.tiedMemberPlacement]}>
                             {t('matchDetails.placement')} {member.placement}
-                            {member.isTied && ` ${t('playerProfile.tied')}`}
+                            {member.isTied && ` ${t('matchEntry.tied')}`}
                           </Text>
                         </View>
                       </View>
@@ -230,6 +235,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500'
   },
+  tiedTeamPlacement: {
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.95)'
+  },
   teamChangeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -299,6 +308,10 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 12,
     marginTop: 2
+  },
+  tiedMemberPlacement: {
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.95)'
   },
   teamMemberStats: {
     alignItems: 'flex-end'
