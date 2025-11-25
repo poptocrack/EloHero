@@ -112,7 +112,13 @@ export default function SelectedPlayerItem({
             )}
           </View>
           <View style={styles.placementRow}>
-            <Text style={[styles.placementText, isWinner && styles.winnerPlacement, isTied && styles.tiedPlacement]}>
+            <Text
+              style={[
+                styles.placementText,
+                isWinner && styles.winnerPlacement,
+                isTied && styles.tiedPlacement
+              ]}
+            >
               {isWinner ? t('matchEntry.winner') : `${t('matchEntry.position')}: ${placement}`}
               {isTied && ` ${t('matchEntry.tied')}`}
             </Text>

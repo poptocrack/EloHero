@@ -247,15 +247,16 @@ export const joinGroupWithCode = functions.https.onCall(async (data, context) =>
     }
 
     // Check if group admin is premium
+    // Premium users can join full groups even if admin is not premium
     const adminPlan = await getUserPlan(groupData.ownerId);
-    if (adminPlan !== 'premium' && groupData.memberCount >= 5) {
+    if (plan !== 'premium' && adminPlan !== 'premium' && groupData.memberCount >= 5) {
       throw new functions.https.HttpsError(
         'resource-exhausted',
         'Group admin is not premium and group is at member limit'
       );
     }
 
-    // Check user plan and group member limit
+    // Check user plan and group member limit (only applies to free users)
     if (checkPlanLimit(plan, 'members', groupData.memberCount)) {
       throw new functions.https.HttpsError(
         'resource-exhausted',
@@ -591,4 +592,3 @@ export const updateGroup = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'Failed to update group');
   }
 });
-

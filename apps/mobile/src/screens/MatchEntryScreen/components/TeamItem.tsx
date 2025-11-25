@@ -101,7 +101,7 @@ export default function TeamItem({
         style={styles.teamCardGradient}
       >
         <View style={styles.teamHeader}>
-            <View style={styles.teamHeaderLeft}>
+          <View style={styles.teamHeaderLeft}>
             <View style={[styles.placementBadge, team.isTied && styles.placementBadgeTied]}>
               <Text style={styles.placementText}>{team.placement}</Text>
             </View>
@@ -177,8 +177,8 @@ export default function TeamItem({
                       isSubmitting
                         ? 'rgba(255, 255, 255, 0.4)'
                         : team.isTied
-                          ? '#fff'
-                          : 'rgba(255, 255, 255, 0.9)'
+                        ? '#fff'
+                        : 'rgba(255, 255, 255, 0.9)'
                     }
                   />
                 </TouchableOpacity>

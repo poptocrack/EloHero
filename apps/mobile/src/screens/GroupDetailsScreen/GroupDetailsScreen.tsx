@@ -24,6 +24,7 @@ import GamesList from './components/GamesList';
 import AddMemberModal from './components/AddMemberModal';
 import EditGroupNameModal from './components/EditGroupNameModal';
 import HeaderWithMenu from '../../components/HeaderWithMenu';
+import PremiumModal from '../../components/PremiumModal';
 import { useGroupDetailsHandlers } from './hooks/useGroupDetailsHandlers';
 
 interface GroupDetailsScreenProps {
@@ -64,12 +65,14 @@ export default function GroupDetailsScreen({
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [showEditGroupNameModal, setShowEditGroupNameModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [membersLoaded, setMembersLoaded] = useState(false);
   const [membersLoadingStarted, setMembersLoadingStarted] = useState(false);
 
   // Extract handlers and computed values
   const {
+    isAdmin,
     memberLimitReached,
     canAddMember,
     handleRefresh,
@@ -80,6 +83,7 @@ export default function GroupDetailsScreen({
     handlePlayerPress,
     handleAddMemberPress,
     handleEditGroupName,
+    handleNavigateToSubscription,
     menuItems,
     isDeletingGroup,
     isUpdatingGroupName
@@ -95,6 +99,7 @@ export default function GroupDetailsScreen({
     setShowAddMemberModal,
     setIsAddingMember,
     setShowEditGroupNameModal,
+    setShowPremiumModal,
     loadGroup,
     addMember,
     deleteGroup,
@@ -200,6 +205,7 @@ export default function GroupDetailsScreen({
             onAddMember={handleAddMemberPress}
             canAddMember={canAddMember}
             memberLimitReached={memberLimitReached}
+            isAdmin={isAdmin}
           />
         ) : (
           <GamesList
@@ -248,6 +254,23 @@ export default function GroupDetailsScreen({
             </View>
           </View>
         </Modal>
+      )}
+
+      {/* Premium Modal for Member Limit */}
+      {user?.plan !== 'premium' && (
+        <PremiumModal
+          visible={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          onNavigateToSubscription={handleNavigateToSubscription}
+          titleKey="matchEntry.memberLimitPremium.title"
+          subtitleKey="matchEntry.memberLimitPremium.subtitle"
+          bullet1Key="matchEntry.memberLimitPremium.bullet1"
+          bullet2Key="matchEntry.memberLimitPremium.bullet2"
+          ctaKey="matchEntry.memberLimitPremium.cta"
+          cancelKey="matchEntry.memberLimitPremium.cancel"
+          iconName="people-outline"
+          iconColor="#FF6B9D"
+        />
       )}
     </View>
   );

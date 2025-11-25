@@ -40,7 +40,8 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
       if (existing) {
         existing.members.push(participant);
         // Team is tied if all members are tied and have the same placement
-        existing.isTied = existing.isTied && participant.isTied && participant.placement === existing.placement;
+        existing.isTied =
+          existing.isTied && participant.isTied && participant.placement === existing.placement;
       } else {
         map.set(participant.teamId, {
           teamId: participant.teamId,
@@ -100,7 +101,9 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
                   <Text style={styles.teamName}>{teamName}</Text>
                   <View style={styles.teamPlacementContainer}>
                     <Ionicons name="trophy" size={16} color="#FFD700" />
-                    <Text style={[styles.teamPlacementText, team.isTied && styles.tiedTeamPlacement]}>
+                    <Text
+                      style={[styles.teamPlacementText, team.isTied && styles.tiedTeamPlacement]}
+                    >
                       {t('matchDetails.placement')} {team.placement}
                       {team.isTied && ` ${t('matchEntry.tied')}`}
                     </Text>
@@ -141,7 +144,12 @@ const TeamParticipantsView: React.FC<TeamParticipantsViewProps> = ({ participant
                         </View>
                         <View>
                           <Text style={styles.teamMemberName}>{member.displayName}</Text>
-                          <Text style={[styles.teamMemberPlacement, member.isTied && styles.tiedMemberPlacement]}>
+                          <Text
+                            style={[
+                              styles.teamMemberPlacement,
+                              member.isTied && styles.tiedMemberPlacement
+                            ]}
+                          >
                             {t('matchDetails.placement')} {member.placement}
                             {member.isTied && ` ${t('matchEntry.tied')}`}
                           </Text>

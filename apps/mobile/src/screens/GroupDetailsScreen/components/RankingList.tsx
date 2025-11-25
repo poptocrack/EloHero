@@ -13,6 +13,7 @@ interface RankingListProps {
   onAddMember: () => void;
   canAddMember: boolean;
   memberLimitReached: boolean;
+  isAdmin: boolean;
 }
 
 export default function RankingList({
@@ -23,7 +24,8 @@ export default function RankingList({
   onPlayerPress,
   onAddMember,
   canAddMember,
-  memberLimitReached
+  memberLimitReached,
+  isAdmin
 }: RankingListProps) {
   const { t } = useTranslation();
 
@@ -169,11 +171,10 @@ export default function RankingList({
   const renderFooter = () => (
     <View style={styles.footerContainer}>
       {/* Add Member Button - Only show for admins */}
-      {canAddMember && (
+      {isAdmin && (
         <TouchableOpacity
           style={[styles.addMemberButton, memberLimitReached && styles.addMemberButtonDisabled]}
           onPress={onAddMember}
-          disabled={memberLimitReached}
         >
           <View style={styles.addMemberButtonContent}>
             <View
@@ -194,9 +195,14 @@ export default function RankingList({
               {t('matchEntry.addMember')}
             </Text>
             {memberLimitReached && (
-              <View style={styles.limitBadge}>
-                <Text style={styles.limitBadgeText}>5/5</Text>
-              </View>
+              <>
+                <View style={styles.limitBadge}>
+                  <Text style={styles.limitBadgeText}>5/5</Text>
+                </View>
+                <View style={styles.premiumIconContainer}>
+                  <Ionicons name="star" size={16} color="#FF6B9D" />
+                </View>
+              </>
             )}
           </View>
         </TouchableOpacity>
@@ -400,5 +406,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: '600'
+  },
+  premiumIconContainer: {
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 });

@@ -7,9 +7,9 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  Linking,
   Platform
 } from 'react-native';
+import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
@@ -42,46 +42,24 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     ]);
   };
 
-  const handleDiscord = async () => {
-    const discordUrl = 'https://discord.gg/2MZeDx5CNZ';
+  const openUrl = async (url: string): Promise<void> => {
     try {
-      const supported = await Linking.canOpenURL(discordUrl);
-      if (supported) {
-        await Linking.openURL(discordUrl);
-      } else {
-        Alert.alert(t('common.error'), t('profile.cannotOpenDiscord'));
-      }
-    } catch (error) {
-      Alert.alert(t('common.error'), t('profile.cannotOpenDiscord'));
-    }
-  };
-
-  const handleTermsOfUse = async () => {
-    const termsUrl = 'https://sites.google.com/view/elohero/terms-of-use-eula?authuser=0';
-    try {
-      const supported = await Linking.canOpenURL(termsUrl);
-      if (supported) {
-        await Linking.openURL(termsUrl);
-      } else {
-        Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
-      }
+      await Linking.openURL(url);
     } catch (error) {
       Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
     }
   };
 
-  const handlePrivacyPolicy = async () => {
-    const privacyUrl = 'https://sites.google.com/view/elohero/privacy?authuser=0';
-    try {
-      const supported = await Linking.canOpenURL(privacyUrl);
-      if (supported) {
-        await Linking.openURL(privacyUrl);
-      } else {
-        Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
-      }
-    } catch (error) {
-      Alert.alert(t('common.error'), t('profile.cannotOpenLink'));
-    }
+  const handleDiscord = () => {
+    openUrl('https://discord.gg/2MZeDx5CNZ');
+  };
+
+  const handleTermsOfUse = () => {
+    openUrl('https://sites.google.com/view/elohero/terms-of-use-eula?authuser=0');
+  };
+
+  const handlePrivacyPolicy = () => {
+    openUrl('https://sites.google.com/view/elohero/privacy?authuser=0');
   };
 
   const handleDisconnect = () => {
@@ -94,7 +72,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
           try {
             await signOut();
           } catch (error) {
-            Alert.alert(t('common.error'), 'Failed to disconnect');
+            Alert.alert(t('common.error'), t('profile.disconnectError'));
           }
         }
       }

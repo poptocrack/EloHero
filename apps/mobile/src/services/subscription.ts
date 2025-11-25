@@ -91,7 +91,9 @@ class SubscriptionService {
       }
 
       // Set appropriate log level based on environment
-      await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.ERROR);
+      await Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
+
+      // await Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.ERROR);
       // Configure RevenueCat
       await Purchases.configure({ apiKey, appUserID: userId });
 

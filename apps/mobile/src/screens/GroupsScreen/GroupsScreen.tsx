@@ -41,6 +41,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [isJoiningGroup, setIsJoiningGroup] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -91,8 +92,10 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   };
 
   const handleJoinWithCode = async (code: string) => {
+    setIsJoiningGroup(true);
     try {
       await joinGroupWithCode(code);
+      setShowJoinModal(false);
       Alert.alert(t('common.success'), t('groups.groupJoinedSuccessfully'));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to join group';
@@ -112,6 +115,8 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         Alert.alert(t('common.error'), errorMessage);
       }
       throw error; // Re-throw to prevent modal from closing
+    } finally {
+      setIsJoiningGroup(false);
     }
   };
 
@@ -175,8 +180,12 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
 
       <JoinGroupModal
         isVisible={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
+        onClose={() => {
+          setShowJoinModal(false);
+          setIsJoiningGroup(false);
+        }}
         onJoin={handleJoinWithCode}
+        isLoading={isJoiningGroup}
       />
 
       <CreateGroupModal

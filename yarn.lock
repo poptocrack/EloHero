@@ -1209,7 +1209,7 @@ __metadata:
     expo-dev-client: "npm:~6.0.15"
     expo-font: "npm:~14.0.4"
     expo-linear-gradient: "npm:~15.0.7"
-    expo-linking: "npm:~8.0.8"
+    expo-linking: "npm:~8.0.9"
     expo-localization: "npm:~17.0.7"
     expo-splash-screen: "npm:~31.0.10"
     expo-status-bar: "npm:~3.0.8"
@@ -7105,7 +7105,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-linking@npm:~8.0.8":
+"expo-linking@npm:~8.0.9":
   version: 8.0.9
   resolution: "expo-linking@npm:8.0.9"
   dependencies:

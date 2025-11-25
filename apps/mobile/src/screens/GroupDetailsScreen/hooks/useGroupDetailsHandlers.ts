@@ -3,9 +3,8 @@ import { Alert, Clipboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useGroupStore } from '../../../store/groupStore';
-import { Member } from '@elohero/shared-types';
 import { MenuItem } from '../../../components/HeaderWithMenu';
-import { Group, User } from '@elohero/shared-types';
+import { Group, User, Member } from '@elohero/shared-types';
 
 interface UseGroupDetailsHandlersProps {
   groupId: string;
@@ -19,10 +18,14 @@ interface UseGroupDetailsHandlersProps {
   setShowAddMemberModal: (value: boolean) => void;
   setIsAddingMember: (value: boolean) => void;
   setShowEditGroupNameModal: (value: boolean) => void;
+  setShowPremiumModal: (value: boolean) => void;
   loadGroup: (groupId: string) => Promise<void>;
   addMember: (groupId: string, memberName: string) => Promise<Member>;
   deleteGroup: (groupId: string) => Promise<void>;
-  updateGroup: (groupId: string, updates: Partial<Pick<Group, 'name' | 'description'>>) => Promise<void>;
+  updateGroup: (
+    groupId: string,
+    updates: Partial<Pick<Group, 'name' | 'description'>>
+  ) => Promise<void>;
 }
 
 export function useGroupDetailsHandlers({
@@ -37,6 +40,7 @@ export function useGroupDetailsHandlers({
   setShowAddMemberModal,
   setIsAddingMember,
   setShowEditGroupNameModal,
+  setShowPremiumModal,
   loadGroup,
   addMember,
   deleteGroup,
@@ -177,20 +181,15 @@ export function useGroupDetailsHandlers({
 
   const handleAddMemberPress = (): void => {
     if (memberLimitReached) {
-      Alert.alert(
-        t('matchEntry.addMemberModal.memberLimitReached'),
-        t('matchEntry.addMemberModal.memberLimitReachedMessage'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('matchEntry.addMemberModal.upgradeToPremium'),
-            onPress: () => navigation.navigate('Subscription')
-          }
-        ]
-      );
+      setShowPremiumModal(true);
     } else {
       setShowAddMemberModal(true);
     }
+  };
+
+  const handleNavigateToSubscription = (): void => {
+    setShowPremiumModal(false);
+    navigation.navigate('Subscription');
   };
 
   const handleManageMembers = (): void => {
@@ -286,6 +285,7 @@ export function useGroupDetailsHandlers({
     handleAddMemberPress,
     handleEditGroupName,
     handleEditGroupNamePress,
+    handleNavigateToSubscription,
     // Menu items
     menuItems,
     // Loading states

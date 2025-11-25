@@ -8,10 +8,14 @@ interface IndividualParticipantsViewProps {
   participants: Participant[];
 }
 
-const IndividualParticipantsView: React.FC<IndividualParticipantsViewProps> = ({ participants }) => {
+const IndividualParticipantsView: React.FC<IndividualParticipantsViewProps> = ({
+  participants
+}) => {
   const { t } = useTranslation();
 
-  const getPlacementMeta = (placement: number): {
+  const getPlacementMeta = (
+    placement: number
+  ): {
     color: string;
     icon: keyof typeof Ionicons.glyphMap;
   } => {
@@ -50,13 +54,17 @@ const IndividualParticipantsView: React.FC<IndividualParticipantsViewProps> = ({
             <View style={styles.cardGradient}>
               <View style={styles.participantInfo}>
                 <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{participant.displayName.charAt(0).toUpperCase()}</Text>
+                  <Text style={styles.avatarText}>
+                    {participant.displayName.charAt(0).toUpperCase()}
+                  </Text>
                 </View>
                 <View style={styles.participantDetails}>
                   <Text style={styles.participantName}>{participant.displayName}</Text>
                   <View style={styles.placementContainer}>
                     <Ionicons name={placementMeta.icon} size={16} color={placementMeta.color} />
-                    <Text style={[styles.placementText, participant.isTied && styles.tiedPlacement]}>
+                    <Text
+                      style={[styles.placementText, participant.isTied && styles.tiedPlacement]}
+                    >
                       {t('matchDetails.placement')} {participant.placement}
                       {participant.isTied && ` ${t('matchEntry.tied')}`}
                     </Text>

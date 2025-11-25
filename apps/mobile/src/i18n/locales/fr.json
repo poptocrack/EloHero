@@ -185,6 +185,7 @@
     "disconnectSubtitle": "Changer d'utilisateur",
     "disconnectConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "disconnectMessage": "Cela vous déconnectera et vous ramènera à l'écran de connexion.",
+    "disconnectError": "Échec de la déconnexion",
     "termsOfUse": "Conditions d'utilisation",
     "termsOfUseSubtitle": "Voir nos conditions d'utilisation",
     "privacyPolicy": "Politique de confidentialité",
@@ -254,6 +255,14 @@
       "subtitle": "Créez des matchs par équipe, comparez les classements collectifs et gardez des classements équitables pour chaque composition.",
       "bullet1": "Composez des équipes illimitées avec vos joueurs",
       "bullet2": "Suivez les variations de classement d'équipe et les prédictions",
+      "cta": "Aller vers Premium",
+      "cancel": "Plus tard"
+    },
+    "memberLimitPremium": {
+      "title": "Débloquez les membres illimités",
+      "subtitle": "Les utilisateurs gratuits peuvent ajouter jusqu'à 5 membres par groupe. Passez à Premium pour ajouter des membres illimités et développer votre communauté.",
+      "bullet1": "Ajoutez des membres illimités à vos groupes",
+      "bullet2": "Construisez des communautés plus grandes et rivalisez avec plus de joueurs",
       "cta": "Aller vers Premium",
       "cancel": "Plus tard"
     }

@@ -185,6 +185,7 @@
     "disconnectSubtitle": "Switch to another user",
     "disconnectConfirm": "Are you sure you want to disconnect?",
     "disconnectMessage": "This will sign you out and return to the login screen.",
+    "disconnectError": "Failed to disconnect",
     "termsOfUse": "Terms of Use",
     "termsOfUseSubtitle": "View our terms and conditions",
     "privacyPolicy": "Privacy Policy",
@@ -254,6 +255,14 @@
       "subtitle": "Create squad-based matches, compare team rankings instantly, and keep your rankings fair for every lineup.",
       "bullet1": "Build unlimited teams with custom lineups",
       "bullet2": "Track team ranking changes and predictions",
+      "cta": "Go to Premium",
+      "cancel": "Maybe later"
+    },
+    "memberLimitPremium": {
+      "title": "Unlock Unlimited Members",
+      "subtitle": "Free users can add up to 5 members per group. Upgrade to Premium to add unlimited members and grow your community.",
+      "bullet1": "Add unlimited members to your groups",
+      "bullet2": "Build larger communities and compete with more players",
       "cta": "Go to Premium",
       "cancel": "Maybe later"
     }

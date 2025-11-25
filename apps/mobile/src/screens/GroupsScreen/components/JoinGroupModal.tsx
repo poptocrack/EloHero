@@ -5,8 +5,22 @@ interface JoinGroupModalProps {
   isVisible: boolean;
   onClose: () => void;
   onJoin: (code: string) => Promise<void>;
+  isLoading?: boolean;
 }
 
-export default function JoinGroupModal({ isVisible, onClose, onJoin }: JoinGroupModalProps) {
-  return <GroupActionModal isVisible={isVisible} type="join" onClose={onClose} onAction={onJoin} />;
+export default function JoinGroupModal({
+  isVisible,
+  onClose,
+  onJoin,
+  isLoading = false
+}: Readonly<JoinGroupModalProps>) {
+  return (
+    <GroupActionModal
+      isVisible={isVisible}
+      type="join"
+      onClose={onClose}
+      onAction={onJoin}
+      isLoading={isLoading}
+    />
+  );
 }
