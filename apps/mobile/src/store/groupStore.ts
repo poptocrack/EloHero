@@ -2,7 +2,16 @@
 import { create } from 'zustand';
 import { CloudFunctionsService } from '../services/cloudFunctions';
 import { FirestoreService } from '../services/firestore';
-import { Group, Member, Season, Rating, Game, Participant, MatchEntryState } from '@elohero/shared-types';
+import {
+  Group,
+  Member,
+  Season,
+  Rating,
+  Game,
+  Participant,
+  MatchEntryState,
+  Team
+} from '@elohero/shared-types';
 
 interface GroupState {
   groups: Group[];
@@ -16,6 +25,15 @@ interface GroupState {
 
   // Match entry state
   matchEntry: MatchEntryState;
+
+  // Team management actions
+  addTeam: () => void;
+  removeTeam: (teamId: string) => void;
+  moveTeamUp: (teamId: string) => void;
+  moveTeamDown: (teamId: string) => void;
+  addPlayerToTeam: (teamId: string, player: Member) => void;
+  removePlayerFromTeam: (teamId: string, playerUid: string) => void;
+  toggleTeamMode: () => void;
 
   // Actions
   loadUserGroups: (uid: string) => Promise<void>;
@@ -41,7 +59,18 @@ interface GroupState {
     participants: Omit<
       Participant,
       'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
-    >[]
+    >[],
+    teams?: Array<{
+      id: string;
+      name: string;
+      members: Array<{
+        uid: string;
+        displayName: string;
+        photoURL?: string | null;
+      }>;
+      placement: number;
+      isTied?: boolean;
+    }>
   ) => Promise<void>;
   addMember: (groupId: string, memberName: string) => Promise<Member>;
   removeMember: (groupId: string, memberUid: string) => Promise<void>;
@@ -71,7 +100,9 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   matchEntry: {
     selectedPlayers: [],
     playerOrder: [],
-    isSubmitting: false
+    isSubmitting: false,
+    isTeamMode: false,
+    teams: []
   },
 
   loadUserGroups: async (uid: string) => {
@@ -379,7 +410,18 @@ export const useGroupStore = create<GroupState>((set, get) => ({
     participants: Omit<
       Participant,
       'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
-    >[]
+    >[],
+    teams?: Array<{
+      id: string;
+      name: string;
+      members: Array<{
+        uid: string;
+        displayName: string;
+        photoURL?: string | null;
+      }>;
+      placement: number;
+      isTied?: boolean;
+    }>
   ) => {
     set((state) => ({
       matchEntry: { ...state.matchEntry, isSubmitting: true },
@@ -387,7 +429,12 @@ export const useGroupStore = create<GroupState>((set, get) => ({
     }));
 
     try {
-      const response = await CloudFunctionsService.reportMatch(groupId, seasonId, participants);
+      const response = await CloudFunctionsService.reportMatch(
+        groupId,
+        seasonId,
+        participants,
+        teams
+      );
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to report match');
       }
@@ -547,9 +594,163 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       matchEntry: {
         selectedPlayers: [],
         playerOrder: [],
-        isSubmitting: false
+        isSubmitting: false,
+        isTeamMode: false,
+        teams: []
       }
     });
+  },
+
+  // Team management actions
+  toggleTeamMode: () => {
+    set((state) => ({
+      matchEntry: {
+        ...state.matchEntry,
+        isTeamMode: !state.matchEntry.isTeamMode,
+        teams: !state.matchEntry.isTeamMode ? [] : state.matchEntry.teams
+      }
+    }));
+  },
+
+  addTeam: () => {
+    set((state) => {
+      const teamNumber = state.matchEntry.teams.length + 1;
+      const gradients: Array<[string, string]> = [
+        ['#FF6B9D', '#C44569'], // Pink gradient
+        ['#4ECDC4', '#44A08D'], // Teal gradient
+        ['#667eea', '#764ba2'], // Purple gradient
+        ['#FF9500', '#FF6B00'], // Orange gradient
+        ['#9C27B0', '#7B1FA2'], // Deep purple gradient
+        ['#00BCD4', '#0097A7'] // Cyan gradient
+      ];
+      // Assign gradient based on creation order (cycles through gradients)
+      const gradientIndex = (teamNumber - 1) % gradients.length;
+      const newTeam: Team = {
+        id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: `Team ${teamNumber}`, // Will be translated in the UI
+        members: [],
+        placement: teamNumber,
+        teamNumber: teamNumber, // Permanent team number
+        gradientIndex: gradientIndex // Permanent gradient index
+      };
+      return {
+        matchEntry: {
+          ...state.matchEntry,
+          teams: [...state.matchEntry.teams, newTeam]
+        }
+      };
+    });
+  },
+
+  removeTeam: (teamId: string) => {
+    set((state) => {
+      const updatedTeams = state.matchEntry.teams
+        .filter((t) => t.id !== teamId)
+        .map((t, index) => ({ ...t, placement: index + 1 }));
+      return {
+        matchEntry: {
+          ...state.matchEntry,
+          teams: updatedTeams
+        }
+      };
+    });
+  },
+
+  moveTeamUp: (teamId: string) => {
+    set((state) => {
+      const teams = [...state.matchEntry.teams];
+      const currentIndex = teams.findIndex((t) => t.id === teamId);
+
+      if (currentIndex > 0) {
+        // Swap teams in the array
+        const temp = teams[currentIndex];
+        teams[currentIndex] = teams[currentIndex - 1];
+        teams[currentIndex - 1] = temp;
+
+        // Update placements for all teams - create completely new objects
+        // Keep teamNumber and gradientIndex unchanged
+        const updatedTeams = teams.map((team, index) => ({
+          id: team.id,
+          name: team.name,
+          members: [...team.members], // Ensure members array is copied
+          placement: index + 1,
+          teamNumber: team.teamNumber,
+          gradientIndex: team.gradientIndex
+        }));
+
+        return {
+          matchEntry: {
+            ...state.matchEntry,
+            teams: updatedTeams
+          }
+        };
+      }
+      return state;
+    });
+  },
+
+  moveTeamDown: (teamId: string) => {
+    set((state) => {
+      const teams = [...state.matchEntry.teams];
+      const currentIndex = teams.findIndex((t) => t.id === teamId);
+
+      if (currentIndex < teams.length - 1) {
+        // Swap teams in the array
+        const temp = teams[currentIndex];
+        teams[currentIndex] = teams[currentIndex + 1];
+        teams[currentIndex + 1] = temp;
+
+        // Update placements for all teams - create completely new objects
+        // Keep teamNumber and gradientIndex unchanged
+        const updatedTeams = teams.map((team, index) => ({
+          id: team.id,
+          name: team.name,
+          members: [...team.members], // Ensure members array is copied
+          placement: index + 1,
+          teamNumber: team.teamNumber,
+          gradientIndex: team.gradientIndex
+        }));
+
+        return {
+          matchEntry: {
+            ...state.matchEntry,
+            teams: updatedTeams
+          }
+        };
+      }
+      return state;
+    });
+  },
+
+  addPlayerToTeam: (teamId: string, player: Member) => {
+    set((state) => ({
+      matchEntry: {
+        ...state.matchEntry,
+        teams: state.matchEntry.teams.map((t) =>
+          t.id === teamId ? { ...t, members: [...t.members, player] } : t
+        )
+      }
+    }));
+  },
+
+  removePlayerFromTeam: (teamId: string, playerUid: string) => {
+    set((state) => ({
+      matchEntry: {
+        ...state.matchEntry,
+        teams: state.matchEntry.teams.map((t) =>
+          t.id === teamId ? { ...t, members: t.members.filter((m) => m.uid !== playerUid) } : t
+        )
+      }
+    }));
+  },
+
+  setTeamPlacement: (teamId: string, placement: number) => {
+    set((state) => ({
+      matchEntry: {
+        ...state.matchEntry,
+        teams: state.matchEntry.teams.map((t) => (t.id === teamId ? { ...t, placement } : t))
+      }
+    }));
   },
 
   setLoading: (loading: boolean) => {

@@ -20,7 +20,8 @@
     "yes": "Yes",
     "no": "No",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "add": "Add"
   },
   "auth": {
     "signIn": "Sign In",
@@ -116,7 +117,9 @@
     "enterNewGroupName": "Enter the new group name",
     "groupNameRequired": "Group name is required",
     "cannotUpdateGroupName": "Unable to update group name",
-    "groupNameUpdated": "Group name updated successfully"
+    "groupNameUpdated": "Group name updated successfully",
+    "matchTypeTeams": "Team Match",
+    "matchTypeIndividuals": "Individual Match"
   },
   "memberManagement": {
     "title": "Manage Members",
@@ -218,6 +221,20 @@
     "needAtLeastTwoPlayers": "You need at least 2 players to create a match",
     "noActiveSeason": "No active season found",
     "addMember": "Add Member",
+    "teamMode": "Team Mode",
+    "individualMode": "Individual Mode",
+    "switchToTeamMode": "Switch to Team Mode",
+    "switchToIndividualMode": "Switch to Individual Mode",
+    "teams": "Teams",
+    "addTeam": "Add Team",
+    "teamNumber": "Team {{number}}",
+    "teamMembers": "Team Members",
+    "addPlayerToTeam": "Add Player to Team",
+    "removePlayerFromTeam": "Remove Player from Team",
+    "removeTeam": "Remove Team",
+    "needAtLeastTwoTeams": "You need at least 2 teams to create a match",
+    "teamMustHaveAtLeastOneMember": "Each team must have at least one member",
+    "confirmMatchMessageTeams": "Are you sure you want to record this match with {{count}} teams?",
     "addMemberModal": {
       "title": "Add New Member",
       "memberName": "Member Name",
@@ -360,12 +377,15 @@
     "matchInfo": "Match Information",
     "players": "players",
     "participants": "Participants",
+    "teams": "Teams",
     "placement": "Placement",
     "ratingBefore": "Rating Before",
     "ratingAfter": "Rating After",
     "eloPoints": "ELO points",
     "viewDetails": "View Details",
     "noParticipants": "No participants found for this match",
+    "teamName": "Team {{number}}",
+    "teamMembers": "Team members ({{count}})",
     "deleteMatch": "Delete Match",
     "confirmDelete": "Delete Match",
     "confirmDeleteMessage": "Are you sure you want to delete this match?",

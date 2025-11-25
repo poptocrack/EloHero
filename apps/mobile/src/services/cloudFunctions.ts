@@ -66,7 +66,18 @@ export class CloudFunctionsService {
     participants: Omit<
       Participant,
       'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
-    >[]
+    >[],
+    teams?: Array<{
+      id: string;
+      name: string;
+      members: Array<{
+        uid: string;
+        displayName: string;
+        photoURL?: string | null;
+      }>;
+      placement: number;
+      isTied?: boolean;
+    }>
   ): Promise<ApiResponse<{ game: Game; participants: Participant[] }>> {
     try {
       const reportMatch = httpsCallable(functions, 'reportMatch');
@@ -79,6 +90,17 @@ export class CloudFunctionsService {
           photoURL: p.photoURL,
           placement: p.placement,
           isTied: p.isTied
+        })),
+        teams: teams?.map((t) => ({
+          id: t.id,
+          name: t.name,
+          members: t.members.map((m) => ({
+            uid: m.uid,
+            displayName: m.displayName,
+            photoURL: m.photoURL
+          })),
+          placement: t.placement,
+          isTied: t.isTied || false
         }))
       });
       return result.data as ApiResponse<{ game: Game; participants: Participant[] }>;

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calculateEloChanges = exports.generateInviteCodeHelper = exports.checkPlanLimit = exports.getUserPlan = void 0;
+exports.calculateTeamEloChanges = exports.calculateEloChanges = exports.generateInviteCodeHelper = exports.checkPlanLimit = exports.getUserPlan = void 0;
 const admin = __importStar(require("firebase-admin"));
 const db_1 = require("./db");
 const constants_1 = require("./constants");
@@ -138,4 +138,76 @@ function calculateEloChanges(participants) {
     return results;
 }
 exports.calculateEloChanges = calculateEloChanges;
+/**
+ * Calculate ELO changes for teams based on their placements
+ * Team elo is calculated as the average of team members' elo
+ * All members of a team receive the same elo change
+ */
+function calculateTeamEloChanges(teams) {
+    const n = teams.length;
+    const results = [];
+    // First, calculate team-level elo changes
+    const teamResults = [];
+    for (let i = 0; i < n; i++) {
+        const team = teams[i];
+        let totalExpectedScore = 0;
+        let totalActualScore = 0;
+        // Calculate expected and actual scores against all other teams
+        for (let j = 0; j < n; j++) {
+            if (i !== j) {
+                const opponent = teams[j];
+                // Expected score calculation (team vs team)
+                const expectedScore = 1 / (1 + Math.pow(10, (opponent.teamRating - team.teamRating) / 400));
+                totalExpectedScore += expectedScore;
+                // Actual score based on placement
+                let actualScore;
+                if (team.placement < opponent.placement) {
+                    actualScore = 1; // Team finished higher
+                }
+                else if (team.placement > opponent.placement) {
+                    actualScore = 0; // Team finished lower
+                }
+                else {
+                    actualScore = 0.5; // Tie
+                }
+                totalActualScore += actualScore;
+            }
+        }
+        // Calculate average games played for the team (for K factor calculation)
+        const avgGamesPlayed = team.members.length > 0
+            ? Math.round(team.members.reduce((sum, m) => sum + m.gamesPlayed, 0) / team.members.length)
+            : 0;
+        // Calculate K factor (decreases with more games)
+        const kFactor = constants_1.ELO_CONFIG.K_BASE * (1 / (1 + avgGamesPlayed / constants_1.ELO_CONFIG.N0));
+        // Calculate team rating change
+        const teamRatingChange = Math.round(kFactor * (totalActualScore - totalExpectedScore));
+        const teamRatingAfter = team.teamRating + teamRatingChange;
+        teamResults.push({
+            teamId: team.id,
+            teamRatingBefore: team.teamRating,
+            teamRatingAfter,
+            teamRatingChange
+        });
+    }
+    // Apply team elo changes to all team members equally
+    for (const team of teams) {
+        const teamResult = teamResults.find((tr) => tr.teamId === team.id);
+        if (!teamResult)
+            continue;
+        // Calculate per-member elo change
+        // Each member gets the same change as the team
+        const memberRatingChange = teamResult.teamRatingChange;
+        for (const member of team.members) {
+            const memberRatingAfter = member.ratingBefore + memberRatingChange;
+            results.push({
+                uid: member.uid,
+                ratingBefore: member.ratingBefore,
+                ratingAfter: memberRatingAfter,
+                ratingChange: memberRatingChange
+            });
+        }
+    }
+    return results;
+}
+exports.calculateTeamEloChanges = calculateTeamEloChanges;
 //# sourceMappingURL=helpers.js.map

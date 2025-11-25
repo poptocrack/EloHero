@@ -6,11 +6,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
 import { queryKeys } from '../../utils/queryKeys';
-import { Member } from '@elohero/shared-types';
-import { calculateEloChanges } from '../../utils/eloCalculation';
+import { Member, Team } from '@elohero/shared-types';
+import { calculateEloChanges, calculateTeamEloChanges } from '../../utils/eloCalculation';
 import { APP_CONSTANTS } from '../../utils/constants';
 import MatchEntryHeader from './components/MatchEntryHeader';
+import TeamModeToggle from './components/TeamModeToggle';
 import SelectedPlayersCard from './components/SelectedPlayersCard';
+import TeamsCard from './components/TeamsCard';
 import AvailablePlayersCard from './components/AvailablePlayersCard';
 import MatchSubmitButton from './components/MatchSubmitButton';
 
@@ -42,43 +44,108 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     addPlayerToMatch,
     removePlayerFromMatch,
     reportMatch,
-    clearMatchEntry
+    clearMatchEntry,
+    toggleTeamMode,
+    addTeam,
+    removeTeam,
+    moveTeamUp,
+    moveTeamDown,
+    addPlayerToTeam,
+    removePlayerFromTeam
   } = useGroupStore();
 
   const [availablePlayers, setAvailablePlayers] = useState<Member[]>([]);
 
-  // Calculate ELO changes for selected players based on their order
+  // Calculate ELO changes for selected players or teams based on mode
   const eloPredictions = useMemo(() => {
-    if (!currentSeason || matchEntry.playerOrder.length < 2 || currentSeasonRatings.length === 0) {
+    if (!currentSeason || currentSeasonRatings.length === 0) {
       return new Map<string, { currentElo: number; eloChange: number }>();
     }
 
-    // Get current ratings for selected players
-    const participantsWithRatings = matchEntry.playerOrder.map((player, index) => {
-      const rating = currentSeasonRatings.find((r) => r.uid === player.uid);
-      return {
-        uid: player.uid,
-        ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
-        gamesPlayed: rating?.gamesPlayed || 0,
-        placement: index + 1,
-        isTied: false
-      };
-    });
+    if (matchEntry.isTeamMode) {
+      // Team mode: Calculate team elo changes
+      if (matchEntry.teams.length < 2) {
+        return new Map<string, { currentElo: number; eloChange: number }>();
+      }
 
-    // Calculate ELO changes
-    const eloResults = calculateEloChanges(participantsWithRatings);
+      // Prepare teams with ratings
+      const teamsWithRatings = matchEntry.teams.map((team) => {
+        const teamMembers = team.members.map((member) => {
+          const rating = currentSeasonRatings.find((r) => r.uid === member.uid);
+          return {
+            uid: member.uid,
+            ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
+            gamesPlayed: rating?.gamesPlayed || 0
+          };
+        });
 
-    // Create a map for easy lookup
-    const eloMap = new Map<string, { currentElo: number; eloChange: number }>();
-    eloResults.forEach((result) => {
-      eloMap.set(result.uid, {
-        currentElo: result.ratingBefore,
-        eloChange: result.ratingChange
+        // Calculate team rating as average of member ratings
+        const teamRating =
+          teamMembers.length > 0
+            ? teamMembers.reduce((sum, m) => sum + m.ratingBefore, 0) / teamMembers.length
+            : APP_CONSTANTS.ELO.RATING_INIT;
+
+        return {
+          id: team.id,
+          members: teamMembers,
+          placement: team.placement,
+          isTied: false,
+          teamRating
+        };
       });
-    });
 
-    return eloMap;
-  }, [matchEntry.playerOrder, currentSeason, currentSeasonRatings]);
+      // Calculate team elo changes
+      const teamEloResults = calculateTeamEloChanges(teamsWithRatings);
+
+      // Create a map for easy lookup
+      const eloMap = new Map<string, { currentElo: number; eloChange: number }>();
+      teamEloResults.forEach((result) => {
+        eloMap.set(result.uid, {
+          currentElo: result.ratingBefore,
+          eloChange: result.ratingChange
+        });
+      });
+
+      return eloMap;
+    } else {
+      // Individual mode: Calculate individual elo changes
+      if (matchEntry.playerOrder.length < 2) {
+        return new Map<string, { currentElo: number; eloChange: number }>();
+      }
+
+      // Get current ratings for selected players
+      const participantsWithRatings = matchEntry.playerOrder.map((player, index) => {
+        const rating = currentSeasonRatings.find((r) => r.uid === player.uid);
+        return {
+          uid: player.uid,
+          ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
+          gamesPlayed: rating?.gamesPlayed || 0,
+          placement: index + 1,
+          isTied: false
+        };
+      });
+
+      // Calculate ELO changes
+      const eloResults = calculateEloChanges(participantsWithRatings);
+
+      // Create a map for easy lookup
+      const eloMap = new Map<string, { currentElo: number; eloChange: number }>();
+      eloResults.forEach((result) => {
+        eloMap.set(result.uid, {
+          currentElo: result.ratingBefore,
+          eloChange: result.ratingChange
+        });
+      });
+
+      return eloMap;
+    }
+  }, [
+    matchEntry.playerOrder,
+    matchEntry.teams,
+    matchEntry.isTeamMode,
+    currentSeason,
+    currentSeasonRatings
+  ]);
 
   useEffect(() => {
     loadGroupMembers(groupId);
@@ -95,11 +162,24 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
 
   useEffect(() => {
     // Update available players when group members change
-    const available = currentGroupMembers.filter(
-      (member) => !matchEntry.selectedPlayers.some((selected) => selected.uid === member.uid)
-    );
-    setAvailablePlayers(available);
-  }, [currentGroupMembers, matchEntry.selectedPlayers]);
+    if (matchEntry.isTeamMode) {
+      // In team mode, show players not in any team
+      const playersInTeams = new Set<string>();
+      matchEntry.teams.forEach((team) => {
+        team.members.forEach((member) => {
+          playersInTeams.add(member.uid);
+        });
+      });
+      const available = currentGroupMembers.filter((member) => !playersInTeams.has(member.uid));
+      setAvailablePlayers(available);
+    } else {
+      // In individual mode, show players not selected
+      const available = currentGroupMembers.filter(
+        (member) => !matchEntry.selectedPlayers.some((selected) => selected.uid === member.uid)
+      );
+      setAvailablePlayers(available);
+    }
+  }, [currentGroupMembers, matchEntry.selectedPlayers, matchEntry.teams, matchEntry.isTeamMode]);
 
   const handleAddPlayer = (player: Member) => {
     addPlayerToMatch(player);
@@ -144,55 +224,125 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   };
 
   const handleSubmitMatch = async () => {
-    if (matchEntry.playerOrder.length < 2) {
-      Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoPlayers'));
-      return;
-    }
+    if (matchEntry.isTeamMode) {
+      // Team mode validation
+      if (matchEntry.teams.length < 2) {
+        Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoTeams'));
+        return;
+      }
 
-    Alert.alert(
-      t('matchEntry.confirmMatch'),
-      t('matchEntry.confirmMatchMessage', { count: matchEntry.playerOrder.length }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.confirm'),
-          onPress: async () => {
-            try {
-              // Convert player order to participants with placements
-              const participants = matchEntry.playerOrder.map((player, index) => ({
-                uid: player.uid,
-                displayName: player.displayName,
-                photoURL: player.photoURL,
-                placement: index + 1,
-                isTied: false // TODO: Add tie functionality
-              }));
+      // Validate each team has at least one member
+      const invalidTeams = matchEntry.teams.filter((team) => team.members.length === 0);
+      if (invalidTeams.length > 0) {
+        Alert.alert(t('common.error'), t('matchEntry.teamMustHaveAtLeastOneMember'));
+        return;
+      }
 
-              // Get current season (assuming first active season for now)
-              const currentSeason = useGroupStore.getState().currentSeason;
-              if (!currentSeason) {
-                Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
-                return;
+      Alert.alert(
+        t('matchEntry.confirmMatch'),
+        t('matchEntry.confirmMatchMessageTeams', { count: matchEntry.teams.length }),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.confirm'),
+            onPress: async () => {
+              try {
+                // Get current season
+                const currentSeason = useGroupStore.getState().currentSeason;
+                if (!currentSeason) {
+                  Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
+                  return;
+                }
+
+                // Convert teams to the format expected by the backend
+                const teams = matchEntry.teams.map((team) => ({
+                  id: team.id,
+                  name: team.name,
+                  members: team.members.map((member) => ({
+                    uid: member.uid,
+                    displayName: member.displayName,
+                    photoURL: member.photoURL
+                  })),
+                  placement: team.placement,
+                  isTied: false
+                }));
+
+                // Call reportMatch with teams
+                await reportMatch(groupId, currentSeason.id, [], teams);
+
+                // Invalidate React Query queries
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
+                  queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.seasonRatings(currentSeason.id)
+                  })
+                ]);
+
+                Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
+                  { text: t('common.done'), onPress: () => navigation.goBack() }
+                ]);
+              } catch (error) {
+                Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
               }
-
-              await reportMatch(groupId, currentSeason.id, participants);
-
-              // Invalidate React Query queries
-              await Promise.all([
-                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
-                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
-                queryClient.invalidateQueries({ queryKey: queryKeys.seasonRatings(currentSeason.id) })
-              ]);
-
-              Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
-                { text: t('common.done'), onPress: () => navigation.goBack() }
-              ]);
-            } catch (error) {
-              Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
             }
           }
-        }
-      ]
-    );
+        ]
+      );
+    } else {
+      // Individual mode validation
+      if (matchEntry.playerOrder.length < 2) {
+        Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoPlayers'));
+        return;
+      }
+
+      Alert.alert(
+        t('matchEntry.confirmMatch'),
+        t('matchEntry.confirmMatchMessage', { count: matchEntry.playerOrder.length }),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.confirm'),
+            onPress: async () => {
+              try {
+                // Convert player order to participants with placements
+                const participants = matchEntry.playerOrder.map((player, index) => ({
+                  uid: player.uid,
+                  displayName: player.displayName,
+                  photoURL: player.photoURL,
+                  placement: index + 1,
+                  isTied: false
+                }));
+
+                // Get current season
+                const currentSeason = useGroupStore.getState().currentSeason;
+                if (!currentSeason) {
+                  Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
+                  return;
+                }
+
+                await reportMatch(groupId, currentSeason.id, participants);
+
+                // Invalidate React Query queries
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
+                  queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.seasonRatings(currentSeason.id)
+                  })
+                ]);
+
+                Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
+                  { text: t('common.done'), onPress: () => navigation.goBack() }
+                ]);
+              } catch (error) {
+                Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+              }
+            }
+          }
+        ]
+      );
+    }
   };
 
   return (
@@ -200,30 +350,61 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
       {/* Header with Back Button */}
       <MatchEntryHeader onBackPress={() => navigation.goBack()} />
 
+      {/* Team Mode Toggle */}
+      <TeamModeToggle isTeamMode={matchEntry.isTeamMode} onToggle={toggleTeamMode} />
+
       {/* Scrollable Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Selected Players Card */}
-        <SelectedPlayersCard
-          selectedPlayers={matchEntry.playerOrder}
-          onDragEnd={handleDragEnd}
-          onRemovePlayer={handleRemovePlayer}
-          onMovePlayerUp={handleMovePlayerUp}
-          onMovePlayerDown={handleMovePlayerDown}
-          eloPredictions={eloPredictions}
-        />
+        {matchEntry.isTeamMode ? (
+          <>
+            {/* Teams Card */}
+            <TeamsCard
+              teams={matchEntry.teams}
+              availablePlayers={availablePlayers}
+              currentGroupMembers={currentGroupMembers}
+              onAddTeam={addTeam}
+              onRemoveTeam={removeTeam}
+              onMoveTeamUp={moveTeamUp}
+              onMoveTeamDown={moveTeamDown}
+              onAddPlayerToTeam={addPlayerToTeam}
+              onRemovePlayerFromTeam={removePlayerFromTeam}
+              eloPredictions={eloPredictions}
+              isSubmitting={matchEntry.isSubmitting}
+            />
+          </>
+        ) : (
+          <>
+            {/* Selected Players Card */}
+            <SelectedPlayersCard
+              selectedPlayers={matchEntry.playerOrder}
+              onDragEnd={handleDragEnd}
+              onRemovePlayer={handleRemovePlayer}
+              onMovePlayerUp={handleMovePlayerUp}
+              onMovePlayerDown={handleMovePlayerDown}
+              eloPredictions={eloPredictions}
+            />
 
-        {/* Available Players Card */}
-        <AvailablePlayersCard availablePlayers={availablePlayers} onAddPlayer={handleAddPlayer} />
+            {/* Available Players Card - Only show in individual mode */}
+            <AvailablePlayersCard
+              availablePlayers={availablePlayers}
+              onAddPlayer={handleAddPlayer}
+            />
+          </>
+        )}
       </ScrollView>
 
       {/* Fixed Submit Button */}
       <MatchSubmitButton
         onPress={handleSubmitMatch}
-        isDisabled={matchEntry.playerOrder.length < 2 || matchEntry.isSubmitting}
+        isDisabled={
+          matchEntry.isTeamMode
+            ? matchEntry.teams.length < 2 || matchEntry.isSubmitting
+            : matchEntry.playerOrder.length < 2 || matchEntry.isSubmitting
+        }
         isLoading={matchEntry.isSubmitting}
       />
     </View>

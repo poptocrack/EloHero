@@ -12,27 +12,55 @@ interface GamesListProps {
 export default function GamesList({ games, onGamePress }: GamesListProps) {
   const { t } = useTranslation();
 
-  const renderGameItem = ({ item }: { item: Game }) => (
-    <TouchableOpacity
-      style={styles.gameItem}
-      onPress={() => onGamePress?.(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.gameHeader}>
-        <Text style={styles.gameDate}>{item.createdAt.toLocaleDateString('fr-FR')}</Text>
-        <Text style={styles.gameTime}>
-          {item.createdAt.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </Text>
-      </View>
-      <View style={styles.gameFooter}>
-        <Text style={styles.gameParticipants}>{t('matchDetails.viewDetails')}</Text>
-        <Ionicons name="chevron-forward" size={20} color="#667eea" />
-      </View>
-    </TouchableOpacity>
-  );
+  const renderGameItem = ({ item }: { item: Game }) => {
+    const isTeamMatch = item.gameType === 'teams';
+
+    return (
+      <TouchableOpacity
+        style={styles.gameItem}
+        onPress={() => onGamePress?.(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.gameHeader}>
+          <View>
+            <Text style={styles.gameDate}>{item.createdAt.toLocaleDateString('fr-FR')}</Text>
+            <Text style={styles.gameTime}>
+              {item.createdAt.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.matchTypeBadge,
+              isTeamMatch ? styles.teamMatchBadge : styles.individualMatchBadge
+            ]}
+          >
+            <Ionicons
+              name={isTeamMatch ? 'people' : 'person'}
+              size={14}
+              color={isTeamMatch ? '#fff' : '#4A5568'}
+            />
+            <Text
+              style={[
+                styles.matchTypeText,
+                isTeamMatch ? styles.teamMatchText : styles.individualMatchText
+              ]}
+            >
+              {isTeamMatch
+                ? t('groupDetails.matchTypeTeams')
+                : t('groupDetails.matchTypeIndividuals')}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.gameFooter}>
+          <Text style={styles.gameParticipants}>{t('matchDetails.viewDetails')}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#667eea" />
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyGames = () => (
     <View style={styles.emptyState}>
@@ -90,6 +118,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#718096'
+  },
+  matchTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    gap: 6
+  },
+  matchTypeText: {
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  teamMatchBadge: {
+    backgroundColor: '#764ba2'
+  },
+  teamMatchText: {
+    color: '#fff'
+  },
+  individualMatchBadge: {
+    backgroundColor: '#EDF2F7'
+  },
+  individualMatchText: {
+    color: '#4A5568'
   },
   gameFooter: {
     flexDirection: 'row',

@@ -335,7 +335,9 @@ export class FirestoreService {
         isTied: doc.data().isTied,
         ratingBefore: doc.data().ratingBefore,
         ratingAfter: doc.data().ratingAfter,
-        ratingChange: doc.data().ratingChange
+        ratingChange: doc.data().ratingChange,
+        teamId: doc.data().teamId,
+        teamName: doc.data().teamName
       })) as Participant[];
 
       // Sort manually if we couldn't use orderBy

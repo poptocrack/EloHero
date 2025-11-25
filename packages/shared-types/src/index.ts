@@ -70,7 +70,7 @@ export interface Game {
   seasonId: string;
   createdBy: string;
   createdAt: Date;
-  gameType: 'multiplayer';
+  gameType: 'multiplayer' | 'teams';
   status: 'completed';
   deletedAt?: Date; // Soft delete timestamp
 }
@@ -85,6 +85,8 @@ export interface Participant {
   ratingBefore: number;
   ratingAfter: number;
   ratingChange: number;
+  teamId?: string; // Optional team ID for team matches
+  teamName?: string; // Optional team name for display purposes
 }
 
 export interface RatingChange {
@@ -135,10 +137,21 @@ export interface GroupState {
   isLoading: boolean;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  members: Member[];
+  placement: number; // Team placement in the match (can change when reordering)
+  teamNumber: number; // Permanent team number assigned at creation (Team 1, Team 2, etc.)
+  gradientIndex: number; // Permanent gradient index (0-5) assigned at creation
+}
+
 export interface MatchEntryState {
   selectedPlayers: Member[];
   playerOrder: Member[];
   isSubmitting: boolean;
+  isTeamMode: boolean;
+  teams: Team[];
 }
 
 // Navigation Types

@@ -20,7 +20,8 @@
     "yes": "Oui",
     "no": "Non",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "add": "Ajouter"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -116,7 +117,9 @@
     "enterNewGroupName": "Entrez le nouveau nom du groupe",
     "groupNameRequired": "Le nom du groupe est requis",
     "cannotUpdateGroupName": "Impossible de mettre à jour le nom du groupe",
-    "groupNameUpdated": "Nom du groupe mis à jour avec succès"
+    "groupNameUpdated": "Nom du groupe mis à jour avec succès",
+    "matchTypeTeams": "Match en équipe",
+    "matchTypeIndividuals": "Match individuel"
   },
   "memberManagement": {
     "title": "Gérer les membres",
@@ -218,6 +221,20 @@
     "needAtLeastTwoPlayers": "Il faut au moins 2 joueurs pour créer une partie",
     "noActiveSeason": "Aucune saison active trouvée",
     "addMember": "Ajouter un membre",
+    "teamMode": "Mode Équipe",
+    "individualMode": "Mode Individuel",
+    "switchToTeamMode": "Passer en mode équipe",
+    "switchToIndividualMode": "Passer en mode individuel",
+    "teams": "Équipes",
+    "addTeam": "Ajouter une équipe",
+    "teamNumber": "Équipe {{number}}",
+    "teamMembers": "Membres de l'équipe",
+    "addPlayerToTeam": "Ajouter un joueur à l'équipe",
+    "removePlayerFromTeam": "Retirer un joueur de l'équipe",
+    "removeTeam": "Retirer l'équipe",
+    "needAtLeastTwoTeams": "Il faut au moins 2 équipes pour créer une partie",
+    "teamMustHaveAtLeastOneMember": "Chaque équipe doit avoir au moins un membre",
+    "confirmMatchMessageTeams": "Êtes-vous sûr de vouloir enregistrer cette partie avec {{count}} équipes ?",
     "addMemberModal": {
       "title": "Ajouter un nouveau membre",
       "memberName": "Nom du membre",
@@ -360,10 +377,13 @@
     "matchInfo": "Informations de la partie",
     "players": "joueurs",
     "participants": "Participants",
+    "teams": "Équipes",
     "placement": "Placement",
     "ratingBefore": "Classement avant",
     "ratingAfter": "Classement après",
     "eloPoints": "points ELO",
+    "teamName": "Équipe {{number}}",
+    "teamMembers": "Membres de l'équipe ({{count}})",
     "viewDetails": "Voir les détails",
     "noParticipants": "Aucun participant trouvé pour cette partie",
     "deleteMatch": "Supprimer la partie",

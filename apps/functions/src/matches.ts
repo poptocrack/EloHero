@@ -2,7 +2,19 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { db } from './utils/db';
 import { ELO_CONFIG } from './utils/constants';
-import { calculateEloChanges } from './utils/helpers';
+import { calculateEloChanges, calculateTeamEloChanges } from './utils/helpers';
+
+interface TeamInput {
+  id: string;
+  name: string;
+  members: Array<{
+    uid: string;
+    displayName: string;
+    photoURL?: string | null;
+  }>;
+  placement: number;
+  isTied?: boolean;
+}
 
 // 4. Report Match Function
 export const reportMatch = functions.https.onCall(async (data, context) => {
@@ -10,21 +22,48 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { groupId, seasonId, participants } = data;
+  const { groupId, seasonId, participants, teams } = data;
   const uid = context.auth.uid;
 
-  if (!groupId || !seasonId || !participants || !Array.isArray(participants)) {
+  if (!groupId || !seasonId) {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Group ID, season ID, and participants are required'
+      'Group ID and season ID are required'
     );
   }
 
-  if (participants.length < 2) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'At least 2 participants are required'
-    );
+  const isTeamMode = teams && Array.isArray(teams) && teams.length > 0;
+  let teamInputs: TeamInput[] = [];
+
+  if (isTeamMode) {
+    if (teams.length < 2) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'At least 2 teams are required'
+      );
+    }
+    // Validate each team has at least one member
+    for (const team of teams) {
+      if (!team.members || !Array.isArray(team.members) || team.members.length === 0) {
+        throw new functions.https.HttpsError(
+          'invalid-argument',
+          'Each team must have at least one member'
+        );
+      }
+    }
+  } else {
+    if (!participants || !Array.isArray(participants)) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Participants are required'
+      );
+    }
+    if (participants.length < 2) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'At least 2 participants are required'
+      );
+    }
   }
 
   try {
@@ -37,40 +76,141 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
       );
     }
 
-    // Get current ratings for all participants
-    const ratingsPromises = participants.map((p: {
+    let eloResults: Array<{
       uid: string;
       displayName: string;
       photoURL?: string | null;
       placement: number;
-      isTied?: boolean;
-    }) => db.collection('ratings').doc(`${seasonId}_${p.uid}`).get());
-    const ratingDocs = await Promise.all(ratingsPromises);
+      isTied: boolean;
+      ratingBefore: number;
+      ratingAfter: number;
+      ratingChange: number;
+      teamId?: string;
+    }> = [];
 
-    // Prepare participants with current ratings
-    const participantsWithRatings = participants.map((p: {
-      uid: string;
-      displayName: string;
-      photoURL?: string | null;
-      placement: number;
-      isTied?: boolean;
-    }, index: number) => {
-      const ratingDoc = ratingDocs[index];
-      const ratingData = ratingDoc.exists ? ratingDoc.data()! : null;
+    if (isTeamMode) {
+      // Team mode: Calculate team elo changes
+      teamInputs = teams as TeamInput[];
 
-      return {
-        uid: p.uid,
-        displayName: p.displayName,
-        photoURL: p.photoURL,
-        placement: p.placement,
-        isTied: p.isTied || false,
-        ratingBefore: ratingData?.currentRating || ELO_CONFIG.RATING_INIT,
-        gamesPlayed: ratingData?.gamesPlayed || 0
-      };
-    });
+      // Get all unique member UIDs from all teams
+      const allMemberUids = new Set<string>();
+      teamInputs.forEach((team) => {
+        team.members.forEach((member) => {
+          allMemberUids.add(member.uid);
+        });
+      });
 
-    // Calculate ELO changes
-    const eloResults = calculateEloChanges(participantsWithRatings);
+      // Get current ratings for all team members
+      const ratingsPromises = Array.from(allMemberUids).map((memberUid) =>
+        db.collection('ratings').doc(`${seasonId}_${memberUid}`).get()
+      );
+      const ratingDocs = await Promise.all(ratingsPromises);
+      const ratingMap = new Map<string, { currentRating: number; gamesPlayed: number }>();
+      ratingDocs.forEach((doc, index) => {
+        const memberUid = Array.from(allMemberUids)[index];
+        const ratingData = doc.exists ? doc.data()! : null;
+        ratingMap.set(memberUid, {
+          currentRating: ratingData?.currentRating || ELO_CONFIG.RATING_INIT,
+          gamesPlayed: ratingData?.gamesPlayed || 0
+        });
+      });
+
+      // Prepare teams with ratings
+      const teamsWithRatings = teamInputs.map((team) => {
+        const teamMembers = team.members.map((member) => {
+          const rating = ratingMap.get(member.uid)!;
+          return {
+            uid: member.uid,
+            ratingBefore: rating.currentRating,
+            gamesPlayed: rating.gamesPlayed
+          };
+        });
+
+        // Calculate team rating as average of member ratings
+        const teamRating = teamMembers.length > 0
+          ? teamMembers.reduce((sum, m) => sum + m.ratingBefore, 0) / teamMembers.length
+          : ELO_CONFIG.RATING_INIT;
+
+        return {
+          id: team.id,
+          members: teamMembers,
+          placement: team.placement,
+          isTied: team.isTied || false,
+          teamRating
+        };
+      });
+
+      // Calculate team elo changes
+      const teamEloResults = calculateTeamEloChanges(teamsWithRatings);
+
+      // Map team elo results back to participants with team info
+      eloResults = teamEloResults.map((result) => {
+        // Find which team this member belongs to
+        const team = teamInputs.find((t) =>
+          t.members.some((m) => m.uid === result.uid)
+        );
+        const teamMember = team?.members.find((m) => m.uid === result.uid);
+
+        return {
+          uid: result.uid,
+          displayName: teamMember?.displayName || '',
+          photoURL: teamMember?.photoURL || null,
+          placement: team?.placement || 1,
+          isTied: team?.isTied || false,
+          ratingBefore: result.ratingBefore,
+          ratingAfter: result.ratingAfter,
+          ratingChange: result.ratingChange,
+          teamId: team?.id
+        };
+      });
+    } else {
+      // Individual mode: Use existing logic
+      const participantsArray = participants as Array<{
+        uid: string;
+        displayName: string;
+        photoURL?: string | null;
+        placement: number;
+        isTied?: boolean;
+      }>;
+
+      // Get current ratings for all participants
+      const ratingsPromises = participantsArray.map((p) =>
+        db.collection('ratings').doc(`${seasonId}_${p.uid}`).get()
+      );
+      const ratingDocs = await Promise.all(ratingsPromises);
+
+      // Prepare participants with current ratings
+      const participantsWithRatings = participantsArray.map((p, index) => {
+        const ratingDoc = ratingDocs[index];
+        const ratingData = ratingDoc.exists ? ratingDoc.data()! : null;
+
+        return {
+          uid: p.uid,
+          displayName: p.displayName,
+          photoURL: p.photoURL,
+          placement: p.placement,
+          isTied: p.isTied || false,
+          ratingBefore: ratingData?.currentRating || ELO_CONFIG.RATING_INIT,
+          gamesPlayed: ratingData?.gamesPlayed || 0
+        };
+      });
+
+      // Calculate ELO changes
+      const individualResults = calculateEloChanges(participantsWithRatings);
+      eloResults = individualResults.map((result) => {
+        const participant = participantsArray.find((p) => p.uid === result.uid);
+        return {
+          uid: result.uid,
+          displayName: participant?.displayName || '',
+          photoURL: participant?.photoURL || null,
+          placement: result.placement,
+          isTied: result.isTied || false,
+          ratingBefore: result.ratingBefore,
+          ratingAfter: result.ratingAfter,
+          ratingChange: result.ratingChange
+        };
+      });
+    }
 
     // Create game document
     const gameRef = db.collection('games').doc();
@@ -80,11 +220,22 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
       seasonId,
       createdBy: uid,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      gameType: 'multiplayer',
+      gameType: isTeamMode ? 'teams' : 'multiplayer',
       status: 'completed'
     };
 
     await gameRef.set(gameData);
+
+    // Get all current rating documents before batch operations
+    const ratingDocPromises = eloResults.map((result) =>
+      db.collection('ratings').doc(`${seasonId}_${result.uid}`).get()
+    );
+    const allRatingDocs = await Promise.all(ratingDocPromises);
+    const ratingDataMap = new Map<string, admin.firestore.DocumentData | undefined>();
+    eloResults.forEach((result, index) => {
+      const ratingDoc = allRatingDocs[index];
+      ratingDataMap.set(result.uid, ratingDoc.exists ? ratingDoc.data() : undefined);
+    });
 
     // Update participants and ratings in a batch
     const batch = db.batch();
@@ -92,7 +243,19 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
     // Add participants
     eloResults.forEach((result) => {
       const participantRef = db.collection('participants').doc(`${gameRef.id}_${result.uid}`);
-      batch.set(participantRef, {
+      const participantData: {
+        uid: string;
+        gameId: string;
+        displayName: string;
+        photoURL?: string | null;
+        placement: number;
+        isTied: boolean;
+        ratingBefore: number;
+        ratingAfter: number;
+        ratingChange: number;
+        teamId?: string;
+        teamName?: string;
+      } = {
         uid: result.uid,
         gameId: gameRef.id,
         displayName: result.displayName,
@@ -102,19 +265,38 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
         ratingBefore: result.ratingBefore,
         ratingAfter: result.ratingAfter,
         ratingChange: result.ratingChange
-      });
+      };
+      if (result.teamId) {
+        participantData.teamId = result.teamId;
+        const team = teamInputs.find((t) => t.id === result.teamId);
+        if (team?.name) {
+          participantData.teamName = team.name;
+        }
+      }
+      batch.set(participantRef, participantData);
 
       // Update rating
       const ratingRef = db.collection('ratings').doc(`${seasonId}_${result.uid}`);
-      const isWin = result.placement === 1;
-      const isLoss = result.placement === participants.length;
+      let isWin = false;
+      let isLoss = false;
       const isDraw = result.isTied;
 
-      // Get current rating data for this participant
-      const currentRatingDoc = ratingDocs.find(
-        (doc, index) => participants[index].uid === result.uid
-      );
-      const currentRatingData = currentRatingDoc?.exists ? currentRatingDoc.data() : null;
+      if (isTeamMode) {
+        // In team mode, win/loss is based on team placement
+        const teamPlacements = (teams as Array<{ placement: number }>).map((t) => t.placement);
+        const maxPlacement = Math.max(...teamPlacements);
+        isWin = result.placement === 1;
+        isLoss = result.placement === maxPlacement;
+      } else {
+        // In individual mode, win/loss is based on participant placement
+        const totalParticipants = (participants as Array<{ uid: string }>).length;
+        isWin = result.placement === 1;
+        isLoss = result.placement === totalParticipants;
+      }
+
+      // Get current rating data for this participant from the map
+      const currentRatingData = ratingDataMap.get(result.uid);
+      const currentGamesPlayed = currentRatingData?.gamesPlayed || 0;
 
       batch.set(
         ratingRef,
@@ -124,7 +306,7 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
           uid: result.uid,
           groupId,
           currentRating: result.ratingAfter,
-          gamesPlayed: result.gamesPlayed + 1,
+          gamesPlayed: currentGamesPlayed + 1,
           wins: (currentRatingData?.wins || 0) + (isWin ? 1 : 0),
           losses: (currentRatingData?.losses || 0) + (isLoss ? 1 : 0),
           draws: (currentRatingData?.draws || 0) + (isDraw ? 1 : 0),
