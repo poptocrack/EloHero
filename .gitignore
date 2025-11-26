@@ -48,3 +48,6 @@ yarn-error.*
 *service-account*.json
 firebase-service-account.json
 elohero-service-account.json
+
+# Local Netlify folder
+.netlify

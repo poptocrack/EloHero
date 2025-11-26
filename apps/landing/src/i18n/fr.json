@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "EloHero",
+    "tagline": "Suivez vos rivalités en quelques secondes"
+  },
+  "common": {
+    "language": "Langue",
+    "comingSoon": "Bientôt disponible"
+  },
+  "nav": {
+    "home": "Accueil",
+    "howItWorks": "Comment ça marche",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Suivez les résultats et le classement de votre groupe",
+    "subtitle": "Jeux de société, sport, jeux vidéo ou matchs au bureau. Enregistrez vos résultats et laissez EloHero gérer le classement.",
+    "ctaPrimary": "Télécharger l’app",
+    "ctaSecondary": "Comment ça marche",
+    "cardTitle": "Instantanés de groupe",
+    "cardSubtitle": "Gardez une vue claire des classements à tout moment.",
+    "highlights": [
+      "Créez ou rejoignez un groupe en quelques secondes",
+      "Enregistrez chaque match sans tableur",
+      "Laissez EloHero mettre le classement à jour"
+    ],
+    "snapshot": {
+      "liveBadge": "Classement en direct",
+      "playersLabel": "Leaders actuels",
+      "updated": "Mis à jour il y a 2 min",
+      "players": [
+        {
+          "name": "Mia",
+          "games": "18 matchs joués",
+          "elo": "1520 Elo",
+          "delta": "+24",
+          "trend": "up"
+        },
+        {
+          "name": "Léo",
+          "games": "15 matchs joués",
+          "elo": "1488 Elo",
+          "delta": "+12",
+          "trend": "steady"
+        },
+        {
+          "name": "Sasha",
+          "games": "20 matchs joués",
+          "elo": "1462 Elo",
+          "delta": "-8",
+          "trend": "down"
+        }
+      ],
+      "nextMatch": {
+        "label": "Prochain duel",
+        "matchup": "Sasha vs Théo",
+        "cta": "Enregistrer"
+      }
+    }
+  },
+  "useCases": {
+    "title": "Utilisez-la pour tous vos jeux",
+    "label": "Pour qui l’app est faite",
+    "boardgames": {
+      "title": "Jeux de société",
+      "text": "Suivez vos parties de Catan, Carcassonne, Splendor, 7 Wonders, et bien plus."
+    },
+    "sports": {
+      "title": "Sports et jeux au bureau",
+      "text": "Parfait pour le babyfoot, le ping-pong, le padel, les fléchettes ou tout match amical."
+    },
+    "videogames": {
+      "title": "Jeux vidéo",
+      "text": "Gardez un classement sur la durée pour Mario Kart, Smash, FIFA, etc."
+    }
+  },
+  "features": {
+    "title": "Ce que EloHero apporte à votre groupe",
+    "subtitle": "Pensé pour la rapidité, la clarté et la compétition amicale.",
+    "1": {
+      "title": "Enregistrez le résultat après chaque match",
+      "text": "Capturez chaque victoire ou défaite dès qu’elle arrive."
+    },
+    "2": {
+      "title": "Classement automatique de votre groupe",
+      "text": "Oubliez les tableaux Excel : le classement se met à jour seul."
+    },
+    "3": {
+      "title": "Gérez plusieurs groupes",
+      "text": "Passez d’un groupe d’amis à votre club ou au bureau en un instant."
+    },
+    "4": {
+      "title": "Statistiques dans le temps",
+      "text": "Visualisez qui monte ou descend sur la durée."
+    },
+    "5": {
+      "title": "Simple et rapide",
+      "text": "Une interface légère pensée pour quelques taps par match."
+    }
+  },
+  "stores": {
+    "title": "Disponible sur iOS et Android",
+    "subtitle": "Téléchargez l’app et commencez à logger vos matchs.",
+    "iosBadge": "iOS",
+    "androidBadge": "Android",
+    "ios": "Disponible sur l’App Store",
+    "android": "Disponible sur Google Play"
+  },
+  "footer": {
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d’utilisation",
+    "discord": "Rejoindre le Discord",
+    "linkedin": "Me trouver sur LinkedIn"
+  }
+}

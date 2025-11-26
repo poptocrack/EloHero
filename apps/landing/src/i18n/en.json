@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "EloHero",
+    "tagline": "Track every rivalry in seconds"
+  },
+  "common": {
+    "language": "Language",
+    "comingSoon": "Coming soon"
+  },
+  "nav": {
+    "home": "Home",
+    "howItWorks": "How it works",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Track results and rankings in your group",
+    "subtitle": "For board games, sports, video games or office matches. Record your results, and let EloHero keep the ranking.",
+    "ctaPrimary": "Get the app",
+    "ctaSecondary": "How it works",
+    "cardTitle": "Group snapshots",
+    "cardSubtitle": "Stay aligned on standings at any moment.",
+    "highlights": [
+      "Create or join groups in seconds",
+      "Log every match without spreadsheets",
+      "Let EloHero auto-update rankings"
+    ],
+    "snapshot": {
+      "liveBadge": "Live standings",
+      "playersLabel": "Current leaders",
+      "updated": "Updated 2 min ago",
+      "players": [
+        {
+          "name": "Mia",
+          "games": "18 games played",
+          "elo": "1520 Elo",
+          "delta": "+24",
+          "trend": "up"
+        },
+        {
+          "name": "Leo",
+          "games": "15 games played",
+          "elo": "1488 Elo",
+          "delta": "+12",
+          "trend": "steady"
+        },
+        {
+          "name": "Sasha",
+          "games": "20 games played",
+          "elo": "1462 Elo",
+          "delta": "-8",
+          "trend": "down"
+        }
+      ],
+      "nextMatch": {
+        "label": "Next matchup",
+        "matchup": "Sasha vs Theo",
+        "cta": "Log result"
+      }
+    }
+  },
+  "useCases": {
+    "title": "Use it for any kind of game",
+    "label": "Who it's built for",
+    "boardgames": {
+      "title": "Board games",
+      "text": "Track your Catan, Carcassonne, Splendor, 7 Wonders, and more."
+    },
+    "sports": {
+      "title": "Sports & office games",
+      "text": "Perfect for foosball, ping-pong, padel, darts, or any friendly match."
+    },
+    "videogames": {
+      "title": "Video games",
+      "text": "Keep long-term rankings for Mario Kart, Smash, FIFA, and more."
+    }
+  },
+  "features": {
+    "title": "What EloHero does for your group",
+    "subtitle": "Designed for speed, clarity, and friendly competition.",
+    "1": {
+      "title": "Track results after each match",
+      "text": "Capture every win or loss the moment it happens."
+    },
+    "2": {
+      "title": "Automatic rankings for your group",
+      "text": "Forget spreadsheets,rankings update themselves."
+    },
+    "3": {
+      "title": "Support for multiple groups",
+      "text": "Switch between friends, club, or office leagues instantly."
+    },
+    "4": {
+      "title": "Stats over time",
+      "text": "Visualize trends to see who is rising or falling."
+    },
+    "5": {
+      "title": "Simple and fast",
+      "text": "A lightweight UI built for a few taps per match."
+    }
+  },
+  "stores": {
+    "title": "Available on iOS and Android",
+    "subtitle": "Download the app and start logging matches today.",
+    "iosBadge": "iOS",
+    "androidBadge": "Android",
+    "ios": "Download on the App Store",
+    "android": "Get it on Google Play"
+  },
+  "footer": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "discord": "Join the Discord",
+    "linkedin": "Connect on LinkedIn"
+  }
+}
