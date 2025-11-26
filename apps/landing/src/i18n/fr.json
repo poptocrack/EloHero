@@ -23,40 +23,7 @@
       "Créez ou rejoignez un groupe en quelques secondes",
       "Enregistrez chaque match sans tableur",
       "Laissez EloHero mettre le classement à jour"
-    ],
-    "snapshot": {
-      "liveBadge": "Classement en direct",
-      "playersLabel": "Leaders actuels",
-      "updated": "Mis à jour il y a 2 min",
-      "players": [
-        {
-          "name": "Mia",
-          "games": "18 matchs joués",
-          "elo": "1520 Elo",
-          "delta": "+24",
-          "trend": "up"
-        },
-        {
-          "name": "Léo",
-          "games": "15 matchs joués",
-          "elo": "1488 Elo",
-          "delta": "+12",
-          "trend": "steady"
-        },
-        {
-          "name": "Sasha",
-          "games": "20 matchs joués",
-          "elo": "1462 Elo",
-          "delta": "-8",
-          "trend": "down"
-        }
-      ],
-      "nextMatch": {
-        "label": "Prochain duel",
-        "matchup": "Sasha vs Théo",
-        "cta": "Enregistrer"
-      }
-    }
+    ]
   },
   "useCases": {
     "title": "Utilisez-la pour tous vos jeux",
@@ -109,7 +76,6 @@
   "footer": {
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d’utilisation",
-    "discord": "Rejoindre le Discord",
-    "linkedin": "Me trouver sur LinkedIn"
+    "madeBy": "Créé par Tristan Debroise"
   }
 }

@@ -21,7 +21,7 @@ export const Hero = (): ReactElement => {
 
   const highlights = t('hero.highlights', { returnObjects: true }) as string[];
   const snapshotPlayers = t('hero.snapshot.players', {
-    returnObjects: true,
+    returnObjects: true
   }) as SnapshotPlayer[];
 
   return (
@@ -32,9 +32,7 @@ export const Hero = (): ReactElement => {
       <div className="grid items-start gap-10 lg:grid-cols-2">
         <div className="space-y-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-              EloHero
-            </p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-primary">EloHero</p>
             <h1 className="mt-3 text-4xl font-bold text-slate-900 sm:text-5xl">
               {t('hero.title')}
             </h1>
@@ -52,12 +50,7 @@ export const Hero = (): ReactElement => {
             <Button asChild size="lg" className="rounded-2xl px-8">
               <a href="#stores">{t('hero.ctaPrimary')}</a>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="rounded-2xl px-8"
-            >
+            <Button asChild size="lg" variant="outline" className="rounded-2xl px-8">
               <a href="#features">{t('hero.ctaSecondary')}</a>
             </Button>
           </div>
@@ -97,12 +90,8 @@ export const Hero = (): ReactElement => {
                         #{index + 1}
                       </span>
                       <div>
-                        <p className="text-base font-semibold leading-tight">
-                          {player.name}
-                        </p>
-                        <p className="text-xs text-white/70">
-                          {player.games}
-                        </p>
+                        <p className="text-base font-semibold leading-tight">{player.name}</p>
+                        <p className="text-xs text-white/70">{player.games}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -113,8 +102,8 @@ export const Hero = (): ReactElement => {
                             player.trend === 'down'
                               ? 'rotate-180 text-rose-200'
                               : player.trend === 'steady'
-                                ? 'text-white/70'
-                                : 'text-emerald-200'
+                              ? 'text-white/70'
+                              : 'text-emerald-200'
                           }`}
                         />
                         <span>{player.delta}</span>
@@ -146,4 +135,3 @@ export const Hero = (): ReactElement => {
     </section>
   );
 };
-

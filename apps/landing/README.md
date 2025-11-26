@@ -27,16 +27,19 @@ The build output will be in the `dist/` directory.
 ### Setup Instructions
 
 1. **Connect your repository to Netlify:**
+
    - Go to your Netlify dashboard
    - Click "Add new site" → "Import an existing project"
    - Connect your Git repository
 
 2. **Configure build settings:**
+
    - **Base directory:** `apps/landing`
    - **Build command:** `yarn build` (or `cd apps/landing && yarn build`)
    - **Publish directory:** `apps/landing/dist`
 
 3. **Environment variables (if needed):**
+
    - Add any required environment variables in Netlify's site settings
 
 4. **Custom domain:**
@@ -47,6 +50,7 @@ The build output will be in the `dist/` directory.
 ### Netlify Configuration
 
 The `netlify.toml` file is already configured with:
+
 - Build command and publish directory
 - SPA redirect rules (all routes redirect to `index.html` for client-side routing)
 
@@ -81,4 +85,3 @@ apps/landing/
 ├── tsconfig.json   # TypeScript config
 └── vite.config.ts  # Vite configuration
 ```
-
