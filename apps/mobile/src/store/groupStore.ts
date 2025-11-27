@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { CloudFunctionsService } from '../services/cloudFunctions';
 import { FirestoreService } from '../services/firestore';
+import { useAuthStore } from './authStore';
 import {
   Group,
   Member,
@@ -213,19 +214,36 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   },
 
   createGroup: async (name: string, description?: string) => {
-    set({ isLoading: true, error: null });
+    const user = useAuthStore.getState().user;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const temporaryGroup: Group = {
+      id: `temp-${Date.now()}`,
+      name,
+      description,
+      ownerId: user.uid,
+      memberCount: 1,
+      gameCount: 0,
+      isActive: true,
+      currentSeasonId: undefined,
+      invitationCode: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    set((state) => ({
+      groups: [...state.groups, temporaryGroup],
+      isLoading: true,
+      error: null
+    }));
+
     try {
-      // Ensure user document exists before creating group
-      // Import AuthService dynamically to avoid circular dependency
       const { AuthService } = await import('../services/auth');
-      const { useAuthStore } = await import('../store/authStore');
-      const user = useAuthStore.getState().user;
-      if (user) {
-        await AuthService.ensureUserDocument({
-          uid: user.uid,
-          displayName: user.displayName,
-          photoURL: user.photoURL
-        } as any);
+      const firebaseUser = AuthService.getCurrentUser();
+      if (firebaseUser) {
+        await AuthService.ensureUserDocument(firebaseUser);
       }
 
       const response = await CloudFunctionsService.createGroup(name, description);
@@ -235,16 +253,17 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
       const newGroup = response.data;
       set((state) => ({
-        groups: [...state.groups, newGroup],
+        groups: state.groups.map((group) => (group.id === temporaryGroup.id ? newGroup : group)),
         isLoading: false
       }));
 
       return newGroup;
     } catch (error) {
-      set({
+      set((state) => ({
+        groups: state.groups.filter((group) => group.id !== temporaryGroup.id),
         error: error instanceof Error ? error.message : 'Failed to create group',
         isLoading: false
-      });
+      }));
       throw error;
     }
   },

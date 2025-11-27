@@ -56,7 +56,7 @@ export default function TeamItem({
   ];
 
   // Use the stored gradientIndex (fallback to 0 if not set for backwards compatibility)
-  const gradientIndex = team.gradientIndex !== undefined ? team.gradientIndex : 0;
+  const gradientIndex = team.gradientIndex || 0;
   const teamGradient = gradients[gradientIndex % gradients.length];
 
   // Calculate available players for this team

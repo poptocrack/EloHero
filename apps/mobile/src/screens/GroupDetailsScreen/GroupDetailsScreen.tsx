@@ -77,7 +77,7 @@ export default function GroupDetailsScreen({
     canAddMember,
     handleRefresh,
     handleNewMatch,
-    handleCopyInviteCode,
+    handleShareGroup,
     handleAddMember,
     handleCancelAddMember,
     handlePlayerPress,
@@ -188,8 +188,8 @@ export default function GroupDetailsScreen({
         }
         contentContainerStyle={{ paddingBottom: height * 0.2 }}
       >
-        {/* Invitation Code Card for Admins */}
-        <InvitationCodeCard group={currentGroup} onCopyCode={handleCopyInviteCode} />
+        {/* Share Group Card for Admins */}
+        <InvitationCodeCard group={currentGroup} onShareGroup={handleShareGroup} />
 
         {/* Tab Navigation Card */}
         <TabNavigation group={currentGroup} activeTab={activeTab} onTabChange={setActiveTab} />

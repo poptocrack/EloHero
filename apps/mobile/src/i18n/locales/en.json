@@ -119,7 +119,13 @@
     "cannotUpdateGroupName": "Unable to update group name",
     "groupNameUpdated": "Group name updated successfully",
     "matchTypeTeams": "Team Match",
-    "matchTypeIndividuals": "Individual Match"
+    "matchTypeIndividuals": "Individual Match",
+    "shareGroup": "Share the group",
+    "shareGroupDescription": "Invite your friends quickly with the share sheet.",
+    "shareGroupButton": "Share now",
+    "shareMessagePlaceholder": "Join our EloHero group \"{{groupName}}\", the app that finally ends debates like:\n\n\"No seriously, I've won MORE times than you... you just remember it wrong.\"\n\nInvitation code: {{code}}\nSent with way too much pride by {{userName}}.\n\nInstall the app, create your account, enter the code...\nand get ready to discover your real level (spoiler: it's not always flattering).\n\nSee you soon for highly scientific leaderboards.",
+    "shareFailed": "Unable to share right now. Please try again.",
+    "shareUnknownPlayer": "an EloHero player"
   },
   "memberManagement": {
     "title": "Manage Members",

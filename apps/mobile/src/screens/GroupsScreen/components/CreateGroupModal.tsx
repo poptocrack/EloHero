@@ -21,6 +21,7 @@ export default function CreateGroupModal({
       onClose={onClose}
       onAction={onCreate}
       isLoading={isLoading}
+      awaitActionCompletion={false}
     />
   );
 }

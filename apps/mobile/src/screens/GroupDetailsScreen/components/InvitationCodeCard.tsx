@@ -9,10 +9,10 @@ interface Group {
 
 interface InvitationCodeCardProps {
   group: Group;
-  onCopyCode: () => void;
+  onShareGroup: () => void;
 }
 
-export default function InvitationCodeCard({ group, onCopyCode }: InvitationCodeCardProps) {
+export default function InvitationCodeCard({ group, onShareGroup }: InvitationCodeCardProps) {
   const { t } = useTranslation();
 
   if (!group?.invitationCode) {
@@ -20,24 +20,22 @@ export default function InvitationCodeCard({ group, onCopyCode }: InvitationCode
   }
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={onShareGroup}>
       <View style={[styles.cardGradient, { backgroundColor: '#4ECDC4' }]}>
         <View style={styles.cardHeader}>
           <View style={styles.iconContainer}>
-            <Ionicons name="link" size={20} color="#fff" />
+            <Ionicons name="share-social" size={20} color="#fff" />
           </View>
-          <Text style={styles.cardTitle}>{t('groupDetails.invitationCode')}</Text>
+          <Text style={styles.cardTitle}>{t('groupDetails.shareGroup')}</Text>
         </View>
-        <View style={styles.cardContent}>
-          <View style={styles.inviteCodeDisplay}>
-            <Text style={styles.inviteCodeText}>{group.invitationCode}</Text>
-            <TouchableOpacity style={styles.copyButton} onPress={onCopyCode}>
-              <Ionicons name="copy-outline" size={16} color="#4ECDC4" />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.shareRow}>
+          <Text style={styles.cardSubtitle}>{t('groupDetails.shareGroupDescription')}</Text>
+          <TouchableOpacity style={styles.shareButton} onPress={onShareGroup}>
+            <Ionicons name="share-outline" size={18} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -75,26 +73,34 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff'
   },
-  cardContent: {
-    // Content styles
-  },
-  inviteCodeDisplay: {
+  shareRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 16,
-    borderRadius: 12
+    justifyContent: 'space-between',
+    gap: 12
   },
-  inviteCodeText: {
+  cardSubtitle: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    fontFamily: 'monospace'
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.9)'
   },
-  copyButton: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)'
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16
+  },
+  shareButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginRight: 8
+  },
+  cardContent: {
+    // Content styles placeholder
   }
 });

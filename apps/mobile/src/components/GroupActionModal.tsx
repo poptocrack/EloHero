@@ -21,6 +21,7 @@ interface GroupActionModalProps {
   onAction: (value: string) => Promise<void>;
   isLoading?: boolean;
   initialValue?: string;
+  awaitActionCompletion?: boolean;
 }
 
 export default function GroupActionModal({
@@ -29,7 +30,8 @@ export default function GroupActionModal({
   onClose,
   onAction,
   isLoading = false,
-  initialValue = ''
+  initialValue = '',
+  awaitActionCompletion = true
 }: GroupActionModalProps) {
   const { t } = useTranslation();
   const [value, setValue] = useState('');
@@ -48,13 +50,29 @@ export default function GroupActionModal({
       return;
     }
 
+    let actionPromise: Promise<void>;
     try {
-      await onAction(value.trim());
-      setValue('');
-      onClose();
+      actionPromise = onAction(value.trim());
     } catch (error) {
-      // Error handling is done in the parent component
+      return;
     }
+
+    if (awaitActionCompletion) {
+      try {
+        await actionPromise;
+        setValue('');
+        onClose();
+      } catch (error) {
+        // Error handling is done in the parent component
+      }
+      return;
+    }
+
+    setValue('');
+    onClose();
+    actionPromise.catch(() => {
+      // Parent component handles the error state
+    });
   };
 
   const handleClose = () => {

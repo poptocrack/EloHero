@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Clipboard } from 'react-native';
+import { Alert, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useGroupStore } from '../../../store/groupStore';
@@ -74,10 +74,19 @@ export function useGroupDetailsHandlers({
     navigation.navigate('MatchEntry', { groupId });
   };
 
-  const handleCopyInviteCode = (): void => {
-    if (currentGroup?.invitationCode) {
-      Clipboard.setString(currentGroup.invitationCode);
-      Alert.alert(t('groupDetails.codeCopied'));
+  const handleShareGroup = (): void => {
+    if (currentGroup?.invitationCode && currentGroup?.name) {
+      const authorName = user?.displayName || t('groupDetails.shareUnknownPlayer');
+
+      Share.share({
+        message: t('groupDetails.shareMessagePlaceholder', {
+          code: currentGroup.invitationCode,
+          groupName: currentGroup.name,
+          userName: authorName
+        })
+      }).catch(() => {
+        Alert.alert(t('common.error'), t('groupDetails.shareFailed'));
+      });
     }
   };
 
@@ -276,7 +285,7 @@ export function useGroupDetailsHandlers({
     // Handlers
     handleRefresh,
     handleNewMatch,
-    handleCopyInviteCode,
+    handleShareGroup,
     handleAddMember,
     handleCancelAddMember,
     handlePlayerPress,
