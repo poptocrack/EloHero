@@ -8,18 +8,17 @@
   to = "/index.html"
   status = 200
 
-# Performance: Headers for caching and compression
+# Performance: Headers for caching
+# Note: Netlify automatically handles compression (gzip/brotli) based on Accept-Encoding
 [[headers]]
   for = "/*.js"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-    Content-Encoding = "gzip"
 
 [[headers]]
   for = "/*.css"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-    Content-Encoding = "gzip"
 
 [[headers]]
   for = "/*.webp"
