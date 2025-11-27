@@ -12,16 +12,13 @@ export const StoresSection = (): ReactElement => {
     >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-700">
             {t('stores.title')}
           </p>
-          <h2 className="mt-2 text-3xl font-bold text-slate-900">
-            {t('stores.subtitle')}
-          </h2>
+          <h2 className="mt-2 text-3xl font-bold text-slate-900">{t('stores.subtitle')}</h2>
         </div>
         <StoreButtons />
       </div>
     </section>
   );
 };
-

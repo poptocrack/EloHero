@@ -1,11 +1,5 @@
 import type { ReactElement } from 'react';
-import {
-  BarChart3,
-  CheckCircle2,
-  Layers,
-  Sparkles,
-  Zap,
-} from 'lucide-react';
+import { BarChart3, CheckCircle2, Layers, Sparkles, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,12 +14,10 @@ export const Features = (): ReactElement => {
   return (
     <section id="features" className="mt-20 space-y-8">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-[#FF6B9D]">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#C44569]">
           {t('nav.howItWorks')}
         </p>
-        <h2 className="mt-2 text-3xl font-bold text-slate-900">
-          {t('features.title')}
-        </h2>
+        <h2 className="mt-2 text-3xl font-bold text-slate-900">{t('features.title')}</h2>
         <p className="mt-3 text-base text-slate-600">{t('features.subtitle')}</p>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
@@ -34,12 +26,10 @@ export const Features = (): ReactElement => {
           return (
             <Card key={key}>
               <CardHeader className="flex flex-row items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-primary">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
                   <Icon className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-lg">
-                  {t(`features.${key}.title`)}
-                </CardTitle>
+                <CardTitle className="text-lg">{t(`features.${key}.title`)}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-slate-600">
                 {t(`features.${key}.text`)}
@@ -51,4 +41,3 @@ export const Features = (): ReactElement => {
     </section>
   );
 };
-

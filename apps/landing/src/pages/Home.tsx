@@ -11,10 +11,12 @@ const Home = (): ReactElement => {
     <div className="min-h-screen bg-[#F8F9FF]">
       <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-8">
         <Header />
-        <Hero />
-        <UseCases />
-        <Features />
-        <StoresSection />
+        <main>
+          <Hero />
+          <UseCases />
+          <Features />
+          <StoresSection />
+        </main>
         <Footer />
       </div>
     </div>
@@ -22,4 +24,3 @@ const Home = (): ReactElement => {
 };
 
 export default Home;
-

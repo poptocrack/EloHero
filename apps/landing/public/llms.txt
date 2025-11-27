@@ -1,0 +1,51 @@
+# EloHero
+
+## About
+
+EloHero is a mobile application that helps groups track results and rankings for any competitive activity. Whether you're playing board games, sports, video games, or office matches, EloHero automatically calculates and updates Elo ratings for all participants.
+
+## What It Does
+
+- **Track Results**: Log wins and losses after each match in seconds
+- **Automatic Rankings**: EloHero calculates and updates rankings automatically - no spreadsheets needed
+- **Multiple Groups**: Support for multiple groups (friends, club, office leagues)
+- **Real-time Stats**: View live standings and track trends over time
+- **Simple Interface**: Lightweight UI designed for quick match entry
+
+## Use Cases
+
+- **Board Games**: Track rankings for Catan, Carcassonne, Splendor, 7 Wonders, and more
+- **Sports & Office Games**: Perfect for foosball, ping-pong, padel, darts, or any friendly match
+- **Video Games**: Keep long-term rankings for Mario Kart, Smash, FIFA, and more
+
+## Key Features
+
+1. Create or join groups in seconds
+2. Log every match without spreadsheets
+3. Automatic Elo ranking updates
+4. Support for multiple groups
+5. Stats and trends visualization over time
+6. Simple and fast interface built for minimal taps per match
+
+## Availability
+
+- **Platforms**: iOS and Android
+- **Website**: https://elohero.app/
+- **Pricing**: Free
+
+## Contact
+
+- **Email**: hey@elohero.app
+- **Discord**: https://discord.gg/2MZeDx5CNZ
+- **LinkedIn**: https://www.linkedin.com/in/tristan-debroise/
+
+## Links
+
+- **Homepage**: https://elohero.app/
+- **Privacy Policy**: https://elohero.app/privacy
+- **Terms of Use**: https://elohero.app/terms
+
+## Tagline
+
+"Track every rivalry in seconds"
+

@@ -24,7 +24,7 @@ export const UseCases = (): ReactElement => {
   return (
     <section id="usecases" className="mt-16 space-y-8">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+        <p className="text-sm font-semibold uppercase tracking-wide text-slate-700">
           {t('useCases.label')}
         </p>
         <h2 className="mt-2 text-3xl font-bold text-slate-900">{t('useCases.title')}</h2>
@@ -38,7 +38,7 @@ export const UseCases = (): ReactElement => {
                 className={`h-full rounded-[28px] bg-gradient-to-br ${CARD_GRADIENTS[key]} p-[1px] shadow-lg shadow-slate-400/20`}
               >
                 <div className="h-full rounded-[26px] bg-white p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-primary">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
                     <Icon className="h-6 w-6" />
                   </div>
                   <h3 className="mt-4 text-2xl font-semibold text-slate-900">

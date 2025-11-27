@@ -35,12 +35,12 @@ export const Footer = (): ReactElement => {
         </div>
       </div>
       <div className="mt-8 border-t border-slate-100 pt-4">
-        <div className="flex flex-wrap gap-4 text-sm font-semibold text-primary">
+        <div className="flex flex-wrap gap-4 text-sm font-semibold text-slate-700">
           <a
             href="https://discord.gg/2MZeDx5CNZ"
             target="_blank"
             rel="noreferrer"
-            className="rounded-full border border-primary/20 px-4 py-2 hover:bg-primary/10"
+            className="rounded-full border border-slate-300 px-4 py-2 hover:bg-slate-50 hover:border-slate-400"
           >
             {t('footer.discord')}
           </a>
@@ -48,7 +48,7 @@ export const Footer = (): ReactElement => {
             href="https://www.linkedin.com/in/tristan-debroise/"
             target="_blank"
             rel="noreferrer"
-            className="rounded-full border border-primary/20 px-4 py-2 hover:bg-primary/10"
+            className="rounded-full border border-slate-300 px-4 py-2 hover:bg-slate-50 hover:border-slate-400"
           >
             {t('footer.linkedin')}
           </a>

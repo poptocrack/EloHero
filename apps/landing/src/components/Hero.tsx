@@ -32,7 +32,7 @@ export const Hero = (): ReactElement => {
       <div className="grid items-start gap-10 lg:grid-cols-2">
         <div className="space-y-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">EloHero</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-700">EloHero</p>
             <h1 className="mt-3 text-4xl font-bold text-slate-900 sm:text-5xl">
               {t('hero.title')}
             </h1>

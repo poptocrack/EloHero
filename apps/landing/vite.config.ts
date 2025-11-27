@@ -15,6 +15,17 @@ export default defineConfig({
     open: true
   },
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    target: 'es2015',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector']
+        }
+      }
+    }
   }
 });
