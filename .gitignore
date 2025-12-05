@@ -41,6 +41,7 @@ yarn-error.*
 /android
 
 .env
+.secrets
 *.log
 
 # Firebase service account keys (security)

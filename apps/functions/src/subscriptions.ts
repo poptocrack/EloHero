@@ -245,3 +245,266 @@ export const validateAndroidPurchase = functions.https.onCall(async (data, conte
   }
 });
 
+// Helper function to downgrade user subscription to free
+async function downgradeUserToFree(uid: string): Promise<void> {
+  const userRef = db.collection('users').doc(uid);
+  const userDoc = await userRef.get();
+
+  if (!userDoc.exists) {
+    throw new Error(`User ${uid} not found`);
+  }
+
+  // Update user document
+  await userRef.update({
+    plan: 'free',
+    subscriptionStatus: 'canceled',
+    updatedAt: FieldValue.serverTimestamp()
+  });
+
+  // Update subscription document if it exists
+  const subscriptionRef = db.collection('subscriptions').doc(uid);
+  const subscriptionDoc = await subscriptionRef.get();
+
+  if (subscriptionDoc.exists) {
+    await subscriptionRef.update({
+      plan: 'free',
+      status: 'canceled',
+      updatedAt: FieldValue.serverTimestamp()
+    });
+  }
+
+  // Update custom claims
+  try {
+    await admin.auth().setCustomUserClaims(uid, {
+      plan: 'free',
+      subscriptionStatus: 'canceled'
+    });
+  } catch (claimsError) {
+    console.error('Failed to update custom claims:', claimsError);
+    // Continue anyway - Firestore update succeeded
+  }
+}
+
+// Helper function to mark subscription as canceled (but keep active until expiration)
+async function markSubscriptionAsCanceled(uid: string, expirationDate?: Date): Promise<void> {
+  const userRef = db.collection('users').doc(uid);
+  const userDoc = await userRef.get();
+
+  if (!userDoc.exists) {
+    throw new Error(`User ${uid} not found`);
+  }
+
+  const updateData: {
+    subscriptionStatus: 'canceled';
+    updatedAt: ReturnType<typeof FieldValue.serverTimestamp>;
+    subscriptionEndDate?: Date;
+  } = {
+    subscriptionStatus: 'canceled',
+    updatedAt: FieldValue.serverTimestamp()
+  };
+
+  // Update expiration date if provided
+  if (expirationDate) {
+    updateData.subscriptionEndDate = expirationDate;
+  }
+
+  await userRef.update(updateData);
+
+  // Update subscription document if it exists
+  const subscriptionRef = db.collection('subscriptions').doc(uid);
+  const subscriptionDoc = await subscriptionRef.get();
+
+  if (subscriptionDoc.exists) {
+    const subscriptionUpdate: {
+      status: 'canceled';
+      updatedAt: ReturnType<typeof FieldValue.serverTimestamp>;
+      currentPeriodEnd?: Date;
+    } = {
+      status: 'canceled',
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    if (expirationDate) {
+      subscriptionUpdate.currentPeriodEnd = expirationDate;
+    }
+
+    await subscriptionRef.update(subscriptionUpdate);
+  }
+
+  // Note: We don't update custom claims here because the subscription is still active
+  // until expiration. The user should still have premium access until then.
+}
+
+// Helper function to validate RevenueCat webhook authorization
+// RevenueCat sends the authorization token in the Authorization header
+// Format: "Bearer <token>" or just the token
+function validateWebhookAuthorization(
+  authorizationHeader: string | undefined,
+  expectedSecret: string
+): boolean {
+  if (!authorizationHeader) {
+    return false;
+  }
+
+  // Remove "Bearer " prefix if present
+  const token = authorizationHeader.replace(/^Bearer\s+/i, '').trim();
+
+  // Simple token comparison (RevenueCat uses a configured authorization token)
+  return token === expectedSecret;
+}
+
+// RevenueCat webhook event types
+interface RevenueCatWebhookEvent {
+  event: {
+    id: string;
+    type: string;
+    app_id: string;
+    app_user_id: string;
+    aliases: string[];
+    original_app_user_id: string | null;
+    product_id: string;
+    period_type: string;
+    purchased_at_ms: number;
+    expiration_at_ms: number | null;
+    environment: string;
+    entitlement_ids: string[];
+    transaction_id: string;
+    original_transaction_id: string;
+    is_family_share: boolean;
+    presented_offering_id: string | null;
+  };
+}
+
+// 17. RevenueCat Webhook Handler
+// Handles subscription events from RevenueCat (cancellation, expiration, renewal, etc.)
+export const revenueCatWebhook = functions.https.onRequest(async (req, res) => {
+  // Only accept POST requests
+  if (req.method !== 'POST') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+
+  try {
+    const webhookSecret = functions.config().revenuecat?.webhook_secret;
+    if (!webhookSecret) {
+      console.error('RevenueCat webhook secret not configured');
+      res.status(500).send('Webhook secret not configured');
+      return;
+    }
+
+    // Get authorization token from headers
+    const authorization = req.headers['authorization'] as string | undefined;
+    if (!authorization) {
+      console.error('Missing webhook authorization header');
+      res.status(401).send('Unauthorized');
+      return;
+    }
+
+    // Validate webhook authorization
+    const isValidAuth = validateWebhookAuthorization(authorization, webhookSecret);
+    if (!isValidAuth) {
+      console.error('Invalid webhook authorization token');
+      res.status(401).send('Unauthorized');
+      return;
+    }
+
+    const event = req.body as RevenueCatWebhookEvent;
+    const eventType = event.event.type;
+    const appUserId = event.event.app_user_id; // This is the Firebase UID
+
+    console.log(`Received RevenueCat webhook: ${eventType} for user ${appUserId}`);
+
+    // Handle different event types
+    switch (eventType) {
+      case 'CANCELLATION':
+        // User canceled subscription, but it's still active until expiration
+        const cancellationExpiration = event.event.expiration_at_ms
+          ? new Date(event.event.expiration_at_ms)
+          : undefined;
+        await markSubscriptionAsCanceled(appUserId, cancellationExpiration);
+        console.log(`Marked subscription as canceled for user ${appUserId}`);
+        break;
+
+      case 'EXPIRATION':
+        // Subscription has expired, downgrade to free
+        await downgradeUserToFree(appUserId);
+        console.log(`Downgraded user ${appUserId} to free due to expiration`);
+        break;
+
+      case 'RENEWAL':
+        // Subscription renewed, update expiration date
+        const renewalExpiration = event.event.expiration_at_ms
+          ? new Date(event.event.expiration_at_ms)
+          : undefined;
+        if (renewalExpiration) {
+          const userRef = db.collection('users').doc(appUserId);
+          await userRef.update({
+            subscriptionStatus: 'active',
+            subscriptionEndDate: renewalExpiration,
+            updatedAt: FieldValue.serverTimestamp()
+          });
+
+          // Update subscription document if it exists
+          const subscriptionRef = db.collection('subscriptions').doc(appUserId);
+          const subscriptionDoc = await subscriptionRef.get();
+          if (subscriptionDoc.exists) {
+            await subscriptionRef.update({
+              status: 'active',
+              currentPeriodEnd: renewalExpiration,
+              updatedAt: FieldValue.serverTimestamp()
+            });
+          }
+
+          // Update custom claims
+          try {
+            await admin.auth().setCustomUserClaims(appUserId, {
+              plan: 'premium',
+              subscriptionStatus: 'active'
+            });
+          } catch (claimsError) {
+            console.error('Failed to update custom claims:', claimsError);
+          }
+        }
+        console.log(`Renewed subscription for user ${appUserId}`);
+        break;
+
+      case 'INITIAL_PURCHASE':
+        // New subscription started (handled by mobile app, but we can sync here too)
+        const purchaseExpiration = event.event.expiration_at_ms
+          ? new Date(event.event.expiration_at_ms)
+          : undefined;
+        if (purchaseExpiration) {
+          const userRef = db.collection('users').doc(appUserId);
+          await userRef.update({
+            plan: 'premium',
+            subscriptionStatus: 'active',
+            subscriptionEndDate: purchaseExpiration,
+            updatedAt: FieldValue.serverTimestamp()
+          });
+
+          // Update custom claims
+          try {
+            await admin.auth().setCustomUserClaims(appUserId, {
+              plan: 'premium',
+              subscriptionStatus: 'active'
+            });
+          } catch (claimsError) {
+            console.error('Failed to update custom claims:', claimsError);
+          }
+        }
+        console.log(`Initial purchase processed for user ${appUserId}`);
+        break;
+
+      default:
+        console.log(`Unhandled webhook event type: ${eventType}`);
+    }
+
+    // Always return 200 to acknowledge receipt
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Error processing RevenueCat webhook:', error);
+    // Still return 200 to prevent RevenueCat from retrying
+    // Log the error for investigation
+    res.status(200).send('Error logged');
+  }
+});
