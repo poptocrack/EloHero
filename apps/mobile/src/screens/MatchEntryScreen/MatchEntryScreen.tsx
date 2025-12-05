@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
 import { queryKeys } from '../../utils/queryKeys';
@@ -79,7 +78,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
       const calculateTeamPlacement = (index: number): number => {
         const team = matchEntry.teams[index];
         const isTied = team.isTied || false;
-        
+
         if (isTied) {
           // Find the minimum index in the tie group (the first team in the tie)
           // Tied teams are always tied with the team above them
@@ -93,14 +92,14 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           }
           return minIndex + 1;
         }
-        
+
         // For non-tied teams, count unique placements before this position
         // Each tied group counts as one placement
         const seenPlacements = new Set<number>();
         for (let i = 0; i < index; i++) {
           const prevTeam = matchEntry.teams[i];
           const prevIsTied = prevTeam.isTied || false;
-          
+
           if (prevIsTied) {
             // Find the first team in this tie group
             let firstIndex = i;
@@ -116,7 +115,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
             seenPlacements.add(i + 1);
           }
         }
-        
+
         // Placement is the number of unique placements before + 1
         return seenPlacements.size + 1;
       };
@@ -174,7 +173,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
       const calculatePlacement = (index: number): number => {
         const playerUid = matchEntry.playerOrder[index].uid;
         const tieGroup = matchEntry.playerTies.get(playerUid);
-        
+
         if (tieGroup !== undefined) {
           // Find the minimum index in the tie group (the first player in the tie)
           let minIndex = index;
@@ -185,14 +184,14 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           }
           return minIndex + 1;
         }
-        
+
         // For non-tied players, count unique placements before this position
         // Each tied group counts as one placement
         const seenPlacements = new Set<number>();
         for (let i = 0; i < index; i++) {
           const prevPlayerUid = matchEntry.playerOrder[i].uid;
           const prevTieGroup = matchEntry.playerTies.get(prevPlayerUid);
-          
+
           if (prevTieGroup !== undefined) {
             // Find the first player in this tie group
             let firstIndex = i;
@@ -207,7 +206,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
             seenPlacements.add(i + 1);
           }
         }
-        
+
         // Placement is the number of unique placements before + 1
         return seenPlacements.size + 1;
       };
@@ -216,7 +215,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
         const rating = currentSeasonRatings.find((r) => r.uid === player.uid);
         const placement = calculatePlacement(index);
         const isTied = matchEntry.playerTies.has(player.uid);
-        
+
         return {
           uid: player.uid,
           ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
@@ -380,7 +379,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                 const calculateTeamPlacement = (index: number): number => {
                   const team = matchEntry.teams[index];
                   const isTied = team.isTied || false;
-                  
+
                   if (isTied) {
                     // Find the minimum index in the tie group (the first team in the tie)
                     // Tied teams are always tied with the team above them
@@ -394,14 +393,14 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                     }
                     return minIndex + 1;
                   }
-                  
+
                   // For non-tied teams, count unique placements before this position
                   // Each tied group counts as one placement
                   const seenPlacements = new Set<number>();
                   for (let i = 0; i < index; i++) {
                     const prevTeam = matchEntry.teams[i];
                     const prevIsTied = prevTeam.isTied || false;
-                    
+
                     if (prevIsTied) {
                       // Find the first team in this tie group
                       let firstIndex = i;
@@ -417,7 +416,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                       seenPlacements.add(i + 1);
                     }
                   }
-                  
+
                   // Placement is the number of unique placements before + 1
                   return seenPlacements.size + 1;
                 };
@@ -425,7 +424,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                 // Convert teams to the format expected by the backend
                 const teams = matchEntry.teams.map((team, index) => {
                   const placement = calculateTeamPlacement(index);
-                  
+
                   return {
                     id: team.id,
                     name: team.name,
@@ -482,7 +481,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                 const calculatePlacement = (index: number): number => {
                   const playerUid = matchEntry.playerOrder[index].uid;
                   const tieGroup = matchEntry.playerTies.get(playerUid);
-                  
+
                   if (tieGroup !== undefined) {
                     // Find the minimum index in the tie group (the first player in the tie)
                     let minIndex = index;
@@ -493,19 +492,21 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                     }
                     return minIndex + 1;
                   }
-                  
+
                   // For non-tied players, count unique placements before this position
                   // Each tied group counts as one placement
                   const seenPlacements = new Set<number>();
                   for (let i = 0; i < index; i++) {
                     const prevPlayerUid = matchEntry.playerOrder[i].uid;
                     const prevTieGroup = matchEntry.playerTies.get(prevPlayerUid);
-                    
+
                     if (prevTieGroup !== undefined) {
                       // Find the first player in this tie group
                       let firstIndex = i;
                       for (let j = 0; j < i; j++) {
-                        if (matchEntry.playerTies.get(matchEntry.playerOrder[j].uid) === prevTieGroup) {
+                        if (
+                          matchEntry.playerTies.get(matchEntry.playerOrder[j].uid) === prevTieGroup
+                        ) {
                           firstIndex = j;
                           break;
                         }
@@ -515,7 +516,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                       seenPlacements.add(i + 1);
                     }
                   }
-                  
+
                   // Placement is the number of unique placements before + 1
                   return seenPlacements.size + 1;
                 };
@@ -524,7 +525,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                 const participants = matchEntry.playerOrder.map((player, index) => {
                   const placement = calculatePlacement(index);
                   const isTied = matchEntry.playerTies.has(player.uid);
-                  
+
                   return {
                     uid: player.uid,
                     displayName: player.displayName,

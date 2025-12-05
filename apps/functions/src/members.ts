@@ -127,10 +127,7 @@ export const mergeMember = functions.https.onCall(async (data, context) => {
 
   // Verify real user is not virtual
   if (realUserId.startsWith('virtual_')) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'First user must be a real user'
-    );
+    throw new functions.https.HttpsError('invalid-argument', 'First user must be a real user');
   }
 
   try {
@@ -142,13 +139,16 @@ export const mergeMember = functions.https.onCall(async (data, context) => {
 
     const groupData = groupDoc.data()!;
     if (groupData.ownerId !== uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Only group owner can merge members');
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Only group owner can merge members'
+      );
     }
 
     // Verify both members exist in the group
     const realMemberDocId = `${realUserId}_${groupId}`;
     const virtualMemberDocId = `${virtualUserId}_${groupId}`;
-    
+
     const realMemberDoc = await db.collection('members').doc(realMemberDocId).get();
     const virtualMemberDoc = await db.collection('members').doc(virtualMemberDocId).get();
 
@@ -169,10 +169,7 @@ export const mergeMember = functions.https.onCall(async (data, context) => {
     const realMemberData = realMemberDoc.data()!;
 
     // Get all seasons for this group
-    const seasonsSnapshot = await db
-      .collection('seasons')
-      .where('groupId', '==', groupId)
-      .get();
+    const seasonsSnapshot = await db.collection('seasons').where('groupId', '==', groupId).get();
 
     const batch = db.batch();
 
@@ -296,3 +293,86 @@ export const mergeMember = functions.https.onCall(async (data, context) => {
   }
 });
 
+// 13. Remove Member Function (Admin only)
+export const removeMember = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { groupId, memberUid } = data;
+  const uid = context.auth.uid;
+
+  if (!groupId || !memberUid) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Group ID and member UID are required'
+    );
+  }
+
+  try {
+    // Check if user is group owner (admin)
+    const groupDoc = await db.collection('groups').doc(groupId).get();
+    if (!groupDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Group not found');
+    }
+
+    const groupData = groupDoc.data()!;
+    if (groupData.ownerId !== uid) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Only group owner can remove members'
+      );
+    }
+
+    // Check if member exists
+    const memberDocId = `${memberUid}_${groupId}`;
+    const memberDoc = await db.collection('members').doc(memberDocId).get();
+
+    if (!memberDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Member not found in this group');
+    }
+
+    // Prevent removing the group owner
+    if (groupData.ownerId === memberUid) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Cannot remove group owner. Transfer ownership or delete the group instead.'
+      );
+    }
+
+    // Remove member document
+    await db.collection('members').doc(memberDocId).delete();
+
+    // Update group member count
+    await db
+      .collection('groups')
+      .doc(groupId)
+      .update({
+        memberCount: admin.firestore.FieldValue.increment(-1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+    // Update user's group count (only for real users, not virtual members)
+    if (!memberUid.startsWith('virtual_')) {
+      const userDoc = await db.collection('users').doc(memberUid).get();
+      if (userDoc.exists) {
+        await db
+          .collection('users')
+          .doc(memberUid)
+          .update({
+            groupsCount: admin.firestore.FieldValue.increment(-1),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+      }
+    }
+
+    return {
+      success: true
+    };
+  } catch (error: unknown) {
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError('internal', 'Failed to remove member');
+  }
+});

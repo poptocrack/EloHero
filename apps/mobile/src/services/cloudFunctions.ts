@@ -2,7 +2,15 @@
 // All write operations go through Cloud Functions as per cursor rules
 import { httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
-import { Group, Season, Game, Participant, Invite, ApiResponse, Member } from '@elohero/shared-types';
+import {
+  Group,
+  Season,
+  Game,
+  Participant,
+  Invite,
+  ApiResponse,
+  Member
+} from '@elohero/shared-types';
 
 export class CloudFunctionsService {
   // Create a new group
@@ -63,10 +71,7 @@ export class CloudFunctionsService {
   static async reportMatch(
     groupId: string,
     seasonId: string,
-    participants: Omit<
-      Participant,
-      'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
-    >[],
+    participants: Omit<Participant, 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'>[],
     teams?: Array<{
       id: string;
       name: string;
@@ -203,8 +208,12 @@ export class CloudFunctionsService {
       const removeMember = httpsCallable(functions, 'removeMember');
       const result = await removeMember({ groupId, memberUid });
       return result.data as ApiResponse<void>;
-    } catch (error) {
-      throw new Error(`Failed to remove member: ${error}`);
+    } catch (error: unknown) {
+      // Preserve the original error message from the cloud function
+      const errorObj = error as { details?: string; message?: string; code?: string };
+      const errorMessage =
+        errorObj?.details || errorObj?.message || errorObj?.code || 'Unknown error';
+      throw new Error(errorMessage);
     }
   }
 
@@ -217,7 +226,11 @@ export class CloudFunctionsService {
     try {
       const mergeMember = httpsCallable(functions, 'mergeMember');
       const result = await mergeMember({ groupId, realUserId, virtualUserId });
-      return result.data as ApiResponse<{ realUserId: string; virtualUserId: string; groupId: string }>;
+      return result.data as ApiResponse<{
+        realUserId: string;
+        virtualUserId: string;
+        groupId: string;
+      }>;
     } catch (error: any) {
       // Preserve the original error message from the cloud function
       const errorMessage = error?.details || error?.message || error?.code || 'Unknown error';

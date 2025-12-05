@@ -12,9 +12,12 @@ import {
 import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
 import { DebugInfoCard } from './components/DebugInfoCard';
+import { AuthService } from '../../services/auth';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface ProfileScreenProps {
   navigation: {
@@ -23,9 +26,19 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const { user, signOut } = useAuthStore();
+  const { user: authUser, signOut } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+
+  // Fetch user data with React Query for automatic updates when invalidated
+  const { data: userData } = useQuery({
+    queryKey: queryKeys.user(authUser?.uid ?? ''),
+    queryFn: () => AuthService.getUserData(authUser!.uid),
+    enabled: !!authUser?.uid
+  });
+
+  // Use query data if available, fallback to auth store user
+  const user = userData ?? authUser;
 
   const handleSubscription = () => {
     navigation.navigate('Subscription');
@@ -178,24 +191,20 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
             <Text style={styles.statNumber}>{user?.groupsCount || 0}</Text>
             <Text style={styles.statLabel}>{t('profile.groups')}</Text>
           </View>
-          {Platform.OS !== 'ios' && (
-            <>
-              <View style={styles.statCard}>
-                <View style={styles.statIconContainer}>
-                  <Ionicons name="trending-up" size={20} color="#4ECDC4" />
-                </View>
-                <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '2'}</Text>
-                <Text style={styles.statLabel}>{t('profile.groupLimit')}</Text>
-              </View>
-              <View style={styles.statCard}>
-                <View style={styles.statIconContainer}>
-                  <Ionicons name="person-add" size={20} color="#FF6B9D" />
-                </View>
-                <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '5'}</Text>
-                <Text style={styles.statLabel}>{t('profile.memberLimit')}</Text>
-              </View>
-            </>
-          )}
+          <View style={styles.statCard}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="trending-up" size={20} color="#4ECDC4" />
+            </View>
+            <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '2'}</Text>
+            <Text style={styles.statLabel}>{t('profile.groupLimit')}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="person-add" size={20} color="#FF6B9D" />
+            </View>
+            <Text style={styles.statNumber}>{user?.plan === 'premium' ? '∞' : '5'}</Text>
+            <Text style={styles.statLabel}>{t('profile.memberLimit')}</Text>
+          </View>
         </View>
 
         {/* Menu Cards */}

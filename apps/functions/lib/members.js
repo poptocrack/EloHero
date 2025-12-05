@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mergeMember = exports.addMember = void 0;
+exports.removeMember = exports.mergeMember = exports.addMember = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const db_1 = require("./utils/db");
@@ -247,6 +247,70 @@ exports.mergeMember = functions.https.onCall(async (data, context) => {
             throw error;
         }
         throw new functions.https.HttpsError('internal', 'Failed to merge members');
+    }
+});
+// 13. Remove Member Function (Admin only)
+exports.removeMember = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    const { groupId, memberUid } = data;
+    const uid = context.auth.uid;
+    if (!groupId || !memberUid) {
+        throw new functions.https.HttpsError('invalid-argument', 'Group ID and member UID are required');
+    }
+    try {
+        // Check if user is group owner (admin)
+        const groupDoc = await db_1.db.collection('groups').doc(groupId).get();
+        if (!groupDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Group not found');
+        }
+        const groupData = groupDoc.data();
+        if (groupData.ownerId !== uid) {
+            throw new functions.https.HttpsError('permission-denied', 'Only group owner can remove members');
+        }
+        // Check if member exists
+        const memberDocId = `${memberUid}_${groupId}`;
+        const memberDoc = await db_1.db.collection('members').doc(memberDocId).get();
+        if (!memberDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Member not found in this group');
+        }
+        // Prevent removing the group owner
+        if (groupData.ownerId === memberUid) {
+            throw new functions.https.HttpsError('permission-denied', 'Cannot remove group owner. Transfer ownership or delete the group instead.');
+        }
+        // Remove member document
+        await db_1.db.collection('members').doc(memberDocId).delete();
+        // Update group member count
+        await db_1.db
+            .collection('groups')
+            .doc(groupId)
+            .update({
+            memberCount: admin.firestore.FieldValue.increment(-1),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        // Update user's group count (only for real users, not virtual members)
+        if (!memberUid.startsWith('virtual_')) {
+            const userDoc = await db_1.db.collection('users').doc(memberUid).get();
+            if (userDoc.exists) {
+                await db_1.db
+                    .collection('users')
+                    .doc(memberUid)
+                    .update({
+                    groupsCount: admin.firestore.FieldValue.increment(-1),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
+        return {
+            success: true
+        };
+    }
+    catch (error) {
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError('internal', 'Failed to remove member');
     }
 });
 //# sourceMappingURL=members.js.map

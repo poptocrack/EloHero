@@ -14,11 +14,11 @@ export function preloadResources(): Plugin {
         const cssRegex = /<link[^>]+href=["']([^"']+\.css[^"']*)["'][^>]*>/g;
         // Find all JS module scripts that Vite injects
         const jsRegex = /<script[^>]+src=["']([^"']+\.js[^"']*)["'][^>]*>/g;
-        
+
         const preloadLinks: string[] = [];
         const processedUrls = new Set<string>();
         let match;
-        
+
         // Extract CSS files and create preload hints
         while ((match = cssRegex.exec(html)) !== null) {
           const href = match[1];
@@ -28,7 +28,7 @@ export function preloadResources(): Plugin {
             processedUrls.add(href);
           }
         }
-        
+
         // Extract JS files and create preload hints
         while ((match = jsRegex.exec(html)) !== null) {
           const src = match[1];
@@ -38,20 +38,22 @@ export function preloadResources(): Plugin {
             processedUrls.add(src);
           }
         }
-        
+
         // Insert preload hints right after the viewport meta tag (early in <head>)
         if (preloadLinks.length > 0) {
           const viewportIndex = html.indexOf('<meta name="viewport"');
           if (viewportIndex !== -1) {
             const insertIndex = html.indexOf('>', viewportIndex) + 1;
-            const preloadHtml = '\n    <!-- Preload critical resources for parallel loading -->\n    ' + preloadLinks.join('\n    ') + '\n';
+            const preloadHtml =
+              '\n    <!-- Preload critical resources for parallel loading -->\n    ' +
+              preloadLinks.join('\n    ') +
+              '\n';
             return html.slice(0, insertIndex) + preloadHtml + html.slice(insertIndex);
           }
         }
-        
+
         return html;
       }
     }
   };
 }
-

@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { CloudFunctionsService } from '../services/cloudFunctions';
 import { FirestoreService } from '../services/firestore';
 import { useAuthStore } from './authStore';
+import { queryClient } from '../utils/queryClient';
+import { queryKeys } from '../utils/queryKeys';
 import {
   Group,
   Member,
@@ -57,10 +59,7 @@ interface GroupState {
   reportMatch: (
     groupId: string,
     seasonId: string,
-    participants: Omit<
-      Participant,
-      'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
-    >[],
+    participants: Omit<Participant, 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'>[],
     teams?: Array<{
       id: string;
       name: string;
@@ -257,6 +256,12 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         isLoading: false
       }));
 
+      // Invalidate user query to update groupsCount
+      const user = useAuthStore.getState().user;
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user(user.uid) });
+      }
+
       return newGroup;
     } catch (error) {
       set((state) => ({
@@ -281,6 +286,12 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         groups: [...state.groups, joinedGroup],
         isLoading: false
       }));
+
+      // Invalidate user query to update groupsCount
+      const user = useAuthStore.getState().user;
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user(user.uid) });
+      }
 
       return joinedGroup;
     } catch (error) {
@@ -310,6 +321,12 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       const response = await CloudFunctionsService.leaveGroup(groupId);
       if (!response.success) {
         throw new Error(response.error || 'Failed to leave group');
+      }
+
+      // Invalidate user query to update groupsCount
+      const user = useAuthStore.getState().user;
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user(user.uid) });
       }
 
       // Success - group is already removed from UI
@@ -429,10 +446,7 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   reportMatch: async (
     groupId: string,
     seasonId: string,
-    participants: Omit<
-      Participant,
-      'uid' | 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'
-    >[],
+    participants: Omit<Participant, 'gameId' | 'ratingBefore' | 'ratingAfter' | 'ratingChange'>[],
     teams?: Array<{
       id: string;
       name: string;
@@ -464,6 +478,13 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       // Reload data after successful match report
       get().loadSeasonRatings(seasonId);
       get().loadGroupGames(groupId);
+      // Reload group to update gameCount
+      get().loadGroup(groupId);
+      // Reload user's groups list to update gameCount in the list
+      const user = useAuthStore.getState().user;
+      if (user) {
+        get().loadUserGroups(user.uid);
+      }
       get().clearMatchEntry();
 
       set((state) => ({
