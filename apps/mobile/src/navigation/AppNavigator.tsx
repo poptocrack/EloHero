@@ -1,12 +1,14 @@
 // Main App Navigator
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../store/authStore';
+import { useGroupStore } from '../store/groupStore';
 import { AuthService } from '../services/auth';
 import { subscriptionService } from '../services/subscription';
 import { RootStackParamList, MainTabParamList } from '@elohero/shared-types';
@@ -126,6 +128,8 @@ function RootStackNavigator() {
 // Main App Navigator
 export default function AppNavigator() {
   const { user, isLoading, setUser, setLoading, signInAnonymously } = useAuthStore();
+  const { loadUserGroups } = useGroupStore();
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
     // Listen to auth state changes
@@ -164,8 +168,38 @@ export default function AppNavigator() {
     }
   }, [isLoading, user]);
 
-  if (isLoading) {
-    // You can add a loading screen here
+  // Handle splash screen hiding and start groups loading
+  useEffect(() => {
+    const prepareApp = async (): Promise<void> => {
+      // Don't run if app is already ready (splash already hidden)
+      // This prevents unnecessary group loading after user sets pseudo
+      if (appIsReady) return;
+
+      // Wait until auth is done loading
+      if (isLoading) return;
+
+      // If no user yet (anonymous sign-in in progress), wait
+      if (!user) return;
+
+      const needsPseudo = !user.displayName || user.displayName === 'Anonymous';
+
+      // If user is ready (has display name), start loading groups before hiding splash
+      // Skip for first-time users coming from pseudo screen - they have no groups yet
+      if (!needsPseudo && user.uid) {
+        // Start loading groups - this kicks off the fetch
+        loadUserGroups(user.uid);
+      }
+
+      // Mark app as ready and hide splash screen
+      setAppIsReady(true);
+      await SplashScreen.hideAsync();
+    };
+
+    prepareApp();
+  }, [isLoading, user, loadUserGroups, appIsReady]);
+
+  // Keep splash screen visible while loading
+  if (!appIsReady) {
     return null;
   }
 
