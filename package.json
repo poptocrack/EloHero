@@ -29,6 +29,10 @@
   "dependencies": {
     "expo": "~54.0.23",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-worklets": "^0.6.0"
+  },
+  "overrides": {
+    "react-native-worklets": "^0.6.0"
   }
 }

@@ -18,6 +18,8 @@ import TeamsCard from './components/TeamsCard';
 import AvailablePlayersCard from './components/AvailablePlayersCard';
 import MatchSubmitButton from './components/MatchSubmitButton';
 import PremiumModal from '../../components/PremiumModal';
+import ReviewModal from '../../components/ReviewModal';
+import { isEligibleForReview } from '../../utils/reviewUtils';
 
 interface MatchEntryScreenProps {
   navigation: any;
@@ -64,6 +66,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   const [isPremiumModalVisible, setPremiumModalVisible] = useState(false);
   const [isMatchLabelPremiumModalVisible, setIsMatchLabelPremiumModalVisible] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<MatchLabel | null>(null);
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const isPremiumUser = user?.plan === 'premium';
 
   // Use React Query to fetch labels (cached)
@@ -512,21 +515,36 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                   queryKey: queryKeys.seasonRatings(currentSeason.id)
                 });
 
-                // Navigate back immediately - no success alert needed
-                navigation.goBack();
+                // Check if user should see review modal (before submission)
+                // Check if this is user's 2nd game and they're winning
+                const userRating = currentSeasonRatings.find((r) => r.uid === user?.uid);
+                const currentGamesPlayed = userRating?.gamesPlayed || 0;
+                const userTeam = teams.find((team) =>
+                  team.members.some((member) => member.uid === user?.uid)
+                );
+                const isUserWinning = userTeam?.placement === 1;
+                const shouldShowReview = currentGamesPlayed === 1 && isUserWinning;
 
-                // Make API call in background (fire and forget)
-                reportMatch(
-                  groupId,
-                  currentSeason.id,
-                  [],
-                  teams,
-                  matchEntry.selectedMatchLabelId
-                ).catch((error) => {
-                  // Show error alert if API call fails
-                  console.error('Failed to report match:', error);
-                  Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
-                });
+                // Make API call first
+                reportMatch(groupId, currentSeason.id, [], teams, matchEntry.selectedMatchLabelId)
+                  .then(async () => {
+                    // After successful submission, check if we should show review modal
+                    if (shouldShowReview) {
+                      const eligible = await isEligibleForReview();
+                      if (eligible) {
+                        // Show modal before navigation
+                        setIsReviewModalVisible(true);
+                        return; // Don't navigate yet, wait for modal to close
+                      }
+                    }
+                    // Navigate back if no review modal
+                    navigation.goBack();
+                  })
+                  .catch((error) => {
+                    // Show error alert if API call fails
+                    console.error('Failed to report match:', error);
+                    Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+                  });
               } catch (error) {
                 Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
               }
@@ -626,21 +644,40 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                   queryKey: queryKeys.seasonRatings(currentSeason.id)
                 });
 
-                // Navigate back immediately - no success alert needed
-                navigation.goBack();
+                // Check if user should see review modal (before submission)
+                // Check if this is user's 2nd game and they're winning
+                const userRating = currentSeasonRatings.find((r) => r.uid === user?.uid);
+                const currentGamesPlayed = userRating?.gamesPlayed || 0;
+                const userParticipant = participants.find((p) => p.uid === user?.uid);
+                const isUserWinning = userParticipant?.placement === 1;
+                const shouldShowReview = currentGamesPlayed === 1 && isUserWinning;
 
-                // Make API call in background (fire and forget)
+                // Make API call first
                 reportMatch(
                   groupId,
                   currentSeason.id,
                   participants,
                   undefined,
                   matchEntry.selectedMatchLabelId
-                ).catch((error) => {
-                  // Show error alert if API call fails
-                  console.error('Failed to report match:', error);
-                  Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
-                });
+                )
+                  .then(async () => {
+                    // After successful submission, check if we should show review modal
+                    if (shouldShowReview) {
+                      const eligible = await isEligibleForReview();
+                      if (eligible) {
+                        // Show modal before navigation
+                        setIsReviewModalVisible(true);
+                        return; // Don't navigate yet, wait for modal to close
+                      }
+                    }
+                    // Navigate back if no review modal
+                    navigation.goBack();
+                  })
+                  .catch((error) => {
+                    // Show error alert if API call fails
+                    console.error('Failed to report match:', error);
+                    Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+                  });
               } catch (error) {
                 Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
               }
@@ -760,6 +797,16 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           />
         </>
       )}
+
+      {/* Review Modal */}
+      <ReviewModal
+        visible={isReviewModalVisible}
+        onClose={() => {
+          setIsReviewModalVisible(false);
+          // Navigate back after modal is closed
+          navigation.goBack();
+        }}
+      />
     </View>
   );
 }

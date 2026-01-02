@@ -460,6 +460,12 @@
     "deletingMatch": "Suppression de la partie...",
     "cannotDeleteMatch": "Impossible de supprimer la partie"
   },
+  "review": {
+    "title": "Vous aimez EloHero ?",
+    "subtitle": "Votre avis nous aide à nous améliorer ! Pourriez-vous nous noter sur l'App Store ?",
+    "reviewButton": "Noter EloHero",
+    "maybeLater": "Peut-être plus tard"
+  },
   "errors": {
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
