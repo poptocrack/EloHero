@@ -66,12 +66,13 @@ export function useGroupDetailsHandlers({
     setRefreshing(false);
   };
 
-  const handleNewMatch = (): void => {
+  const handleNewMatch = (): boolean => {
     if (currentGroupMembers.length < 2) {
       Alert.alert(t('common.error'), t('groupDetails.needAtLeastTwoPlayers'));
-      return;
+      return false;
     }
     navigation.navigate('MatchEntry', { groupId });
+    return true;
   };
 
   const handleShareGroup = (): void => {

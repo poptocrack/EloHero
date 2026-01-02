@@ -23,8 +23,10 @@ import RankingList from './components/RankingList';
 import GamesList from './components/GamesList';
 import AddMemberModal from './components/AddMemberModal';
 import EditGroupNameModal from './components/EditGroupNameModal';
+import NewMatchButton from './components/NewMatchButton';
 import HeaderWithMenu from '../../components/HeaderWithMenu';
 import PremiumModal from '../../components/PremiumModal';
+import Toast from '../../components/Toast';
 import { useGroupDetailsHandlers } from './hooks/useGroupDetailsHandlers';
 
 interface GroupDetailsScreenProps {
@@ -52,6 +54,8 @@ export default function GroupDetailsScreen({
     currentSeasonRatings,
     groupGames,
     isLoading,
+    isReportingMatch,
+    lastMatchReportError,
     loadGroup,
     loadSeasonRatings,
     clearGroupData,
@@ -69,6 +73,9 @@ export default function GroupDetailsScreen({
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [membersLoaded, setMembersLoaded] = useState(false);
   const [membersLoadingStarted, setMembersLoadingStarted] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [prevIsReportingMatch, setPrevIsReportingMatch] = useState(false);
 
   // Extract handlers and computed values
   const {
@@ -140,6 +147,24 @@ export default function GroupDetailsScreen({
       setMembersLoaded(true);
     }
   }, [membersLoadingStarted, currentGroupMembers]);
+
+  // Show toast when match reporting completes
+  useEffect(() => {
+    // Detect when isReportingMatch changes from true to false
+    if (prevIsReportingMatch && !isReportingMatch) {
+      // Match reporting just completed
+      if (lastMatchReportError) {
+        // Show error toast
+        setToastType('error');
+        setShowToast(true);
+      } else {
+        // Show success toast
+        setToastType('success');
+        setShowToast(true);
+      }
+    }
+    setPrevIsReportingMatch(isReportingMatch);
+  }, [isReportingMatch, prevIsReportingMatch, lastMatchReportError]);
 
   // Show loading state while group is being loaded (fixes the brief error flash)
   // Also wait for members to be loaded to avoid showing empty ranking
@@ -217,15 +242,7 @@ export default function GroupDetailsScreen({
         )}
       </ScrollView>
 
-      <TouchableOpacity
-        style={[styles.fab, { bottom: insets.bottom + 24 }]}
-        onPress={handleNewMatch}
-        accessibilityRole="button"
-        accessibilityLabel={t('groupDetails.newMatch')}
-      >
-        <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.fabText}>{t('groupDetails.newMatch')}</Text>
-      </TouchableOpacity>
+      <NewMatchButton onPress={handleNewMatch} isLoading={isReportingMatch} />
 
       {/* Add Member Modal */}
       <AddMemberModal
@@ -272,6 +289,18 @@ export default function GroupDetailsScreen({
           iconColor="#FF6B9D"
         />
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        visible={showToast}
+        type={toastType}
+        message={
+          toastType === 'success'
+            ? t('matchEntry.matchRecorded')
+            : t('matchEntry.errorRecordingMatch')
+        }
+        onHide={() => setShowToast(false)}
+      />
     </View>
   );
 }
@@ -335,27 +364,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600'
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    backgroundColor: '#FF6B9D',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8
   },
   loadingOverlay: {
     flex: 1,

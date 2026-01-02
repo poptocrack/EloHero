@@ -438,21 +438,25 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                   };
                 });
 
-                // Call reportMatch with teams
-                await reportMatch(groupId, currentSeason.id, [], teams);
+                // Optimistic update: clear match entry and navigate immediately
+                clearMatchEntry();
 
-                // Invalidate React Query queries
-                await Promise.all([
-                  queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
-                  queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
-                  queryClient.invalidateQueries({
-                    queryKey: queryKeys.seasonRatings(currentSeason.id)
-                  })
-                ]);
+                // Invalidate React Query queries in background (non-blocking)
+                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) });
+                queryClient.invalidateQueries({
+                  queryKey: queryKeys.seasonRatings(currentSeason.id)
+                });
 
-                Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
-                  { text: t('common.done'), onPress: () => navigation.goBack() }
-                ]);
+                // Navigate back immediately - no success alert needed
+                navigation.goBack();
+
+                // Make API call in background (fire and forget)
+                reportMatch(groupId, currentSeason.id, [], teams).catch((error) => {
+                  // Show error alert if API call fails
+                  console.error('Failed to report match:', error);
+                  Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+                });
               } catch (error) {
                 Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
               }
@@ -542,20 +546,25 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                   return;
                 }
 
-                await reportMatch(groupId, currentSeason.id, participants);
+                // Optimistic update: clear match entry and navigate immediately
+                clearMatchEntry();
 
-                // Invalidate React Query queries
-                await Promise.all([
-                  queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) }),
-                  queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) }),
-                  queryClient.invalidateQueries({
-                    queryKey: queryKeys.seasonRatings(currentSeason.id)
-                  })
-                ]);
+                // Invalidate React Query queries in background (non-blocking)
+                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) });
+                queryClient.invalidateQueries({
+                  queryKey: queryKeys.seasonRatings(currentSeason.id)
+                });
 
-                Alert.alert(t('common.success'), t('matchEntry.matchRecorded'), [
-                  { text: t('common.done'), onPress: () => navigation.goBack() }
-                ]);
+                // Navigate back immediately - no success alert needed
+                navigation.goBack();
+
+                // Make API call in background (fire and forget)
+                reportMatch(groupId, currentSeason.id, participants).catch((error) => {
+                  // Show error alert if API call fails
+                  console.error('Failed to report match:', error);
+                  Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+                });
               } catch (error) {
                 Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
               }

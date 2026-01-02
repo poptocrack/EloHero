@@ -24,6 +24,8 @@ interface GroupState {
   currentSeasonRatings: Rating[];
   groupGames: Game[];
   isLoading: boolean;
+  isReportingMatch: boolean;
+  lastMatchReportError: string | null;
   error: string | null;
 
   // Match entry state
@@ -97,6 +99,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   currentSeasonRatings: [],
   groupGames: [],
   isLoading: false,
+  isReportingMatch: false,
+  lastMatchReportError: null,
   error: null,
 
   matchEntry: {
@@ -459,10 +463,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       isTied?: boolean;
     }>
   ) => {
-    set((state) => ({
-      matchEntry: { ...state.matchEntry, isSubmitting: true },
-      error: null
-    }));
+    // Set loading state when match reporting starts
+    set({ isReportingMatch: true, lastMatchReportError: null });
 
     try {
       const response = await CloudFunctionsService.reportMatch(
@@ -475,26 +477,38 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         throw new Error(response.error || 'Failed to report match');
       }
 
-      // Reload data after successful match report
-      get().loadSeasonRatings(seasonId);
-      get().loadGroupGames(groupId);
-      // Reload group to update gameCount
-      get().loadGroup(groupId);
-      // Reload user's groups list to update gameCount in the list
+      // Reload data - wait for members to complete, then continue other loads in background
+      // Members are the most important for the UI, so we stop loading button once they're done
       const user = useAuthStore.getState().user;
-      if (user) {
-        get().loadUserGroups(user.uid);
-      }
-      get().clearMatchEntry();
 
-      set((state) => ({
-        matchEntry: { ...state.matchEntry, isSubmitting: false }
-      }));
+      // Wait for members to load (this is what the user sees, so button stops loading here)
+      await get().loadGroupMembers(groupId);
+
+      // Clear loading state once members are loaded (user sees updated list immediately)
+      set({ isReportingMatch: false, lastMatchReportError: null });
+
+      // Continue loading other data in background (non-blocking)
+      const backgroundPromises = [
+        get().loadGroup(groupId), // Load group
+        get().loadGroupSeasons(groupId), // Load seasons (which may trigger loadSeasonRatings)
+        get().loadGroupGames(groupId), // Load games (could be slow if many games)
+        get().loadSeasonRatings(seasonId) // Load ratings (could be slow if many players)
+      ];
+
+      if (user) {
+        backgroundPromises.push(get().loadUserGroups(user.uid)); // Could be slow if user in many groups
+      }
+
+      // Fire and forget - these will update the UI when they complete
+      Promise.all(backgroundPromises).catch((error) => {
+        // Log errors but don't fail the operation
+        console.error('Background data reload error:', error);
+      });
     } catch (error) {
-      set((state) => ({
-        error: error instanceof Error ? error.message : 'Failed to report match',
-        matchEntry: { ...state.matchEntry, isSubmitting: false }
-      }));
+      // Clear loading state on error and store error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to report match';
+      set({ isReportingMatch: false, lastMatchReportError: errorMessage });
+      // Re-throw error so caller can handle it
       throw error;
     }
   },
