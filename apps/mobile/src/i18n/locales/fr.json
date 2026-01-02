@@ -129,7 +129,7 @@
     "matchTypeTeams": "Match en équipe",
     "matchTypeIndividuals": "Match individuel",
     "shareGroup": "Partager le groupe",
-    "shareGroupDescription": "Invitez vos amis instantanément via la feuille de partage.",
+    "shareGroupDescription": "Invitez vos amis et mettez fin une fois pour toutes aux débats du style 'qui est le meilleur' !",
     "shareGroupButton": "Partager maintenant",
     "shareMessagePlaceholder": "Rejoins notre groupe \"{{groupName}}\" sur EloHero, l'app qui met enfin fin aux débats du style :\n\n\"Non mais sérieux, j'ai gagné PLUS de fois que toi... c'est juste que TU T'EN SOUVIENS MAL\".\n\nCode d'invitation : {{code}}\nEnvoyé avec beaucoup trop de fierté par {{userName}}.\n\nInstalle l'app, crée ton compte, entre le code...\net prépare-toi à découvrir ton vrai niveau (spoiler : ça fait pas toujours plaisir).\n\nÀ tout de suite pour des classements hautement scientifiques.",
     "shareFailed": "Impossible de partager pour le moment. Réessayez.",
