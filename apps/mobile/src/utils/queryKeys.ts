@@ -4,6 +4,9 @@ export const queryKeys = {
   groupGames: (groupId: string) => ['groupGames', groupId] as const,
   seasonRatings: (seasonId: string) => ['seasonRatings', seasonId] as const,
   userGroups: (uid: string) => ['userGroups', uid] as const,
-  user: (uid: string) => ['user', uid] as const
+  user: (uid: string) => ['user', uid] as const,
+  matchLabels: (groupId: string) => ['matchLabels', groupId] as const,
+  matchLabel: (groupId: string, labelId: string) =>
+    ['matchLabel', groupId, labelId] as const
 };
 

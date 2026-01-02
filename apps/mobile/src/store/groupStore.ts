@@ -13,7 +13,8 @@ import {
   Game,
   Participant,
   MatchEntryState,
-  Team
+  Team,
+  MatchLabel
 } from '@elohero/shared-types';
 
 interface GroupState {
@@ -72,7 +73,8 @@ interface GroupState {
       }>;
       placement: number;
       isTied?: boolean;
-    }>
+    }>,
+    matchLabelId?: string | null
   ) => Promise<void>;
   addMember: (groupId: string, memberName: string) => Promise<Member>;
   removeMember: (groupId: string, memberUid: string) => Promise<void>;
@@ -84,6 +86,7 @@ interface GroupState {
   removePlayerFromMatch: (uid: string) => void;
   togglePlayerTie: (uid: string) => void;
   toggleTeamTie: (teamId: string) => void;
+  setMatchLabel: (labelId: string | null) => void;
   clearMatchEntry: () => void;
 
   setLoading: (loading: boolean) => void;
@@ -109,7 +112,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
     playerTies: new Map<string, number>(),
     isSubmitting: false,
     isTeamMode: false,
-    teams: []
+    teams: [],
+    selectedMatchLabelId: null
   },
 
   loadUserGroups: async (uid: string) => {
@@ -461,7 +465,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       }>;
       placement: number;
       isTied?: boolean;
-    }>
+    }>,
+    matchLabelId?: string | null
   ) => {
     // Set loading state when match reporting starts
     set({ isReportingMatch: true, lastMatchReportError: null });
@@ -471,7 +476,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         groupId,
         seasonId,
         participants,
-        teams
+        teams,
+        matchLabelId
       );
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to report match');
@@ -742,6 +748,15 @@ export const useGroupStore = create<GroupState>((set, get) => ({
     });
   },
 
+  setMatchLabel: (labelId: string | null) => {
+    set((state) => ({
+      matchEntry: {
+        ...state.matchEntry,
+        selectedMatchLabelId: labelId
+      }
+    }));
+  },
+
   clearMatchEntry: () => {
     set({
       matchEntry: {
@@ -750,7 +765,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
         playerTies: new Map<string, number>(),
         isSubmitting: false,
         isTeamMode: false,
-        teams: []
+        teams: [],
+        selectedMatchLabelId: null
       }
     });
   },

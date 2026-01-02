@@ -22,7 +22,7 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { groupId, seasonId, participants, teams } = data;
+  const { groupId, seasonId, participants, teams, matchLabelId } = data;
   const uid = context.auth.uid;
 
   if (!groupId || !seasonId) {
@@ -214,7 +214,16 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
 
     // Create game document
     const gameRef = db.collection('games').doc();
-    const gameData = {
+    const gameData: {
+      id: string;
+      groupId: string;
+      seasonId: string;
+      createdBy: string;
+      createdAt: admin.firestore.FieldValue;
+      gameType: 'multiplayer' | 'teams';
+      status: 'completed';
+      matchLabelId?: string;
+    } = {
       id: gameRef.id,
       groupId,
       seasonId,
@@ -223,6 +232,20 @@ export const reportMatch = functions.https.onCall(async (data, context) => {
       gameType: isTeamMode ? 'teams' : 'multiplayer',
       status: 'completed'
     };
+
+    // Add matchLabelId if provided
+    if (matchLabelId && typeof matchLabelId === 'string') {
+      // Verify the label exists and belongs to this group
+      const labelDoc = await db
+        .collection('groups')
+        .doc(groupId)
+        .collection('matchLabels')
+        .doc(matchLabelId)
+        .get();
+      if (labelDoc.exists) {
+        gameData.matchLabelId = matchLabelId;
+      }
+    }
 
     await gameRef.set(gameData);
 

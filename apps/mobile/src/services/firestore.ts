@@ -14,7 +14,17 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Group, Member, Season, Rating, Game, Participant, RatingChange, User } from '@elohero/shared-types';
+import {
+  Group,
+  Member,
+  Season,
+  Rating,
+  Game,
+  Participant,
+  RatingChange,
+  User,
+  MatchLabel
+} from '@elohero/shared-types';
 
 export class FirestoreService {
   // Get user's groups
@@ -480,6 +490,30 @@ export class FirestoreService {
       };
     } catch (error) {
       throw new Error(`Failed to validate invite code: ${error}`);
+    }
+  }
+
+  // Get match label by ID
+  static async getMatchLabel(groupId: string, labelId: string): Promise<MatchLabel | null> {
+    try {
+      const labelDoc = await getDoc(
+        doc(db, 'groups', groupId, 'matchLabels', labelId)
+      );
+
+      if (!labelDoc.exists()) {
+        return null;
+      }
+
+      const labelData = labelDoc.data();
+      return {
+        id: labelDoc.id,
+        groupId: labelData.groupId as string,
+        name: labelData.name as string,
+        createdBy: labelData.createdBy as string,
+        createdAt: labelData.createdAt?.toDate() || new Date()
+      };
+    } catch (error) {
+      return null;
     }
   }
 }

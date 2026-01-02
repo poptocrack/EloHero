@@ -6,11 +6,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
 import { queryKeys } from '../../utils/queryKeys';
-import { Member } from '@elohero/shared-types';
+import { Member, MatchLabel } from '@elohero/shared-types';
+import { useMatchLabels } from '../../hooks/useMatchLabels';
 import { calculateEloChanges, calculateTeamEloChanges } from '../../utils/eloCalculation';
 import { APP_CONSTANTS } from '../../utils/constants';
 import MatchEntryHeader from './components/MatchEntryHeader';
 import TeamModeToggle from './components/TeamModeToggle';
+import MatchLabelSelector from './components/MatchLabelSelector';
 import SelectedPlayersCard from './components/SelectedPlayersCard';
 import TeamsCard from './components/TeamsCard';
 import AvailablePlayersCard from './components/AvailablePlayersCard';
@@ -54,12 +56,18 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     moveTeamUp,
     moveTeamDown,
     addPlayerToTeam,
-    removePlayerFromTeam
+    removePlayerFromTeam,
+    setMatchLabel
   } = useGroupStore();
 
   const [availablePlayers, setAvailablePlayers] = useState<Member[]>([]);
   const [isPremiumModalVisible, setPremiumModalVisible] = useState(false);
+  const [isMatchLabelPremiumModalVisible, setIsMatchLabelPremiumModalVisible] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState<MatchLabel | null>(null);
   const isPremiumUser = user?.plan === 'premium';
+
+  // Use React Query to fetch labels (cached)
+  const { data: matchLabels = [] } = useMatchLabels(groupId);
 
   // Calculate ELO changes for selected players or teams based on mode
   const eloPredictions = useMemo(() => {
@@ -288,6 +296,32 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     }
   }, [isPremiumUser, matchEntry.isTeamMode, toggleTeamMode]);
 
+  // Labels are automatically loaded via React Query hook above
+
+  // Update selectedLabel immediately when matchEntry.selectedMatchLabelId changes
+  useEffect(() => {
+    if (matchEntry.selectedMatchLabelId) {
+      // First check if we already have it in matchLabels
+      const found = matchLabels.find((l) => l.id === matchEntry.selectedMatchLabelId);
+      if (found) {
+        setSelectedLabel(found);
+      } else if (!selectedLabel || selectedLabel.id !== matchEntry.selectedMatchLabelId) {
+        // If not found and we don't have a matching selectedLabel, create optimistic placeholder
+        // The label name will be updated when labels load
+        setSelectedLabel({
+          id: matchEntry.selectedMatchLabelId,
+          groupId,
+          name: '...', // Placeholder - will be updated when labels load
+          createdBy: '',
+          createdAt: new Date()
+        });
+      }
+      // If selectedLabel already matches, keep it (don't overwrite with placeholder)
+    } else {
+      setSelectedLabel(null);
+    }
+  }, [matchEntry.selectedMatchLabelId, matchLabels, groupId, selectedLabel]);
+
   const handleOpenPremiumModal = () => {
     setPremiumModalVisible(true);
   };
@@ -296,10 +330,40 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     setPremiumModalVisible(false);
   };
 
+  const handleOpenMatchLabelPremiumModal = () => {
+    setIsMatchLabelPremiumModalVisible(true);
+  };
+
+  const handleCloseMatchLabelPremiumModal = () => {
+    setIsMatchLabelPremiumModalVisible(false);
+  };
+
   const handleNavigateToSubscription = () => {
     setPremiumModalVisible(false);
     navigation.navigate('Subscription');
   };
+
+  const handleOpenMatchLabelScreen = () => {
+    navigation.navigate('MatchLabel', {
+      groupId,
+      selectedLabelId: matchEntry.selectedMatchLabelId
+    });
+  };
+
+  // Handle navigation focus to update selected label (labels are cached via React Query)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Update selected label if we have a selected ID
+      if (matchEntry.selectedMatchLabelId && matchLabels.length > 0) {
+        const found = matchLabels.find((l) => l.id === matchEntry.selectedMatchLabelId);
+        if (found) {
+          setSelectedLabel(found);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, matchEntry.selectedMatchLabelId, matchLabels]);
 
   const handleAddPlayer = (player: Member) => {
     addPlayerToMatch(player);
@@ -452,7 +516,13 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                 navigation.goBack();
 
                 // Make API call in background (fire and forget)
-                reportMatch(groupId, currentSeason.id, [], teams).catch((error) => {
+                reportMatch(
+                  groupId,
+                  currentSeason.id,
+                  [],
+                  teams,
+                  matchEntry.selectedMatchLabelId
+                ).catch((error) => {
                   // Show error alert if API call fails
                   console.error('Failed to report match:', error);
                   Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
@@ -560,7 +630,13 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
                 navigation.goBack();
 
                 // Make API call in background (fire and forget)
-                reportMatch(groupId, currentSeason.id, participants).catch((error) => {
+                reportMatch(
+                  groupId,
+                  currentSeason.id,
+                  participants,
+                  undefined,
+                  matchEntry.selectedMatchLabelId
+                ).catch((error) => {
                   // Show error alert if API call fails
                   console.error('Failed to report match:', error);
                   Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
@@ -586,6 +662,14 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
         onToggle={toggleTeamMode}
         isPremiumUser={isPremiumUser}
         onPremiumPress={handleOpenPremiumModal}
+      />
+
+      {/* Match Label Selector */}
+      <MatchLabelSelector
+        selectedLabel={selectedLabel}
+        onPress={handleOpenMatchLabelScreen}
+        isPremiumUser={isPremiumUser}
+        onPremiumPress={handleOpenMatchLabelPremiumModal}
       />
 
       {/* Scrollable Content */}
@@ -647,19 +731,34 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
       />
 
       {!isPremiumUser && (
-        <PremiumModal
-          visible={isPremiumModalVisible}
-          onClose={handleClosePremiumModal}
-          onNavigateToSubscription={handleNavigateToSubscription}
-          titleKey="matchEntry.teamModePremium.title"
-          subtitleKey="matchEntry.teamModePremium.subtitle"
-          bullet1Key="matchEntry.teamModePremium.bullet1"
-          bullet2Key="matchEntry.teamModePremium.bullet2"
-          ctaKey="matchEntry.teamModePremium.cta"
-          cancelKey="matchEntry.teamModePremium.cancel"
-          iconName="star-outline"
-          iconColor="#FF6B9D"
-        />
+        <>
+          <PremiumModal
+            visible={isPremiumModalVisible}
+            onClose={handleClosePremiumModal}
+            onNavigateToSubscription={handleNavigateToSubscription}
+            titleKey="matchEntry.teamModePremium.title"
+            subtitleKey="matchEntry.teamModePremium.subtitle"
+            bullet1Key="matchEntry.teamModePremium.bullet1"
+            bullet2Key="matchEntry.teamModePremium.bullet2"
+            ctaKey="matchEntry.teamModePremium.cta"
+            cancelKey="matchEntry.teamModePremium.cancel"
+            iconName="star-outline"
+            iconColor="#FF6B9D"
+          />
+          <PremiumModal
+            visible={isMatchLabelPremiumModalVisible}
+            onClose={handleCloseMatchLabelPremiumModal}
+            onNavigateToSubscription={handleNavigateToSubscription}
+            titleKey="matchEntry.matchLabelPremium.title"
+            subtitleKey="matchEntry.matchLabelPremium.subtitle"
+            bullet1Key="matchEntry.matchLabelPremium.bullet1"
+            bullet2Key="matchEntry.matchLabelPremium.bullet2"
+            ctaKey="matchEntry.matchLabelPremium.cta"
+            cancelKey="matchEntry.matchLabelPremium.cancel"
+            iconName="pricetag-outline"
+            iconColor="#667eea"
+          />
+        </>
       )}
     </View>
   );

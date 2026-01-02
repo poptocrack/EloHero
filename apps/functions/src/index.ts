@@ -9,6 +9,7 @@ export * from './groups';
 export * from './seasons';
 export * from './members';
 export * from './matches';
+export * from './matchLabels';
 export * from './subscriptions';
 export * from './users';
 export * from './scheduled';

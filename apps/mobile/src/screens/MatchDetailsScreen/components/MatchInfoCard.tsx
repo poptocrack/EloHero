@@ -2,16 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Game } from '@elohero/shared-types';
+import { Game, MatchLabel } from '@elohero/shared-types';
 
 interface MatchInfoCardProps {
   game: Game;
   participantsCount: number;
+  matchLabel: MatchLabel | null;
 }
 
-const MatchInfoCard: React.FC<MatchInfoCardProps> = ({ game, participantsCount }) => {
+const MatchInfoCard: React.FC<MatchInfoCardProps> = ({ game, participantsCount, matchLabel }) => {
   const { t } = useTranslation();
-
   return (
     <View style={styles.cardWrapper}>
       <View style={styles.card}>
@@ -48,6 +48,12 @@ const MatchInfoCard: React.FC<MatchInfoCardProps> = ({ game, participantsCount }
                   {participantsCount} {t('matchDetails.players')}
                 </Text>
               </View>
+              {matchLabel && (
+                <View style={styles.row}>
+                  <Ionicons name="pricetag-outline" size={18} color="#fff" />
+                  <Text style={styles.text}>{matchLabel.name}</Text>
+                </View>
+              )}
             </View>
           )}
         </View>

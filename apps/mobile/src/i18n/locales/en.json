@@ -279,7 +279,38 @@
       "bullet2": "Build larger communities and compete with more players",
       "cta": "Go to Premium",
       "cancel": "Maybe later"
+    },
+    "matchLabel": {
+      "title": "Match Label",
+      "selectLabel": "Select or add a label",
+      "noLabelSelected": "No label selected",
+      "selectOrAdd": "Select or add a label",
+      "example": "Game name, sport name, event name...",
+      "premiumFeature": "Match labels are a premium feature"
+    },
+    "matchLabelPremium": {
+      "title": "Unlock Match Labels",
+      "subtitle": "Organize your matches with custom labels. Categorize games by sport, event, or any custom category you want.",
+      "bullet1": "Create unlimited custom labels for your matches",
+      "bullet2": "Organize and filter matches by category",
+      "cta": "Go to Premium",
+      "cancel": "Maybe later"
     }
+  },
+  "matchLabelScreen": {
+    "title": "Match Label",
+    "addNew": "Add New Label",
+    "selectExisting": "Select Existing Label",
+    "namePlaceholder": "Game name, sport name, event name...",
+    "create": "Create",
+    "use": "Use",
+    "nameRequired": "Label name is required",
+    "nameTooLong": "Label name must be 50 characters or less",
+    "createError": "Failed to create label",
+    "noLabels": "No labels yet",
+    "noLabelsSubtext": "Create your first label to get started",
+    "loading": "Loading labels...",
+    "error": "Failed to load labels"
   },
   "subscription": {
     "title": "Subscription",

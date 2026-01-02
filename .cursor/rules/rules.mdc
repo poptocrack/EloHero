@@ -764,3 +764,341 @@ const handleTextChange = (text: string): void => {
 
 **🚫 TYPESCRIPT RULE: NO `any` TYPES ALLOWED - ALL CODE MUST BE FULLY TYPED!**
 **⚡ OPTIMISTIC RULE: ALL USER ACTIONS MUST BE OPTIMISTIC - INSTANT UI UPDATES REQUIRED!**
+
+## 🔄 **TanStack Query (React Query) Rules**
+
+### **MANDATORY TanStack Query Usage:**
+
+#### **1. ALL API Calls Must Use TanStack Query:**
+
+- **NEVER make direct API calls** outside of TanStack Query hooks
+- **ALL data fetching** must use `useQuery` hook
+- **ALL mutations** (create, update, delete) must use `useMutation` hook
+- **NO direct service calls** in components - always wrap in hooks
+
+```typescript
+// ❌ WRONG - Direct API call
+const fetchData = async () => {
+  const data = await FirestoreService.getGroup(groupId);
+  setGroup(data);
+};
+
+// ✅ CORRECT - Using useQuery
+const { data: group } = useQuery({
+  queryKey: queryKeys.group(groupId),
+  queryFn: () => FirestoreService.getGroup(groupId),
+  enabled: !!groupId
+});
+```
+
+#### **2. Query Keys Must Be Centralized:**
+
+- **ALL query keys** must be defined in `utils/queryKeys.ts`
+- **Use consistent naming** and structure
+- **Never hardcode query keys** in components
+- **Use factory functions** for dynamic keys
+
+```typescript
+// ✅ CORRECT - Centralized query keys
+// In utils/queryKeys.ts
+export const queryKeys = {
+  group: (groupId: string) => ['group', groupId] as const,
+  groupGames: (groupId: string) => ['groupGames', groupId] as const,
+  userGroups: (uid: string) => ['userGroups', uid] as const
+};
+
+// In component
+const { data } = useQuery({
+  queryKey: queryKeys.group(groupId),
+  queryFn: () => FirestoreService.getGroup(groupId)
+});
+```
+
+#### **3. Custom Hooks for Queries:**
+
+- **Create custom hooks** for reusable queries
+- **Place hooks in** `src/hooks/` directory
+- **Export typed hooks** with proper return types
+- **Include proper error handling** and loading states
+
+```typescript
+// ✅ CORRECT - Custom query hook
+// In hooks/useGroup.ts
+export function useGroup(groupId: string) {
+  return useQuery({
+    queryKey: queryKeys.group(groupId),
+    queryFn: () => FirestoreService.getGroup(groupId),
+    enabled: !!groupId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000 // 30 minutes
+  });
+}
+
+// In component
+const { data: group, isLoading, error } = useGroup(groupId);
+```
+
+#### **4. Mutations Must Use useMutation:**
+
+- **ALL mutations** (create, update, delete) must use `useMutation`
+- **Implement optimistic updates** in `onMutate`
+- **Invalidate queries** in `onSuccess` or `onSettled`
+- **Handle rollback** in `onError` for optimistic updates
+
+```typescript
+// ✅ CORRECT - Mutation with optimistic update
+export function useCreateGroup() {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  return useMutation({
+    mutationFn: async ({ name, description }: CreateGroupParams) => {
+      const response = await CloudFunctionsService.createGroup(name, description);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to create group');
+      }
+      return response.data;
+    },
+    onMutate: async (newGroup) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.userGroups(user!.uid) });
+
+      // Snapshot previous value for rollback
+      const previousGroups = queryClient.getQueryData<Group[]>(
+        queryKeys.userGroups(user!.uid)
+      );
+
+      // Optimistically update
+      queryClient.setQueryData<Group[]>(queryKeys.userGroups(user!.uid), (old = []) => [
+        ...old,
+        { ...newGroup, id: 'temp-' + Date.now() } as Group
+      ]);
+
+      return { previousGroups };
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousGroups) {
+        queryClient.setQueryData(queryKeys.userGroups(user!.uid), context.previousGroups);
+      }
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.userGroups(user!.uid) });
+    }
+  });
+}
+```
+
+#### **5. Query Invalidation Patterns:**
+
+- **Invalidate related queries** after mutations
+- **Use specific query keys** for targeted invalidation
+- **Invalidate parent queries** when child data changes
+- **Use `invalidateQueries`** instead of manual refetching
+
+```typescript
+// ✅ CORRECT - Proper invalidation
+onSuccess: (data, variables) => {
+  // Invalidate specific queries
+  queryClient.invalidateQueries({ queryKey: queryKeys.group(variables.groupId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(variables.groupId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.seasonRatings(variables.seasonId) });
+}
+
+// ❌ WRONG - Manual refetch
+onSuccess: () => {
+  refetch(); // Don't do this
+}
+```
+
+#### **6. Query Configuration:**
+
+- **Set appropriate `staleTime`** based on data freshness needs
+- **Set `gcTime` (garbage collection)** for cache management
+- **Use `enabled`** to conditionally fetch data
+- **Configure `retry`** for network resilience
+
+```typescript
+// ✅ CORRECT - Proper query configuration
+useQuery({
+  queryKey: queryKeys.group(groupId),
+  queryFn: () => FirestoreService.getGroup(groupId),
+  enabled: !!groupId && !!user, // Conditional fetching
+  staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+  gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
+  retry: 2, // Retry failed requests twice
+  retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+});
+```
+
+#### **7. Error Handling:**
+
+- **Handle errors** in query hooks with proper typing
+- **Display user-friendly error messages** using translations
+- **Use error boundaries** for critical failures
+- **Log errors** for debugging
+
+```typescript
+// ✅ CORRECT - Error handling
+const { data, error, isLoading } = useQuery({
+  queryKey: queryKeys.group(groupId),
+  queryFn: () => FirestoreService.getGroup(groupId),
+  onError: (error: ApiError) => {
+    console.error('Failed to fetch group:', error);
+    // Error is available in component via error state
+  }
+});
+
+// In component
+if (error) {
+  return <ErrorView message={t('errors.failedToLoadGroup')} />;
+}
+```
+
+#### **8. Loading States:**
+
+- **Use `isLoading`** for initial load
+- **Use `isFetching`** for background refetches
+- **Use `isPending`** for mutations
+- **Show loading indicators** appropriately
+
+```typescript
+// ✅ CORRECT - Loading states
+const { data, isLoading, isFetching } = useQuery({
+  queryKey: queryKeys.group(groupId),
+  queryFn: () => FirestoreService.getGroup(groupId)
+});
+
+// Show skeleton on initial load
+if (isLoading) return <LoadingSkeleton />;
+
+// Show subtle indicator on background refetch
+{isFetching && <ActivityIndicator size="small" />}
+```
+
+#### **9. Query Client Usage:**
+
+- **Use `useQueryClient` hook** in components
+- **Use exported `queryClient`** for non-React contexts
+- **Invalidate queries** after mutations
+- **Update cache** optimistically when appropriate
+
+```typescript
+// ✅ CORRECT - In React component
+const queryClient = useQueryClient();
+queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
+
+// ✅ CORRECT - Outside React (e.g., in Zustand store)
+import { queryClient } from '../utils/queryClient';
+queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
+```
+
+#### **10. Mutation Patterns:**
+
+- **Create custom mutation hooks** for reusable mutations
+- **Return mutation object** with proper typing
+- **Handle loading and error states** in components
+- **Implement optimistic updates** for better UX
+
+```typescript
+// ✅ CORRECT - Custom mutation hook
+export function useUpdateGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ groupId, updates }: UpdateGroupParams) => {
+      const response = await CloudFunctionsService.updateGroup(groupId, updates);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to update group');
+      }
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      // Update cache with new data
+      queryClient.setQueryData(queryKeys.group(variables.groupId), data);
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.userGroups(user!.uid) });
+    }
+  });
+}
+
+// In component
+const updateGroup = useUpdateGroup();
+
+const handleUpdate = () => {
+  updateGroup.mutate(
+    { groupId, updates: { name: 'New Name' } },
+    {
+      onSuccess: () => {
+        Alert.alert(t('common.success'), t('groups.groupUpdated'));
+      },
+      onError: (error) => {
+        Alert.alert(t('common.error'), error.message);
+      }
+    }
+  );
+};
+```
+
+### **TanStack Query Best Practices:**
+
+#### **Query Organization:**
+
+1. **Group related queries** in custom hooks
+2. **Use consistent naming** (`use[Resource]` for queries, `use[Action][Resource]` for mutations)
+3. **Export hooks** from `hooks/index.ts` for easy imports
+4. **Document complex queries** with JSDoc comments
+
+#### **Cache Management:**
+
+1. **Set appropriate stale times** based on data volatility
+2. **Use `gcTime`** to control cache retention
+3. **Invalidate strategically** - don't over-invalidate
+4. **Use `setQueryData`** for optimistic updates
+
+#### **Performance Optimization:**
+
+1. **Use `enabled`** to prevent unnecessary fetches
+2. **Implement pagination** with `useInfiniteQuery`
+3. **Use `select`** to transform data without re-renders
+4. **Debounce search queries** to reduce API calls
+
+```typescript
+// ✅ CORRECT - Using select for data transformation
+const { data: groupName } = useQuery({
+  queryKey: queryKeys.group(groupId),
+  queryFn: () => FirestoreService.getGroup(groupId),
+  select: (group) => group?.name // Only re-render when name changes
+});
+```
+
+### **Migration Checklist:**
+
+When converting existing code to TanStack Query:
+
+- [ ] Replace direct API calls with `useQuery` or `useMutation`
+- [ ] Move query keys to `utils/queryKeys.ts`
+- [ ] Create custom hooks for reusable queries
+- [ ] Implement optimistic updates for mutations
+- [ ] Add proper error handling
+- [ ] Configure appropriate `staleTime` and `gcTime`
+- [ ] Invalidate related queries after mutations
+- [ ] Remove manual loading state management
+- [ ] Remove manual error state management
+- [ ] Test query invalidation and cache updates
+
+### **TanStack Query Quality Checklist:**
+
+- [ ] All API calls use TanStack Query hooks
+- [ ] All query keys are centralized in `utils/queryKeys.ts`
+- [ ] Custom hooks are created for reusable queries
+- [ ] Mutations implement optimistic updates
+- [ ] Queries are properly invalidated after mutations
+- [ ] Appropriate `staleTime` and `gcTime` are set
+- [ ] Error handling is implemented with translations
+- [ ] Loading states are properly managed
+- [ ] No direct service calls in components
+- [ ] Query client is used correctly (hook vs. instance)
+
+**🔄 TANSTACK QUERY RULE: ALL API CALLS MUST USE TANSTACK QUERY - NO DIRECT SERVICE CALLS ALLOWED!**

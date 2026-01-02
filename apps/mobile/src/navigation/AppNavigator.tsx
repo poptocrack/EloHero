@@ -24,6 +24,7 @@ import PlayerProfileScreen from '../screens/PlayerProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import MemberManagementScreen from '../screens/MemberManagementScreen';
 import SubscriptionDebugScreen from '../screens/SubscriptionDebugScreen';
+import MatchLabelScreen from '../screens/MatchLabelScreen/MatchLabelScreen';
 
 // Create navigators with explicit type constraints to prevent runtime errors
 const Stack = createStackNavigator<RootStackParamList>();
@@ -121,6 +122,7 @@ function RootStackNavigator() {
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
       <Stack.Screen name="SubscriptionDebug" component={SubscriptionDebugScreen} />
       <Stack.Screen name="MemberManagement" component={MemberManagementScreen} />
+      <Stack.Screen name="MatchLabel" component={MatchLabelScreen} />
     </Stack.Navigator>
   );
 }

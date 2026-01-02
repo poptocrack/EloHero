@@ -23,6 +23,7 @@ __exportStar(require("./groups"), exports);
 __exportStar(require("./seasons"), exports);
 __exportStar(require("./members"), exports);
 __exportStar(require("./matches"), exports);
+__exportStar(require("./matchLabels"), exports);
 __exportStar(require("./subscriptions"), exports);
 __exportStar(require("./users"), exports);
 __exportStar(require("./scheduled"), exports);

@@ -9,7 +9,8 @@ import {
   Participant,
   Invite,
   ApiResponse,
-  Member
+  Member,
+  MatchLabel
 } from '@elohero/shared-types';
 
 export class CloudFunctionsService {
@@ -82,7 +83,8 @@ export class CloudFunctionsService {
       }>;
       placement: number;
       isTied?: boolean;
-    }>
+    }>,
+    matchLabelId?: string | null
   ): Promise<ApiResponse<{ game: Game; participants: Participant[] }>> {
     try {
       const reportMatch = httpsCallable(functions, 'reportMatch');
@@ -106,7 +108,8 @@ export class CloudFunctionsService {
           })),
           placement: t.placement,
           isTied: t.isTied || false
-        }))
+        })),
+        matchLabelId: matchLabelId || undefined
       });
       return result.data as ApiResponse<{ game: Game; participants: Participant[] }>;
     } catch (error) {
@@ -247,6 +250,38 @@ export class CloudFunctionsService {
     } catch (error: any) {
       const errorMessage = error?.details || error?.message || error?.code || 'Unknown error';
       throw new Error(`Failed to delete match: ${errorMessage}`);
+    }
+  }
+
+  // List match labels for a group (Premium only)
+  static async listMatchLabels(groupId: string): Promise<ApiResponse<MatchLabel[]>> {
+    try {
+      const listMatchLabels = httpsCallable(functions, 'listMatchLabels');
+      const result = await listMatchLabels({ groupId });
+      return result.data as ApiResponse<MatchLabel[]>;
+    } catch (error: any) {
+      // Handle specific error codes
+      if (error?.code === 'functions/not-found') {
+        // Function not deployed or not found - return empty array instead of throwing
+        return {
+          success: true,
+          data: []
+        };
+      }
+      const errorMessage = error?.details || error?.message || error?.code || 'Unknown error';
+      throw new Error(`Failed to list match labels: ${errorMessage}`);
+    }
+  }
+
+  // Create a match label for a group (Premium only)
+  static async createMatchLabel(groupId: string, name: string): Promise<ApiResponse<MatchLabel>> {
+    try {
+      const createMatchLabel = httpsCallable(functions, 'createMatchLabel');
+      const result = await createMatchLabel({ groupId, name });
+      return result.data as ApiResponse<MatchLabel>;
+    } catch (error: any) {
+      const errorMessage = error?.details || error?.message || error?.code || 'Unknown error';
+      throw new Error(`Failed to create match label: ${errorMessage}`);
     }
   }
 }

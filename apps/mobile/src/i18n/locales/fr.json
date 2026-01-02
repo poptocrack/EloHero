@@ -279,7 +279,38 @@
       "bullet2": "Construisez des communautés plus grandes et rivalisez avec plus de joueurs",
       "cta": "Aller vers Premium",
       "cancel": "Plus tard"
+    },
+    "matchLabel": {
+      "title": "Étiquette de partie",
+      "selectLabel": "Sélectionner ou ajouter une étiquette",
+      "noLabelSelected": "Aucune étiquette sélectionnée",
+      "selectOrAdd": "Sélectionner ou ajouter une étiquette",
+      "example": "Nom du jeu, sport, événement...",
+      "premiumFeature": "Les étiquettes de partie sont une fonctionnalité premium"
+    },
+    "matchLabelPremium": {
+      "title": "Débloquez les étiquettes de partie",
+      "subtitle": "Organisez vos parties avec des étiquettes personnalisées. Catégorisez les jeux par sport, événement ou toute catégorie personnalisée que vous souhaitez.",
+      "bullet1": "Créez des étiquettes personnalisées illimitées pour vos parties",
+      "bullet2": "Organisez et filtrez les parties par catégorie",
+      "cta": "Aller vers Premium",
+      "cancel": "Plus tard"
     }
+  },
+  "matchLabelScreen": {
+    "title": "Étiquette de partie",
+    "addNew": "Ajouter une nouvelle étiquette",
+    "selectExisting": "Sélectionner une étiquette existante",
+    "namePlaceholder": "Nom du jeu, sport, événement...",
+    "create": "Créer",
+    "use": "Utiliser",
+    "nameRequired": "Le nom de l'étiquette est requis",
+    "nameTooLong": "Le nom de l'étiquette doit faire 50 caractères ou moins",
+    "createError": "Impossible de créer l'étiquette",
+    "noLabels": "Aucune étiquette pour le moment",
+    "noLabelsSubtext": "Créez votre première étiquette pour commencer",
+    "loading": "Chargement des étiquettes...",
+    "error": "Impossible de charger les étiquettes"
   },
   "subscription": {
     "title": "Abonnement",

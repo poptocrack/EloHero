@@ -34,7 +34,7 @@ exports.reportMatch = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
-    const { groupId, seasonId, participants, teams } = data;
+    const { groupId, seasonId, participants, teams, matchLabelId } = data;
     const uid = context.auth.uid;
     if (!groupId || !seasonId) {
         throw new functions.https.HttpsError('invalid-argument', 'Group ID and season ID are required');
@@ -178,6 +178,19 @@ exports.reportMatch = functions.https.onCall(async (data, context) => {
             gameType: isTeamMode ? 'teams' : 'multiplayer',
             status: 'completed'
         };
+        // Add matchLabelId if provided
+        if (matchLabelId && typeof matchLabelId === 'string') {
+            // Verify the label exists and belongs to this group
+            const labelDoc = await db_1.db
+                .collection('groups')
+                .doc(groupId)
+                .collection('matchLabels')
+                .doc(matchLabelId)
+                .get();
+            if (labelDoc.exists) {
+                gameData.matchLabelId = matchLabelId;
+            }
+        }
         await gameRef.set(gameData);
         // Get all current rating documents before batch operations
         const ratingDocPromises = eloResults.map((result) => db_1.db.collection('ratings').doc(`${seasonId}_${result.uid}`).get());

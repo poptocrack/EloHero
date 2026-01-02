@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useGroupStore } from '../../store/groupStore';
 import { queryKeys } from '../../utils/queryKeys';
 import { Participant, Game, Group } from '@elohero/shared-types';
+import { useMatchLabel } from '../../hooks/useMatchLabels';
 import IndividualParticipantsView from './components/IndividualParticipantsView';
 import TeamParticipantsView from './components/TeamParticipantsView';
 import MatchDetailsHeader from './components/MatchDetailsHeader';
@@ -43,6 +44,9 @@ export default function MatchDetailsScreen({
   const [error, setError] = useState<string | null>(null);
   const isTeamMatch = game?.gameType === 'teams';
 
+  // Use React Query to fetch match label (cached)
+  const { data: matchLabel } = useMatchLabel(groupId, game?.matchLabelId || null);
+
   useEffect(() => {
     loadMatchDetails();
   }, [gameId]);
@@ -71,6 +75,7 @@ export default function MatchDetailsScreen({
       setGame(gameData);
       setParticipants(participantsData);
       setGroup(groupData);
+      // Match label is automatically loaded via React Query hook above
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -197,7 +202,13 @@ export default function MatchDetailsScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {game && <MatchInfoCard game={game} participantsCount={participants.length} />}
+        {game && (
+          <MatchInfoCard
+            game={game}
+            participantsCount={participants.length}
+            matchLabel={matchLabel || null}
+          />
+        )}
 
         {isTeamMatch ? (
           <TeamParticipantsView participants={participants} />

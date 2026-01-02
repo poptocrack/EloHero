@@ -64,6 +64,14 @@ export interface Rating {
   lastUpdated: Date;
 }
 
+export interface MatchLabel {
+  id: string;
+  groupId: string;
+  name: string;
+  createdBy: string;
+  createdAt: Date;
+}
+
 export interface Game {
   id: string;
   groupId: string;
@@ -72,6 +80,7 @@ export interface Game {
   createdAt: Date;
   gameType: 'multiplayer' | 'teams';
   status: 'completed';
+  matchLabelId?: string; // Optional match label ID
   deletedAt?: Date; // Soft delete timestamp
 }
 
@@ -154,6 +163,7 @@ export interface MatchEntryState {
   isSubmitting: boolean;
   isTeamMode: boolean;
   teams: Team[];
+  selectedMatchLabelId: string | null; // Optional selected match label ID
 }
 
 // Navigation Types
@@ -166,6 +176,7 @@ export type RootStackParamList = {
   Subscription: undefined;
   SubscriptionDebug: undefined;
   MemberManagement: { groupId: string };
+  MatchLabel: { groupId: string };
 };
 
 export type MainTabParamList = {

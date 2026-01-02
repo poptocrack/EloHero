@@ -151,10 +151,7 @@ exports.mergeMember = functions.https.onCall(async (data, context) => {
         }
         const realMemberData = realMemberDoc.data();
         // Get all seasons for this group
-        const seasonsSnapshot = await db_1.db
-            .collection('seasons')
-            .where('groupId', '==', groupId)
-            .get();
+        const seasonsSnapshot = await db_1.db.collection('seasons').where('groupId', '==', groupId).get();
         const batch = db_1.db.batch();
         // 1. Transfer all ratings from virtual to real user (for all seasons)
         for (const seasonDoc of seasonsSnapshot.docs) {
