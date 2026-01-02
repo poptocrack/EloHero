@@ -79,7 +79,15 @@
     "upgradeBannerTitle": "Unlock Premium Features",
     "upgradeBannerSubtitle": "Create unlimited groups and access all premium features",
     "upgradeNow": "Upgrade Now",
-    "debugSubscriptions": "Debug Subscriptions"
+    "debugSubscriptions": "Debug Subscriptions",
+    "groupLimitPremium": {
+      "title": "Unlock Unlimited Groups",
+      "subtitle": "Free users can create or join up to 2 groups. Upgrade to Premium to create unlimited groups and manage multiple communities.",
+      "bullet1": "Create and join unlimited groups",
+      "bullet2": "Manage multiple communities and compete across different groups",
+      "cta": "Go to Premium",
+      "cancel": "Maybe later"
+    }
   },
   "groupDetails": {
     "title": "Group Details",

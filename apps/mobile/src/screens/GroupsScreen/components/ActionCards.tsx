@@ -10,6 +10,7 @@ interface ActionCardsProps {
   groupsCount: number;
   isPremium: boolean;
   onUpgrade: () => void;
+  onShowPremiumModal?: () => void;
 }
 
 export default function ActionCards({
@@ -17,7 +18,8 @@ export default function ActionCards({
   onJoinGroup,
   groupsCount,
   isPremium,
-  onUpgrade
+  onUpgrade,
+  onShowPremiumModal
 }: ActionCardsProps) {
   const { t } = useTranslation();
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -28,16 +30,16 @@ export default function ActionCards({
   const showBanner = isLimitReached && !bannerDismissed;
 
   const handleCreateGroup = () => {
-    if (isLimitReached) {
-      onUpgrade();
+    if (isLimitReached && onShowPremiumModal) {
+      onShowPremiumModal();
     } else {
       onCreateGroup();
     }
   };
 
   const handleJoinGroup = () => {
-    if (isLimitReached) {
-      onUpgrade();
+    if (isLimitReached && onShowPremiumModal) {
+      onShowPremiumModal();
     } else {
       onJoinGroup();
     }
@@ -47,50 +49,48 @@ export default function ActionCards({
     <View style={styles.container}>
       <View style={styles.actionCardsContainer}>
         <TouchableOpacity
-          style={[styles.actionCard, isLimitReached && styles.disabledCard]}
+          style={styles.actionCard}
           onPress={handleCreateGroup}
-          disabled={isLimitReached}
         >
           <LinearGradient
-            colors={isLimitReached ? ['#F7FAFC', '#E2E8F0'] : ['#FF6B9D', '#C44569']}
+            colors={['#FF6B9D', '#C44569']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.actionCardGradient}
           >
             <View style={styles.actionCardContent}>
               <View style={styles.actionCardIcon}>
-                <Ionicons name="add-circle" size={32} color={isLimitReached ? '#6B7280' : '#fff'} />
+                <Ionicons name="add-circle" size={32} color="#fff" />
               </View>
-              <Text style={[styles.actionCardTitle, isLimitReached && styles.disabledText]}>
+              <Text style={styles.actionCardTitle}>
                 {t('groups.createGroup')}
               </Text>
-              <Text style={[styles.actionCardSubtitle, isLimitReached && styles.disabledText]}>
-                {isLimitReached ? t('groups.upgradeToCreate') : t('groups.createGroupSubtitle')}
+              <Text style={styles.actionCardSubtitle}>
+                {t('groups.createGroupSubtitle')}
               </Text>
             </View>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionCard, isLimitReached && styles.disabledCard]}
+          style={styles.actionCard}
           onPress={handleJoinGroup}
-          disabled={isLimitReached}
         >
           <LinearGradient
-            colors={isLimitReached ? ['#F7FAFC', '#E2E8F0'] : ['#4ECDC4', '#44A08D']}
+            colors={['#4ECDC4', '#44A08D']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.actionCardGradient}
           >
             <View style={styles.actionCardContent}>
               <View style={styles.actionCardIcon}>
-                <Ionicons name="people" size={32} color={isLimitReached ? '#6B7280' : '#fff'} />
+                <Ionicons name="people" size={32} color="#fff" />
               </View>
-              <Text style={[styles.actionCardTitle, isLimitReached && styles.disabledText]}>
+              <Text style={styles.actionCardTitle}>
                 {t('groups.joinGroup')}
               </Text>
-              <Text style={[styles.actionCardSubtitle, isLimitReached && styles.disabledText]}>
-                {isLimitReached ? t('groups.upgradeToJoinMore') : t('groups.joinGroupSubtitle')}
+              <Text style={styles.actionCardSubtitle}>
+                {t('groups.joinGroupSubtitle')}
               </Text>
             </View>
           </LinearGradient>

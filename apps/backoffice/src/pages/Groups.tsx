@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AdminService } from '@/services/admin';
 import type { Group } from '@elohero/shared-types';
@@ -14,21 +14,29 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
+import { ArrowUp, ArrowDown } from 'lucide-react';
+
+type SortField = 'memberCount' | 'gameCount' | null;
+type SortDirection = 'asc' | 'desc';
 
 export default function Groups() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
-  const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [sortField, setSortField] = useState<SortField>(
+    (searchParams.get('sort') as SortField) || null
+  );
+  const [sortDirection, setSortDirection] = useState<SortDirection>(
+    (searchParams.get('direction') as SortDirection) || 'desc'
+  );
 
   useEffect(() => {
     const loadGroups = async () => {
       try {
         const data = await AdminService.getGroups();
         setGroups(data);
-        setFilteredGroups(data);
       } catch (error) {
         console.error('Failed to load groups:', error);
       } finally {
@@ -39,27 +47,49 @@ export default function Groups() {
     loadGroups();
   }, []);
 
+  // Sync sort state from URL params on mount
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredGroups(groups);
-      // Remove search param if empty
-      if (searchParams.get('search')) {
-        setSearchParams((prev) => {
-          prev.delete('search');
-          return prev;
-        });
-      }
-      return;
+    const sortParam = searchParams.get('sort');
+    const directionParam = searchParams.get('direction');
+    
+    if (sortParam === 'memberCount' || sortParam === 'gameCount') {
+      setSortField(sortParam);
+    }
+    
+    if (directionParam === 'asc' || directionParam === 'desc') {
+      setSortDirection(directionParam);
+    }
+  }, [searchParams]);
+
+  // Filter groups based on search term
+  const filteredGroups = useMemo(() => {
+    let filtered = groups;
+
+    if (searchTerm) {
+      filtered = groups.filter(
+        (group) =>
+          group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          group.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          group.invitationCode.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    const filtered = groups.filter(
-      (group) =>
-        group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        group.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        group.invitationCode.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredGroups(filtered);
-  }, [searchTerm, groups, searchParams, setSearchParams]);
+    // Sort groups
+    if (sortField) {
+      filtered = [...filtered].sort((a, b) => {
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+        
+        if (sortDirection === 'asc') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      });
+    }
+
+    return filtered;
+  }, [groups, searchTerm, sortField, sortDirection]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -71,6 +101,33 @@ export default function Groups() {
       }
       return prev;
     });
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if clicking the same field
+      const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      setSortDirection(newDirection);
+      setSearchParams((prev) => {
+        prev.set('sort', field || '');
+        prev.set('direction', newDirection);
+        return prev;
+      });
+    } else {
+      // Set new field with default descending direction
+      setSortField(field);
+      setSortDirection('desc');
+      setSearchParams((prev) => {
+        if (field) {
+          prev.set('sort', field);
+          prev.set('direction', 'desc');
+        } else {
+          prev.delete('sort');
+          prev.delete('direction');
+        }
+        return prev;
+      });
+    }
   };
 
   const handleGroupClick = (groupId: string) => {
@@ -108,8 +165,36 @@ export default function Groups() {
                 <TableHead>Name</TableHead>
                 <TableHead>Group ID</TableHead>
                 <TableHead>Owner ID</TableHead>
-                <TableHead>Members</TableHead>
-                <TableHead>Games</TableHead>
+                <TableHead>
+                  <button
+                    onClick={() => handleSort('memberCount')}
+                    className="flex items-center gap-1 hover:text-primary transition-colors"
+                  >
+                    Members
+                    {sortField === 'memberCount' && (
+                      sortDirection === 'asc' ? (
+                        <ArrowUp className="h-4 w-4" />
+                      ) : (
+                        <ArrowDown className="h-4 w-4" />
+                      )
+                    )}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button
+                    onClick={() => handleSort('gameCount')}
+                    className="flex items-center gap-1 hover:text-primary transition-colors"
+                  >
+                    Games
+                    {sortField === 'gameCount' && (
+                      sortDirection === 'asc' ? (
+                        <ArrowUp className="h-4 w-4" />
+                      ) : (
+                        <ArrowDown className="h-4 w-4" />
+                      )
+                    )}
+                  </button>
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Invitation Code</TableHead>
                 <TableHead>Created</TableHead>

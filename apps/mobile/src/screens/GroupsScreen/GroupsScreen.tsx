@@ -25,6 +25,7 @@ import {
   EmptyState,
   ErrorDisplay
 } from './components';
+import PremiumModal from '../../components/PremiumModal';
 
 interface GroupsScreenProps {
   navigation: any;
@@ -42,6 +43,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isJoiningGroup, setIsJoiningGroup] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -58,7 +60,22 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   };
 
   const handleCreateGroup = () => {
-    setShowCreateModal(true);
+    // Check if user has reached the free limit (2 groups) and is not premium
+    const isLimitReached = groups.length >= 2 && user?.plan !== 'premium';
+    if (isLimitReached) {
+      setShowPremiumModal(true);
+    } else {
+      setShowCreateModal(true);
+    }
+  };
+
+  const handleShowPremiumModal = () => {
+    setShowPremiumModal(true);
+  };
+
+  const handleNavigateToSubscription = () => {
+    setShowPremiumModal(false);
+    navigation.navigate('Subscription');
   };
 
   const handleCreateWithName = async (name: string) => {
@@ -88,7 +105,13 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
   };
 
   const handleJoinGroup = () => {
-    setShowJoinModal(true);
+    // Check if user has reached the free limit (2 groups) and is not premium
+    const isLimitReached = groups.length >= 2 && user?.plan !== 'premium';
+    if (isLimitReached) {
+      setShowPremiumModal(true);
+    } else {
+      setShowJoinModal(true);
+    }
   };
 
   const handleJoinWithCode = async (code: string) => {
@@ -159,6 +182,7 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
           groupsCount={groups.length}
           isPremium={user?.plan === 'premium'}
           onUpgrade={handleUpgrade}
+          onShowPremiumModal={handleShowPremiumModal}
         />
       )}
 
@@ -197,6 +221,22 @@ export default function GroupsScreen({ navigation }: GroupsScreenProps) {
         onCreate={handleCreateWithName}
         isLoading={isCreatingGroup}
       />
+
+      {user?.plan !== 'premium' && (
+        <PremiumModal
+          visible={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          onNavigateToSubscription={handleNavigateToSubscription}
+          titleKey="groups.groupLimitPremium.title"
+          subtitleKey="groups.groupLimitPremium.subtitle"
+          bullet1Key="groups.groupLimitPremium.bullet1"
+          bullet2Key="groups.groupLimitPremium.bullet2"
+          ctaKey="groups.groupLimitPremium.cta"
+          cancelKey="groups.groupLimitPremium.cancel"
+          iconName="people-outline"
+          iconColor="#FF6B9D"
+        />
+      )}
 
       {__DEV__ && (
         <View style={styles.debugButtonContainer}>

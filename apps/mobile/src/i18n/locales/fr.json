@@ -79,7 +79,15 @@
     "upgradeBannerTitle": "Débloquez les fonctionnalités Premium",
     "upgradeBannerSubtitle": "Créez des groupes illimités et accédez à toutes les fonctionnalités premium",
     "upgradeNow": "Mettre à niveau maintenant",
-    "debugSubscriptions": "Debug Abonnements"
+    "debugSubscriptions": "Debug Abonnements",
+    "groupLimitPremium": {
+      "title": "Débloquez les groupes illimités",
+      "subtitle": "Les utilisateurs gratuits peuvent créer ou rejoindre jusqu'à 2 groupes. Passez à Premium pour créer des groupes illimités et gérer plusieurs communautés.",
+      "bullet1": "Créez et rejoignez des groupes illimités",
+      "bullet2": "Gérez plusieurs communautés et rivalisez dans différents groupes",
+      "cta": "Aller vers Premium",
+      "cancel": "Plus tard"
+    }
   },
   "groupDetails": {
     "title": "Détails du groupe",
