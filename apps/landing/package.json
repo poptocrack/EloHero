@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "deploy": "npx netlify deploy --prod"
+    "deploy": "cd ../.. && npx netlify deploy --prod"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",

@@ -1,10 +1,19 @@
 {
   "files": [],
   "references": [
-    { "path": "./apps/mobile" },
-    { "path": "./apps/functions" },
-    { "path": "./packages/shared-types" },
-    { "path": "./packages/shared-config" }
-  ]
+    {
+      "path": "./apps/mobile"
+    },
+    {
+      "path": "./apps/functions"
+    },
+    {
+      "path": "./packages/shared-types"
+    },
+    {
+      "path": "./packages/shared-config"
+    }
+  ],
+  "compilerOptions": {},
+  "extends": "expo/tsconfig.base"
 }
-
