@@ -1,15 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGroupStore } from '../../store/groupStore';
 import { useAuthStore } from '../../store/authStore';
-import { queryKeys } from '../../utils/queryKeys';
 import { Member, MatchLabel } from '@elohero/shared-types';
 import { useMatchLabels } from '../../hooks/useMatchLabels';
-import { calculateEloChanges, calculateTeamEloChanges } from '../../utils/eloCalculation';
-import { APP_CONSTANTS } from '../../utils/constants';
 import MatchEntryHeader from './components/MatchEntryHeader';
 import TeamModeToggle from './components/TeamModeToggle';
 import MatchLabelSelector from './components/MatchLabelSelector';
@@ -20,12 +17,22 @@ import MatchSubmitButton from './components/MatchSubmitButton';
 import PremiumModal from '../../components/PremiumModal';
 import ReviewModal from '../../components/ReviewModal';
 import { isEligibleForReview } from '../../utils/reviewUtils';
+import {
+  calculateTeamEloPredictions,
+  calculateIndividualEloPredictions,
+  validateTeamMatch,
+  validateIndividualMatch,
+  submitTeamMatch,
+  submitIndividualMatch,
+  invalidateMatchQueries,
+  type EloPrediction
+} from '../../utils/matchEntry';
 
 interface MatchEntryScreenProps {
-  navigation: any;
-  route: {
-    params: {
-      groupId: string;
+  readonly navigation: any;
+  readonly route: {
+    readonly params: {
+      readonly groupId: string;
     };
   };
 }
@@ -75,180 +82,17 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   // Calculate ELO changes for selected players or teams based on mode
   const eloPredictions = useMemo(() => {
     if (!currentSeason || currentSeasonRatings.length === 0) {
-      return new Map<string, { currentElo: number; eloChange: number }>();
+      return new Map<string, EloPrediction>();
     }
 
     if (matchEntry.isTeamMode) {
-      // Team mode: Calculate team elo changes
-      if (matchEntry.teams.length < 2) {
-        return new Map<string, { currentElo: number; eloChange: number }>();
-      }
-
-      // Calculate team placements considering ties
-      // When teams are tied, they share the same placement (the placement of the first tied team)
-      const calculateTeamPlacement = (index: number): number => {
-        const team = matchEntry.teams[index];
-        const isTied = team.isTied || false;
-
-        if (isTied) {
-          // Find the minimum index in the tie group (the first team in the tie)
-          // Tied teams are always tied with the team above them
-          let minIndex = index;
-          for (let i = index - 1; i >= 0; i--) {
-            if (matchEntry.teams[i].isTied) {
-              minIndex = i;
-            } else {
-              break;
-            }
-          }
-          return minIndex + 1;
-        }
-
-        // For non-tied teams, count unique placements before this position
-        // Each tied group counts as one placement
-        const seenPlacements = new Set<number>();
-        for (let i = 0; i < index; i++) {
-          const prevTeam = matchEntry.teams[i];
-          const prevIsTied = prevTeam.isTied || false;
-
-          if (prevIsTied) {
-            // Find the first team in this tie group
-            let firstIndex = i;
-            for (let j = i - 1; j >= 0; j--) {
-              if (matchEntry.teams[j].isTied) {
-                firstIndex = j;
-              } else {
-                break;
-              }
-            }
-            seenPlacements.add(firstIndex + 1);
-          } else {
-            seenPlacements.add(i + 1);
-          }
-        }
-
-        // Placement is the number of unique placements before + 1
-        return seenPlacements.size + 1;
-      };
-
-      // Prepare teams with ratings
-      const teamsWithRatings = matchEntry.teams.map((team, index) => {
-        const teamMembers = team.members.map((member) => {
-          const rating = currentSeasonRatings.find((r) => r.uid === member.uid);
-          return {
-            uid: member.uid,
-            ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
-            gamesPlayed: rating?.gamesPlayed || 0
-          };
-        });
-
-        // Calculate team rating as average of member ratings
-        const teamRating =
-          teamMembers.length > 0
-            ? teamMembers.reduce((sum, m) => sum + m.ratingBefore, 0) / teamMembers.length
-            : APP_CONSTANTS.ELO.RATING_INIT;
-
-        const placement = calculateTeamPlacement(index);
-
-        return {
-          id: team.id,
-          members: teamMembers,
-          placement,
-          isTied: team.isTied || false,
-          teamRating
-        };
-      });
-
-      // Calculate team elo changes
-      const teamEloResults = calculateTeamEloChanges(teamsWithRatings);
-
-      // Create a map for easy lookup
-      const eloMap = new Map<string, { currentElo: number; eloChange: number }>();
-      teamEloResults.forEach((result) => {
-        eloMap.set(result.uid, {
-          currentElo: result.ratingBefore,
-          eloChange: result.ratingChange
-        });
-      });
-
-      return eloMap;
+      return calculateTeamEloPredictions(matchEntry.teams, currentSeasonRatings);
     } else {
-      // Individual mode: Calculate individual elo changes
-      if (matchEntry.playerOrder.length < 2) {
-        return new Map<string, { currentElo: number; eloChange: number }>();
-      }
-
-      // Get current ratings for selected players
-      // Calculate placements considering ties
-      // When players are tied, they share the same placement (the placement of the first tied player)
-      const calculatePlacement = (index: number): number => {
-        const playerUid = matchEntry.playerOrder[index].uid;
-        const tieGroup = matchEntry.playerTies.get(playerUid);
-
-        if (tieGroup !== undefined) {
-          // Find the minimum index in the tie group (the first player in the tie)
-          let minIndex = index;
-          for (let i = 0; i < matchEntry.playerOrder.length; i++) {
-            if (matchEntry.playerTies.get(matchEntry.playerOrder[i].uid) === tieGroup) {
-              minIndex = Math.min(minIndex, i);
-            }
-          }
-          return minIndex + 1;
-        }
-
-        // For non-tied players, count unique placements before this position
-        // Each tied group counts as one placement
-        const seenPlacements = new Set<number>();
-        for (let i = 0; i < index; i++) {
-          const prevPlayerUid = matchEntry.playerOrder[i].uid;
-          const prevTieGroup = matchEntry.playerTies.get(prevPlayerUid);
-
-          if (prevTieGroup !== undefined) {
-            // Find the first player in this tie group
-            let firstIndex = i;
-            for (let j = 0; j < i; j++) {
-              if (matchEntry.playerTies.get(matchEntry.playerOrder[j].uid) === prevTieGroup) {
-                firstIndex = j;
-                break;
-              }
-            }
-            seenPlacements.add(firstIndex + 1);
-          } else {
-            seenPlacements.add(i + 1);
-          }
-        }
-
-        // Placement is the number of unique placements before + 1
-        return seenPlacements.size + 1;
-      };
-
-      const participantsWithRatings = matchEntry.playerOrder.map((player, index) => {
-        const rating = currentSeasonRatings.find((r) => r.uid === player.uid);
-        const placement = calculatePlacement(index);
-        const isTied = matchEntry.playerTies.has(player.uid);
-
-        return {
-          uid: player.uid,
-          ratingBefore: rating?.currentRating || APP_CONSTANTS.ELO.RATING_INIT,
-          gamesPlayed: rating?.gamesPlayed || 0,
-          placement,
-          isTied
-        };
-      });
-
-      // Calculate ELO changes
-      const eloResults = calculateEloChanges(participantsWithRatings);
-
-      // Create a map for easy lookup
-      const eloMap = new Map<string, { currentElo: number; eloChange: number }>();
-      eloResults.forEach((result) => {
-        eloMap.set(result.uid, {
-          currentElo: result.ratingBefore,
-          eloChange: result.ratingChange
-        });
-      });
-
-      return eloMap;
+      return calculateIndividualEloPredictions(
+        matchEntry.playerOrder,
+        matchEntry.playerTies,
+        currentSeasonRatings
+      );
     }
   }, [
     matchEntry.playerOrder,
@@ -272,26 +116,48 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     }
   }, [currentSeason, currentSeasonRatings.length, loadSeasonRatings]);
 
-  useEffect(() => {
-    // Update available players when group members change
-    if (matchEntry.isTeamMode) {
-      // In team mode, show players not in any team
-      const playersInTeams = new Set<string>();
-      matchEntry.teams.forEach((team) => {
-        team.members.forEach((member) => {
-          playersInTeams.add(member.uid);
+  // Calculate available players based on mode
+  const calculateAvailablePlayers = useCallback(
+    (
+      groupMembers: Member[],
+      isTeamMode: boolean,
+      selectedPlayers: Member[],
+      teams: Array<{ members: Array<{ uid: string }> }>
+    ): Member[] => {
+      if (isTeamMode) {
+        // In team mode, show players not in any team
+        const playersInTeams = new Set<string>();
+        teams.forEach((team) => {
+          team.members.forEach((member) => {
+            playersInTeams.add(member.uid);
+          });
         });
-      });
-      const available = currentGroupMembers.filter((member) => !playersInTeams.has(member.uid));
-      setAvailablePlayers(available);
-    } else {
-      // In individual mode, show players not selected
-      const available = currentGroupMembers.filter(
-        (member) => !matchEntry.selectedPlayers.some((selected) => selected.uid === member.uid)
-      );
-      setAvailablePlayers(available);
-    }
-  }, [currentGroupMembers, matchEntry.selectedPlayers, matchEntry.teams, matchEntry.isTeamMode]);
+        return groupMembers.filter((member) => !playersInTeams.has(member.uid));
+      } else {
+        // In individual mode, show players not selected
+        return groupMembers.filter(
+          (member) => !selectedPlayers.some((selected) => selected.uid === member.uid)
+        );
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    const available = calculateAvailablePlayers(
+      currentGroupMembers,
+      matchEntry.isTeamMode,
+      matchEntry.selectedPlayers,
+      matchEntry.teams
+    );
+    setAvailablePlayers(available);
+  }, [
+    currentGroupMembers,
+    matchEntry.selectedPlayers,
+    matchEntry.teams,
+    matchEntry.isTeamMode,
+    calculateAvailablePlayers
+  ]);
 
   useEffect(() => {
     if (!isPremiumUser && matchEntry.isTeamMode) {
@@ -301,29 +167,52 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
 
   // Labels are automatically loaded via React Query hook above
 
-  // Update selectedLabel immediately when matchEntry.selectedMatchLabelId changes
-  useEffect(() => {
-    if (matchEntry.selectedMatchLabelId) {
+  // Sync selected label with match entry
+  const syncSelectedLabel = useCallback(
+    (
+      selectedMatchLabelId: string | null,
+      labels: MatchLabel[],
+      currentLabel: MatchLabel | null,
+      groupId: string
+    ): MatchLabel | null => {
+      if (!selectedMatchLabelId) {
+        return null;
+      }
+
       // First check if we already have it in matchLabels
-      const found = matchLabels.find((l) => l.id === matchEntry.selectedMatchLabelId);
+      const found = labels.find((l) => l.id === selectedMatchLabelId);
       if (found) {
-        setSelectedLabel(found);
-      } else if (!selectedLabel || selectedLabel.id !== matchEntry.selectedMatchLabelId) {
-        // If not found and we don't have a matching selectedLabel, create optimistic placeholder
-        // The label name will be updated when labels load
-        setSelectedLabel({
-          id: matchEntry.selectedMatchLabelId,
+        return found;
+      }
+
+      // If not found and we don't have a matching selectedLabel, create optimistic placeholder
+      // The label name will be updated when labels load
+      if (currentLabel?.id !== selectedMatchLabelId) {
+        return {
+          id: selectedMatchLabelId,
           groupId,
           name: '...', // Placeholder - will be updated when labels load
           createdBy: '',
           createdAt: new Date()
-        });
+        };
       }
+
       // If selectedLabel already matches, keep it (don't overwrite with placeholder)
-    } else {
-      setSelectedLabel(null);
-    }
-  }, [matchEntry.selectedMatchLabelId, matchLabels, groupId, selectedLabel]);
+      return currentLabel;
+    },
+    []
+  );
+
+  // Update selectedLabel immediately when matchEntry.selectedMatchLabelId changes
+  useEffect(() => {
+    const syncedLabel = syncSelectedLabel(
+      matchEntry.selectedMatchLabelId,
+      matchLabels,
+      selectedLabel,
+      groupId
+    );
+    setSelectedLabel(syncedLabel);
+  }, [matchEntry.selectedMatchLabelId, matchLabels, groupId, selectedLabel, syncSelectedLabel]);
 
   const handleOpenPremiumModal = () => {
     setPremiumModalVisible(true);
@@ -410,18 +299,11 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     }
   };
 
-  const handleSubmitMatch = async () => {
+  const handleSubmitMatch = () => {
     if (matchEntry.isTeamMode) {
-      // Team mode validation
-      if (matchEntry.teams.length < 2) {
-        Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoTeams'));
-        return;
-      }
-
-      // Validate each team has at least one member
-      const invalidTeams = matchEntry.teams.filter((team) => team.members.length === 0);
-      if (invalidTeams.length > 0) {
-        Alert.alert(t('common.error'), t('matchEntry.teamMustHaveAtLeastOneMember'));
+      const validation = validateTeamMatch(matchEntry.teams);
+      if (!validation.isValid) {
+        Alert.alert(t('common.error'), t(validation.errorKey!));
         return;
       }
 
@@ -432,130 +314,40 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           { text: t('common.cancel'), style: 'cancel' },
           {
             text: t('common.confirm'),
-            onPress: async () => {
-              try {
-                // Get current season
-                const currentSeason = useGroupStore.getState().currentSeason;
-                if (!currentSeason) {
-                  Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
-                  return;
-                }
-
-                // Calculate team placements considering ties
-                // When teams are tied, they share the same placement (the placement of the first tied team)
-                const calculateTeamPlacement = (index: number): number => {
-                  const team = matchEntry.teams[index];
-                  const isTied = team.isTied || false;
-
-                  if (isTied) {
-                    // Find the minimum index in the tie group (the first team in the tie)
-                    // Tied teams are always tied with the team above them
-                    let minIndex = index;
-                    for (let i = index - 1; i >= 0; i--) {
-                      if (matchEntry.teams[i].isTied) {
-                        minIndex = i;
-                      } else {
-                        break;
-                      }
-                    }
-                    return minIndex + 1;
-                  }
-
-                  // For non-tied teams, count unique placements before this position
-                  // Each tied group counts as one placement
-                  const seenPlacements = new Set<number>();
-                  for (let i = 0; i < index; i++) {
-                    const prevTeam = matchEntry.teams[i];
-                    const prevIsTied = prevTeam.isTied || false;
-
-                    if (prevIsTied) {
-                      // Find the first team in this tie group
-                      let firstIndex = i;
-                      for (let j = i - 1; j >= 0; j--) {
-                        if (matchEntry.teams[j].isTied) {
-                          firstIndex = j;
-                        } else {
-                          break;
-                        }
-                      }
-                      seenPlacements.add(firstIndex + 1);
-                    } else {
-                      seenPlacements.add(i + 1);
-                    }
-                  }
-
-                  // Placement is the number of unique placements before + 1
-                  return seenPlacements.size + 1;
-                };
-
-                // Convert teams to the format expected by the backend
-                const teams = matchEntry.teams.map((team, index) => {
-                  const placement = calculateTeamPlacement(index);
-
-                  return {
-                    id: team.id,
-                    name: team.name,
-                    members: team.members.map((member) => ({
-                      uid: member.uid,
-                      displayName: member.displayName,
-                      photoURL: member.photoURL
-                    })),
-                    placement,
-                    isTied: team.isTied || false
-                  };
-                });
-
-                // Optimistic update: clear match entry and navigate immediately
-                clearMatchEntry();
-
-                // Invalidate React Query queries in background (non-blocking)
-                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
-                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) });
-                queryClient.invalidateQueries({
-                  queryKey: queryKeys.seasonRatings(currentSeason.id)
-                });
-
-                // Check if user should see review modal (before submission)
-                // Check if this is user's 2nd game and they're winning
-                const userRating = currentSeasonRatings.find((r) => r.uid === user?.uid);
-                const currentGamesPlayed = userRating?.gamesPlayed || 0;
-                const userTeam = teams.find((team) =>
-                  team.members.some((member) => member.uid === user?.uid)
-                );
-                const isUserWinning = userTeam?.placement === 1;
-                const shouldShowReview = currentGamesPlayed === 1 && isUserWinning;
-
-                // Make API call first
-                reportMatch(groupId, currentSeason.id, [], teams, matchEntry.selectedMatchLabelId)
-                  .then(async () => {
-                    // After successful submission, check if we should show review modal
-                    if (shouldShowReview) {
-                      const eligible = await isEligibleForReview();
-                      if (eligible) {
-                        // Show modal before navigation
-                        setIsReviewModalVisible(true);
-                        return; // Don't navigate yet, wait for modal to close
-                      }
-                    }
-                    // Navigate back if no review modal
-                    navigation.goBack();
-                  })
-                  .catch((error) => {
-                    // Show error alert if API call fails
-                    console.error('Failed to report match:', error);
-                    Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
-                  });
-              } catch (error) {
-                Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+            onPress: () => {
+              const currentSeason = useGroupStore.getState().currentSeason;
+              if (!currentSeason) {
+                Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
+                return;
               }
+
+              // Optimistic update: clear match entry immediately
+              clearMatchEntry();
+
+              // Invalidate React Query queries in background (non-blocking)
+              invalidateMatchQueries(queryClient, groupId, currentSeason.id);
+
+              // Submit match (navigates immediately, API call happens in background)
+              void submitTeamMatch({
+                teams: matchEntry.teams,
+                groupId,
+                seasonId: currentSeason.id,
+                selectedMatchLabelId: matchEntry.selectedMatchLabelId,
+                userUid: user?.uid,
+                currentSeasonRatings,
+                reportMatch,
+                setIsReviewModalVisible,
+                isEligibleForReview,
+                navigation
+              });
             }
           }
         ]
       );
     } else {
-      // Individual mode validation
-      if (matchEntry.playerOrder.length < 2) {
-        Alert.alert(t('common.error'), t('matchEntry.needAtLeastTwoPlayers'));
+      const validation = validateIndividualMatch(matchEntry.playerOrder);
+      if (!validation.isValid) {
+        Alert.alert(t('common.error'), t(validation.errorKey!));
         return;
       }
 
@@ -566,121 +358,33 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
           { text: t('common.cancel'), style: 'cancel' },
           {
             text: t('common.confirm'),
-            onPress: async () => {
-              try {
-                // Calculate placements considering ties
-                // When players are tied, they share the same placement (the placement of the first tied player)
-                const calculatePlacement = (index: number): number => {
-                  const playerUid = matchEntry.playerOrder[index].uid;
-                  const tieGroup = matchEntry.playerTies.get(playerUid);
-
-                  if (tieGroup !== undefined) {
-                    // Find the minimum index in the tie group (the first player in the tie)
-                    let minIndex = index;
-                    for (let i = 0; i < matchEntry.playerOrder.length; i++) {
-                      if (matchEntry.playerTies.get(matchEntry.playerOrder[i].uid) === tieGroup) {
-                        minIndex = Math.min(minIndex, i);
-                      }
-                    }
-                    return minIndex + 1;
-                  }
-
-                  // For non-tied players, count unique placements before this position
-                  // Each tied group counts as one placement
-                  const seenPlacements = new Set<number>();
-                  for (let i = 0; i < index; i++) {
-                    const prevPlayerUid = matchEntry.playerOrder[i].uid;
-                    const prevTieGroup = matchEntry.playerTies.get(prevPlayerUid);
-
-                    if (prevTieGroup !== undefined) {
-                      // Find the first player in this tie group
-                      let firstIndex = i;
-                      for (let j = 0; j < i; j++) {
-                        if (
-                          matchEntry.playerTies.get(matchEntry.playerOrder[j].uid) === prevTieGroup
-                        ) {
-                          firstIndex = j;
-                          break;
-                        }
-                      }
-                      seenPlacements.add(firstIndex + 1);
-                    } else {
-                      seenPlacements.add(i + 1);
-                    }
-                  }
-
-                  // Placement is the number of unique placements before + 1
-                  return seenPlacements.size + 1;
-                };
-
-                // Convert player order to participants with placements
-                const participants = matchEntry.playerOrder.map((player, index) => {
-                  const placement = calculatePlacement(index);
-                  const isTied = matchEntry.playerTies.has(player.uid);
-
-                  return {
-                    uid: player.uid,
-                    displayName: player.displayName,
-                    photoURL: player.photoURL,
-                    placement,
-                    isTied
-                  };
-                });
-
-                // Get current season
-                const currentSeason = useGroupStore.getState().currentSeason;
-                if (!currentSeason) {
-                  Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
-                  return;
-                }
-
-                // Optimistic update: clear match entry and navigate immediately
-                clearMatchEntry();
-
-                // Invalidate React Query queries in background (non-blocking)
-                queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
-                queryClient.invalidateQueries({ queryKey: queryKeys.groupGames(groupId) });
-                queryClient.invalidateQueries({
-                  queryKey: queryKeys.seasonRatings(currentSeason.id)
-                });
-
-                // Check if user should see review modal (before submission)
-                // Check if this is user's 2nd game and they're winning
-                const userRating = currentSeasonRatings.find((r) => r.uid === user?.uid);
-                const currentGamesPlayed = userRating?.gamesPlayed || 0;
-                const userParticipant = participants.find((p) => p.uid === user?.uid);
-                const isUserWinning = userParticipant?.placement === 1;
-                const shouldShowReview = currentGamesPlayed === 1 && isUserWinning;
-
-                // Make API call first
-                reportMatch(
-                  groupId,
-                  currentSeason.id,
-                  participants,
-                  undefined,
-                  matchEntry.selectedMatchLabelId
-                )
-                  .then(async () => {
-                    // After successful submission, check if we should show review modal
-                    if (shouldShowReview) {
-                      const eligible = await isEligibleForReview();
-                      if (eligible) {
-                        // Show modal before navigation
-                        setIsReviewModalVisible(true);
-                        return; // Don't navigate yet, wait for modal to close
-                      }
-                    }
-                    // Navigate back if no review modal
-                    navigation.goBack();
-                  })
-                  .catch((error) => {
-                    // Show error alert if API call fails
-                    console.error('Failed to report match:', error);
-                    Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
-                  });
-              } catch (error) {
-                Alert.alert(t('common.error'), t('matchEntry.errorRecordingMatch'));
+            onPress: () => {
+              const currentSeason = useGroupStore.getState().currentSeason;
+              if (!currentSeason) {
+                Alert.alert(t('common.error'), t('matchEntry.noActiveSeason'));
+                return;
               }
+
+              // Optimistic update: clear match entry immediately
+              clearMatchEntry();
+
+              // Invalidate React Query queries in background (non-blocking)
+              invalidateMatchQueries(queryClient, groupId, currentSeason.id);
+
+              // Submit match (navigates immediately, API call happens in background)
+              void submitIndividualMatch({
+                playerOrder: matchEntry.playerOrder,
+                playerTies: matchEntry.playerTies,
+                groupId,
+                seasonId: currentSeason.id,
+                selectedMatchLabelId: matchEntry.selectedMatchLabelId,
+                userUid: user?.uid,
+                currentSeasonRatings,
+                reportMatch,
+                setIsReviewModalVisible,
+                isEligibleForReview,
+                navigation
+              });
             }
           }
         ]
