@@ -51,7 +51,6 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     loadGroupMembers,
     loadGroupSeasons,
     loadSeasonRatings,
-    setSelectedPlayers,
     setPlayerOrder,
     addPlayerToMatch,
     removePlayerFromMatch,
@@ -65,12 +64,11 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
     moveTeamUp,
     moveTeamDown,
     addPlayerToTeam,
-    removePlayerFromTeam,
-    setMatchLabel
+    removePlayerFromTeam
   } = useGroupStore();
 
   const [availablePlayers, setAvailablePlayers] = useState<Member[]>([]);
-  const [isPremiumModalVisible, setPremiumModalVisible] = useState(false);
+  const [isPremiumModalVisible, setIsPremiumModalVisible] = useState(false);
   const [isMatchLabelPremiumModalVisible, setIsMatchLabelPremiumModalVisible] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<MatchLabel | null>(null);
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
@@ -215,11 +213,11 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   }, [matchEntry.selectedMatchLabelId, matchLabels, groupId, selectedLabel, syncSelectedLabel]);
 
   const handleOpenPremiumModal = () => {
-    setPremiumModalVisible(true);
+    setIsPremiumModalVisible(true);
   };
 
   const handleClosePremiumModal = () => {
-    setPremiumModalVisible(false);
+    setIsPremiumModalVisible(false);
   };
 
   const handleOpenMatchLabelPremiumModal = () => {
@@ -231,7 +229,7 @@ export default function MatchEntryScreen({ navigation, route }: MatchEntryScreen
   };
 
   const handleNavigateToSubscription = () => {
-    setPremiumModalVisible(false);
+    setIsPremiumModalVisible(false);
     navigation.navigate('Subscription');
   };
 
